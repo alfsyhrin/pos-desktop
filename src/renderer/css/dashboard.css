@@ -1,0 +1,67 @@
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      background: #1f2937;
+      color: #fff;
+      padding: 16px;
+    }
+
+    .sidebar h3 {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 10px;
+      margin-bottom: 6px;
+      color: #ddd;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+
+    .sidebar a:hover {
+      background: #374151;
+      color: #fff;
+    }
+
+    /* CONTENT */
+    .content {
+      flex: 1;
+      padding: 24px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: white;
+      padding: 16px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .card h4 {
+      margin: 0;
+      color: #555;
+    }
+
+    .card p {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
