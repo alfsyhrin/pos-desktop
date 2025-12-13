@@ -1,67 +1,87 @@
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Science+Gothic:wght@100..900&display=swap');
 
-    .layout {
-      display: flex;
-      height: 100vh;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Asap:ital,wght@0,100..900;1,100..900&family=Science+Gothic:wght@100..900&display=swap');
 
-    /* SIDEBAR */
-    .sidebar {
-      width: 220px;
-      background: #1f2937;
-      color: #fff;
-      padding: 16px;
-    }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Asap', sans-serif;
+}
 
-    .sidebar h3 {
-      text-align: center;
-      margin-bottom: 24px;
-    }
+:root {
+  --background-color: #160808;
+  --primary-color: #E43636;
+  --secondary-color: #d53333ff;
+  --paragraph-color: #818386ff;
+  --radius: 18px;
+  --transition:all 0.3s ease;
+}
 
-    .sidebar a {
-      display: block;
-      padding: 10px;
-      margin-bottom: 6px;
-      color: #ddd;
-      text-decoration: none;
-      border-radius: 4px;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
 
-    .sidebar a:hover {
-      background: #374151;
-      color: #fff;
-    }
+.layout {
+  display: flex;
+  height: 100vh;
+}
 
-    /* CONTENT */
-    .content {
-      flex: 1;
-      padding: 24px;
-    }
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  background: #1f2937;
+  color: #fff;
+  padding: 16px;
+}
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
+.sidebar h3 {
+  text-align: center;
+  margin-bottom: 24px;
+}
 
-    .card {
-      background: white;
-      padding: 16px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+.sidebar a {
+  display: block;
+  padding: 10px;
+  margin-bottom: 6px;
+  color: #ddd;
+  text-decoration: none;
+  border-radius: 4px;
+}
 
-    .card h4 {
-      margin: 0;
-      color: #555;
-    }
+.sidebar a:hover {
+  background: #374151;
+  color: #fff;
+}
 
-    .card p {
-      font-size: 22px;
-      font-weight: bold;
-      margin-top: 8px;
-    }
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 24px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.card {
+  background: white;
+  padding: 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card h4 {
+  margin: 0;
+  color: #555;
+}
+
+.card p {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 8px;
+}

@@ -7,11 +7,28 @@
 </head>
 <body>
 
-  <div class="login-box">
-    <h2>Login Kasir</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Masuk</button>
+  <div class="container-login">
+    <div class="judul-box">
+      <h1>Aplikasi PIPos</h1>
+      <p>Aplikasi Kasir untuk Usaha Anda</p>
+    </div>
+    <div class="login-box">
+      <img src="../assets/img/Logo-PIPOS.jpg" alt="logo pipos">
+      <h2 class="judul-aplikasi">PIPos</h2>
+      <p class="deskripsi-aplikasi">By Komunara</p>
+      <h2>Selamat Datang</h2>
+      <p>Masuk untuk melanjutkan ke dashboard</p>
+      <div class="input-wrapper">
+        <label for="email">Email atau username</label>
+        <input type="email" id="email" placeholder="Email">
+      </div>
+      <div class="input-wrapper">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Password">
+      </div>
+      <a href="">Lupa Password?</a>
+      <button onclick="login()">Masuk</button>
+    </div>
   </div>
 
   <script src="../js/auth.js"></script>
