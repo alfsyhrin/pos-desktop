@@ -10,6 +10,7 @@ const routes = {
   karyawan: '../pages/karyawan.html',
   laporan: '../pages/laporan.html',
   pengaturan: '../pages/pengaturan.html',
+  aktivitas: '../pages/log-aktivitas.html',
   login: '../pages/login.html'
 };
 
