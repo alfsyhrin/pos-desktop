@@ -17,6 +17,10 @@
   --card-color: #1D1616;
   --radius: 18px;
   --transition:all 0.3s ease;
+  --weight-bold: 500;
+  --weight-black: bold;
+  --hijau: #328E6E;
+  --background-hijau: #1C352D;
 }
 
 body {
@@ -36,7 +40,7 @@ body {
   width: 250px;
   background: var(--card-color);
   color: #fff;
-  padding: 16px;
+  padding: 13px 16px 16px 16px;
   border-right: 1px solid #333;
 }
 
@@ -48,6 +52,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 10px;
+  margin-bottom: 8px;
   border-bottom: 1px solid #333;
 }
 

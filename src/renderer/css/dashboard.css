@@ -1,44 +1,155 @@
 
 
 /* Awal Header */
-header {
+header.header-dashboard {
   background-color: var(--card-color);
-  padding: 16px;
+  padding: 16px 16px 20px 16px;
   border-bottom: 2px solid var(--primary-color);
   margin-bottom: 24px;
 }
 
-header h2 {
+header.header-dashboard h2 {
   color: #fff;
   font-size: 30px;
 }
 
-header p {
+header.header-dashboard p {
   margin-top: 5px;
   color: var(--paragraph-color);
 }
 /* Akhir Header */
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.card {
-  background: white;
+/* Awal Card Langganan */
+.card-langganan-dashboard {
+  background-color: var(--card-color);
   padding: 16px;
+  border-radius: 15px;
+  margin-right: 16px;
+  margin-left: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #333;
+}
+
+.judul-langganan {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 15px;
+}
+
+.judul-wrapper h3 {
+  display: flex;
+  font-size: 17px;
+  color: #fff;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: var(--weight-bold);
+}
+
+.judul-wrapper span.material-symbols-outlined {
+  font-size: 20px;
+  color: var(--primary-color);
+}
+
+.status-langganan {
+  font-size: 12px;
+  color: var(--hijau);
+  padding: 6px;
+  background-color: var(--background-hijau);
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border: 1px solid var(--hijau);
 }
 
-.card h4 {
-  margin: 0;
-  color: #555;
+.status-langganan .material-symbols-outlined {
+  font-size: 16px;
 }
 
-.card p {
-  font-size: 22px;
-  font-weight: bold;
-  margin-top: 8px;
+.status-langganan p {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
 }
+
+.info-langganan {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.info-langganan .info-langganan-wrapper{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.info-langganan-wrapper .info-langganan-judul {
+  font-size: 14px;
+  color: var(--paragraph-color);
+}
+
+.info-langganan-wrapper .info-langganan-subjudul {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: #fff;
+}
+
+.info-langganan-wrapper .info-langganan-subjudul-hijau {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--hijau);
+}
+/* Akhir Card Langganan */
+
+/* Awal Card Penjualan */
+.card-wrapper-penjualan {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-right: 16px;
+  margin-left: 16px;
+}
+
+.penjualan-card {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--card-color);
+  padding: 16px;
+  border-radius: 15px;
+  border: 1px solid #333;
+  border-left: 5px solid var(--primary-color);
+}
+
+.penjualan-card span.material-symbols-outlined {
+  font-size: 40px;
+  color: var(--primary-color);
+  margin-right: 16px;
+}
+
+.penjualan-info .penjualan-judul {
+  font-size: 15px;
+  color: var(--paragraph-color);
+  margin-bottom: 6px;
+  
+}
+
+.penjualan-info .penjualan-angka {
+  font-size: 21px;
+  font-weight: var(--weight-bold);
+  color: #fff;
+  font-weight: var(--weight-black);
+}
+/* Akhir Card Penjualan */
