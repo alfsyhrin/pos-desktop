@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Science+Gothic:wght@100..900&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Asap:ital,wght@0,100..900;1,100..900&family=Science+Gothic:wght@100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  
+}
+
+:root {
+  --background-color: #160808;
+  --primary-color: #E43636;
+  --secondary-color: #d53333ff;
+  --paragraph-color: #818386ff;
+  --card-color: #1D1616;
+  --radius: 18px;
+  --transition:all 0.3s ease;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #000;
+  font-family: 'Asap', sans-serif;
+}
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* Awal Sidebar */
+.sidebar {
+  width: 250px;
+  background: var(--card-color);
+  color: #fff;
+  padding: 16px;
+  border-right: 1px solid #333;
+}
+
+/* Awal Logo Aplikasi */
+.logo-aplikasi {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #333;
+}
+
+.logo-aplikasi img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+  border: 2px solid var(--primary-color);
+}
+
+.logo-aplikasi h3 {
+  text-align: center;
+  font-family: 'Science Gothic', sans-serif;
+  font-weight: 500;
+  color: white;
+  font-size: 24px;
+}
+
+.logo-aplikasi p {
+  font-size: 12px;
+  padding: 4px 8px;
+  background-color: var(--primary-color);
+  border-radius: 8px;
+}
+/* Akhir Logo Aplikasi */
+
+nav {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  border-bottom: 1px solid #333;
+}
+
+nav a {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 12px 10px;
+  margin-bottom: 10px;
+  color: var(--paragraph-color);
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+nav a.active {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+nav span.material-symbols-outlined {
+  font-size: 25px;
+  padding: 0;
+}
+
+/* Awal Profil Info */
+.info-akun {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.profil-akun {
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+}
+
+.profil-info .username {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+.profil-info .email {
+  font-size: 12px;
+  color: var(--paragraph-color);
+}
+/* Akhir Profil Info */
+
+/* Akhir Sidebar */
+
+
+/* CONTENT */
+.content {
+  flex: 1;
+}

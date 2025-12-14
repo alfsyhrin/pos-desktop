@@ -5,7 +5,7 @@ function login() {
   // DUMMY LOGIN (sementara)
   if (email && password) {
     alert('Login berhasil (dummy)');
-    window.location.href = 'dashboard.html';
+    window.location.href = 'index.html';
   } else {
     alert('Email dan password wajib diisi');
   }

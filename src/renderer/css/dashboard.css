@@ -1,66 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Science+Gothic:wght@100..900&display=swap');
 
-@import url('https://fonts.googleapis.com/css2?family=Asap:ital,wght@0,100..900;1,100..900&family=Science+Gothic:wght@100..900&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Asap', sans-serif;
-}
-
-:root {
-  --background-color: #160808;
-  --primary-color: #E43636;
-  --secondary-color: #d53333ff;
-  --paragraph-color: #818386ff;
-  --radius: 18px;
-  --transition:all 0.3s ease;
-}
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
-
-.layout {
-  display: flex;
-  height: 100vh;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 220px;
-  background: #1f2937;
-  color: #fff;
+/* Awal Header */
+header {
+  background-color: var(--card-color);
   padding: 16px;
-}
-
-.sidebar h3 {
-  text-align: center;
+  border-bottom: 2px solid var(--primary-color);
   margin-bottom: 24px;
 }
 
-.sidebar a {
-  display: block;
-  padding: 10px;
-  margin-bottom: 6px;
-  color: #ddd;
-  text-decoration: none;
-  border-radius: 4px;
-}
-
-.sidebar a:hover {
-  background: #374151;
+header h2 {
   color: #fff;
+  font-size: 30px;
 }
 
-/* CONTENT */
-.content {
-  flex: 1;
-  padding: 24px;
+header p {
+  margin-top: 5px;
+  color: var(--paragraph-color);
 }
+/* Akhir Header */
 
 .cards {
   display: grid;
