@@ -32,7 +32,7 @@ body {
 
 .layout {
   display: flex;
-  height: 100vh;
+  /* height: 100vh; */
 }
 
 /* Awal Sidebar */
@@ -42,6 +42,27 @@ body {
   color: #fff;
   padding: 13px 16px 16px 16px;
   border-right: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-atas {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar-bawah {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid #333;
+  padding-top: 10px;
 }
 
 /* Awal Logo Aplikasi */
@@ -52,7 +73,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 10px;
-  margin-bottom: 8px;
+  /* margin-bottom: 8px; */
   border-bottom: 1px solid #333;
 }
 
@@ -82,9 +103,10 @@ body {
 nav {
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid #333;
+  padding-top: 16px;
   overflow-y: auto;
-  height: 80vh;
+  width: 100%;
+  min-height: 80vh;  
 }
 
 nav a {
@@ -98,6 +120,7 @@ nav a {
   color: var(--paragraph-color);
   text-decoration: none;
   border-radius: 8px;
+  font-weight: var(--weight-bold);
 }
 
 nav a.active {
@@ -112,7 +135,7 @@ nav span.material-symbols-outlined {
 
 /* Awal Profil Info */
 .info-akun {
-  margin-top: 10px;
+  /* margin-top: 10px; */
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -151,4 +174,6 @@ nav span.material-symbols-outlined {
 /* CONTENT */
 .content {
   flex: 1;
+  overflow: hidden;
+  overflow-y: auto;
 }

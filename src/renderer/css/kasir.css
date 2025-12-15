@@ -1,0 +1,107 @@
+header.header-kasir {
+  background-color: var(--card-color);
+  padding: 16px 16px 20px 16px;
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+header.header-kasir h2 {
+  color: #fff;
+  font-size: 30px;
+}
+
+header.header-kasir p {
+  margin-top: 5px;
+  color: var(--paragraph-color);
+}
+
+/* Awal Main */
+main {
+  display: flex;
+  flex-direction: row;
+}
+/* Akhir Main */
+
+/* Awal Produk Kasir */
+.produk-kasir {
+  flex: 2;
+}
+/* Akhir Produk Kasir */
+
+/* Awal Keranjang Belanja */
+.keranjang-belanja-kasir {
+  background-color: var(--card-color);
+  padding: 16px;
+  border: 1px solid #333;
+  border-left: 2px solid var(--primary-color);
+  width: 350px;
+  margin-top: -24px;
+}
+
+.keranjang-belanja-kasir h2 {
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 16px;
+  font-weight: var(--weight-black);
+  border-bottom: 1px solid #333;
+  padding-bottom: 15px;
+}
+
+.keranjang-belanja-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 74vh;
+  overflow-y: auto;
+  justify-content: center;
+  align-items: center;
+}
+
+.keranjang-belanja-wrapper .material-symbols-outlined {
+  font-size: 80px;
+  color: var(--paragraph-color);
+  margin-bottom: 16px;
+
+}
+
+.keranjang-belanja-wrapper p {
+  color: var(--paragraph-color);
+}
+
+.keranjang-belanja-wrapper .keranjang-kosong {
+  font-size: 16px;
+  font-weight: var(--weight-bold);
+  margin-bottom: 8px;
+}
+
+.keranjang-belanja-wrapper .keranjang-deskripsi {
+  font-size: 14px;
+}
+/* Akhir Keranjang Belanja */
+
+/* Awal Bar Pencarian */
+.bar-pencarian-kasir {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--card-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 0 16px 24px 16px;
+  gap: 8px;
+  border: 1px solid #333;
+}
+
+.bar-pencarian-kasir span.material-symbols-outlined {
+  font-size: 24px;
+  color: var(--paragraph-color);
+}
+.bar-pencarian-kasir input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--paragraph-color);
+  font-size: 16px;
+}
+/* Akhir Bar Pencarian */

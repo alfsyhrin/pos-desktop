@@ -1,4 +1,10 @@
-
+/* Awal Container */
+.container-dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+/* Akhir Container */
 
 /* Awal Header */
 header.header-dashboard {

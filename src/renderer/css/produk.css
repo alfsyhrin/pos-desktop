@@ -1,0 +1,212 @@
+header.header-produk {
+  background-color: var(--card-color);
+  padding: 16px 16px 20px 16px;
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+header.header-produk h2 {
+  color: #fff;
+  font-size: 30px;
+}
+
+header.header-produk p {
+  margin-top: 5px;
+  color: var(--paragraph-color);
+}
+
+/* Awal Pencarian & Tambah Produk */
+.pencarian-tambah-produk {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-left: 16px;
+  margin-right: 16px;
+  gap: 16px;
+}
+/* Akhir Pencarian & Tambah Produk */
+
+/* Awal Bar Pencarian */
+.bar-pencarian-produk {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--card-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  gap: 8px;
+  border: 1px solid #333;
+  flex: 1;
+}
+
+.bar-pencarian-produk span.material-symbols-outlined {
+  font-size: 24px;
+  color: var(--paragraph-color);
+}
+.bar-pencarian-produk input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--paragraph-color);
+  font-size: 16px;
+}
+/* Akhir Bar Pencarian */
+
+/* Awal Tambah Produk */
+.tambah-produk-btn {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.tambah-produk-btn .material-symbols-outlined {
+  font-size: 20px;
+  margin-right: 5px;
+} 
+/* Akhir Tambah Produk */
+
+/* Awal Card Produk Wrapper */
+.card-produk-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 16px;
+  margin-right: 16px;
+  margin-left: 16px;
+  margin-bottom: 16px;
+  gap: 10px;
+  /* width: 100%; */
+}
+/* Awal Card Produk Wrapper */
+
+/* Awal Card Detail Produk */
+.card-detail-produk {
+  background-color: var(--card-color);
+  padding: 16px;
+  border-radius: 15px;
+  border: 1px solid #333;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.detail-produk-info  {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-produk-info h5 {
+  color: var(--paragraph-color);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.detail-produk-info p {
+  color: #fff;
+  font-size: 18px;
+  font-weight: var(--weight-bold);
+}
+
+.card-detail-produk .material-symbols-outlined {
+  font-size: 25px;
+  color: var(--primary-color);
+  padding: 8px;
+  background-color: #fff;
+  border-radius: 50%;
+}
+/* Akhir Card Detail Produk */
+
+/* Awal Container Produk */
+.list-produk-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 16px;
+  justify-content: flex-start;
+  padding: 16px;
+  background-color: var(--card-color);
+  border-radius: 8px;
+}
+
+.list-produk {
+  overflow: hidden;
+  overflow-y: auto;
+  width: 100%;
+  max-height: 25.3vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-produk::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
+
+.list-produk-container h3 {
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 16px;
+  font-weight: var(--weight-black);
+}
+
+.card-produk {
+  background-color: #151010ff;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.card-produk .material-symbols-outlined {
+  font-size: 25px;
+  color: var(--primary-color);
+  padding: 8px;
+  background-color: #e4363638;
+  border-radius: 50%;
+}
+
+.info-produk {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-produk .nama-produk {
+  color: #fff;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+}
+
+.info-produk .kode-produk {
+  color: var(--paragraph-color);
+  font-size: 12px;
+}
+
+.info-produk .harga-produk {
+  color: #fff;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+}
+/* Akhir Container Produk */
