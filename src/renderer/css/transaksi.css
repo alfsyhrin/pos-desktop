@@ -1,0 +1,77 @@
+header.header-transaksi {
+  background-color: var(--card-color);
+  padding: 16px 16px 20px 16px;
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+header.header-transaksi h2 {
+  color: #fff;
+  font-size: 30px;
+}
+
+header.header-transaksi p {
+  margin-top: 5px;
+  color: var(--paragraph-color);
+}
+
+.card-transaksi-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 16px;
+  margin-right: 16px;
+  margin-top: 16px;
+  overflow-y: auto;
+  min-height: 80vh;
+}
+
+.card-transaksi {
+  background-color: var(--card-color);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  display: flex;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.card-transaksi .material-symbols-outlined.transaksi {
+  font-size: 25px;
+  color: var(--primary-color);
+  margin-right: 16px;
+  border-radius: 50%;
+  background-color: #e4363638;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-transaksi {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.info-transaksi .material-symbols-outlined {
+  font-size: 20px;
+  background-color: none;
+  margin-right: 8px;
+}
+
+.jenis-transaksi {
+  color: var(--paragraph-color);
+  font-size: 16px;
+  font-weight: var(--weight-bold);
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+

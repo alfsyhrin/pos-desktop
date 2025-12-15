@@ -179,7 +179,7 @@ header.header-produk p {
   cursor: pointer;
 }
 
-.card-produk .material-symbols-outlined {
+.card-produk .material-symbols-outlined.card-icon {
   font-size: 25px;
   color: var(--primary-color);
   padding: 8px;
@@ -191,9 +191,10 @@ header.header-produk p {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
 }
 
-.info-produk .nama-produk {
+.nama-produk-stok-wrapper h4 {
   color: #fff;
   font-size: 14px;
   font-weight: var(--weight-bold);
@@ -210,3 +211,63 @@ header.header-produk p {
   font-weight: var(--weight-bold);
 }
 /* Akhir Container Produk */
+
+.nama-produk-stok-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.kode-harga-button-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kode-harga-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.kode-harga-button-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.edit-produk .material-symbols-outlined,
+.hapus-produk .material-symbols-outlined {
+  font-size: 21px;
+  cursor: pointer;
+}
+
+.edit-produk {
+  background-color: #ff803636;
+  color: #ff8036;
+  border: none;
+  padding: 5px;
+  border-radius: 8px;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+
+.hapus-produk {
+  background-color: #e4363638;
+  color: var(--primary-color);
+  border: none;
+  padding: 6px;
+  border-radius: 8px;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+
+.button-produk-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
