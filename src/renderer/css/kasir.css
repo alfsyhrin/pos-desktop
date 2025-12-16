@@ -105,3 +105,68 @@ main {
   font-size: 16px;
 }
 /* Akhir Bar Pencarian */
+
+/* Awal List Produk */
+.container-list-produk {
+  margin-top: 16px;
+  margin-right: 16px;
+  margin-left: 16px;
+  height: 72vh;
+  overflow-y: auto;
+}
+
+.card-produk-kasir {
+  background-color: var(--card-color);
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 200px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.card-produk-kasir h3 {
+  color: var(--primary-color);
+  font-size: 18px;
+  font-weight: var(--weight-bold);
+  margin-bottom: 8px;
+}
+
+.card-produk-kasir p {
+  color: var(--paragraph-color);
+  font-size: 13px;
+}
+
+.judul-stok-produk {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.overflow-judul-produk {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.judul-stok-produk h3 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: var(--weight-bold);
+}
+
+.judul-stok-produk p {
+  padding: 3px 6px;
+  background-color: var(--primary-color);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+}
+/* Akhir List Produk */
