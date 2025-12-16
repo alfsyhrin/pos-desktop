@@ -1,0 +1,210 @@
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.main-wrapper::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
+
+header.header-pengaturan {
+  background-color: var(--card-color);
+  padding: 16px 16px 20px 16px;
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+header.header-pengaturan h2 {
+  color: #fff;
+  font-size: 30px;
+}
+
+header.header-pengaturan p {
+  margin-top: 5px;
+  color: var(--paragraph-color);
+}
+
+.judul-section {
+  color: var(--paragraph-color);
+  font-weight: var(--weight-bold);
+  margin-left: 16px;
+  margin-bottom: 8px;
+}
+
+.informasi-toko-bisnis {
+  background-color: var(--card-color);
+  border-radius: 8px;
+  border: 1px solid #333;
+  margin-right: 16px;
+  margin-left: 16px;
+  margin-bottom: 16px;
+}
+
+.judul-informasi-toko {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.informasi-toko h3{
+  color: #fff;
+  font-size: 17px;
+}
+
+.informasi-toko p {
+  color: var(--paragraph-color);
+  font-size: 15px;
+}
+
+.judul-informasi-toko .material-symbols-outlined.logo-toko {
+  height: 39px;
+  width: 44px;
+  background-color: #e4363638;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 29px;
+  margin-right: 10px;
+}
+
+.informasi-toko {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+button.edit-toko {
+  background-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3px 8px;
+}
+
+button.edit-toko .material-symbols-outlined {
+  color: #fff;
+  font-size: 20px;
+  margin-right: 5px;
+}
+
+.card-informasi-toko {
+  padding: 16px;
+}
+
+.detail-toko-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.detail-toko-judul {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.detail-toko-deskripsi {
+  color: #fff;
+  font-weight: var(--weight-bold);
+  font-size: 14px;
+}
+
+.card-billing {
+  border: 1px solid #333;
+  background-color: var(--card-color);
+  margin-left: 16px;
+  margin-right: 16px;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-billing .material-symbols-outlined.logo-billing {
+  color: #1581BF;
+  height: 45px;
+  width: 45px;
+  border: 1px solid #1581BF;
+  border-radius: 50%;
+  background-color: #1581bf37;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.card-billing .material-symbols-outlined.copy-data {
+  color: #1581BF;
+  height: 45px;
+  width: 45px;
+  border: 1px solid #1581BF;
+  border-radius: 10px;
+  background-color: #1581bf37;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.card-billing .material-symbols-outlined.backup-data {
+  color: #10B981FF;
+  height: 45px;
+  width: 45px;
+  border: 1px solid #10B981FF;
+  border-radius: 10px;
+  background-color: #10b98135;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.card-billing .material-symbols-outlined.hapus-data {
+  color: var(--primary-color);
+  height: 45px;
+  width: 45px;
+  border: 1px solid var(--primary-color);
+  border-radius: 10px;
+  background-color: #e4363638;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.card-billing-info-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.card-billing .material-symbols-outlined.detail-arrow {
+  color: var(--paragraph-color);
+  font-size: 18px;
+}
+
+.card-info-aplikasi {
+  background-color: var(--card-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-left: 16px;
+  margin-right: 16px;
+  margin-bottom: 16px;
+}
