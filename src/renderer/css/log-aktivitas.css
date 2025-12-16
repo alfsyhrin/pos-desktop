@@ -1,0 +1,81 @@
+header.header-logaktivitas {
+  background-color: var(--card-color);
+  padding: 16px 16px 20px 16px;
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+header.header-logaktivitas h2 {
+  color: #fff;
+  font-size: 30px;
+}
+
+header.header-logaktivitas p {
+  margin-top: 5px;
+  color: var(--paragraph-color);
+}
+
+.container-card-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 16px;
+  margin-right: 16px;
+  margin-top: 16px;
+  overflow-y: auto;
+  min-height: 80vh;
+}
+
+.card-log {
+  background-color: var(--card-color);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  display: flex;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.card-log .material-symbols-outlined {
+  font-size: 23px;
+  color: var(--primary-color);
+  margin-right: 13px;
+  border-radius: 10px;
+  background-color: #e4363638;
+  border: 1px solid var(--primary-color);
+  width: 48px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-log {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  gap: 5px;
+}
+
+.info-log h3 {
+  color: #fff;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+}
+
+.info-log p {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.waktu-log {
+  color: var(--paragraph-color);
+  font-size: 12px;
+  text-align: right;
+  width: 150px;
+  font-weight: var(--weight-bold);
+}
