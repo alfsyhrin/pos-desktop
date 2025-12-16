@@ -1,0 +1,212 @@
+header.header-karyawan {
+  background-color: var(--card-color);
+  padding: 16px 16px 20px 16px;
+  border-bottom: 2px solid var(--primary-color);
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+header.header-karyawan h2 {
+  color: #fff;
+  font-size: 30px;
+}
+
+header.header-karyawan p {
+  margin-top: 5px;
+  color: var(--paragraph-color);
+}
+
+/* Awal Pencarian & Tambah Produk */
+.pencarian-tambah-karyawan {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin-left: 16px;
+  margin-right: 16px;
+  gap: 16px;
+}
+/* Akhir Pencarian & Tambah Produk */
+
+/* Awal Bar Pencarian */
+.bar-pencarian-karyawan {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: var(--card-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  gap: 8px;
+  border: 1px solid #333;
+  flex: 1;
+}
+
+.bar-pencarian-karyawan span.material-symbols-outlined {
+  font-size: 24px;
+  color: var(--paragraph-color);
+}
+.bar-pencarian-karyawan input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--paragraph-color);
+  font-size: 16px;
+}
+/* Akhir Bar Pencarian */
+
+/* Awal Tambah Produk */
+.tambah-karyawan {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 10px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.tambah-karyawan .material-symbols-outlined {
+  font-size: 20px;
+} 
+/* Akhir Tambah Produk */
+
+/* Awal Kontainer Karyawan */
+.container-card-karyawan {
+  margin-top: 16px;
+  /* border: 1px solid #fff; */
+  height: 73vh;
+  margin-right: 16px;
+  margin-left: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-karyawan {
+  background-color: var(--card-color);
+  border-radius: 8px;
+  border: 1px solid #333;
+  display: flex;
+  flex-direction: row;
+  /* justify-content: flex-start; */
+  align-items: center;
+  padding: 10px;
+  width: 100%;
+}
+
+.icon-karyawan {
+  width: 57px;
+  height: 50px;
+  border-radius: 50%;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.icon-karyawan.icon-hijau {
+  background-color: #10b98135;
+  color: #10B981FF;
+  border: 1px solid #10B981FF;
+}
+
+.icon-karyawan.icon-oranye {
+  background-color: #ff803636;
+  color: #ff8036;
+  border: 1px solid #ff8036;
+}
+
+.info-card-karyawan {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.info-card-karyawan h3 {
+  font-size: 17px;
+  color: #fff;
+  font-weight: var(--weight-bold);
+}
+
+.info-card-karyawan .id-karyawan {
+  font-size: 14px;
+  color: var(--paragraph-color);
+}
+
+.role-nomor-karyawan {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+}
+
+.role-nomor-karyawan .nomor-user {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.info-card-karyawan .role-user {
+  font-size: 13px;
+  color: #10B981FF;
+  background-color: #10b98135;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.role-user.role-oranye {
+  background-color: #ff803636;
+  color: #ff8036;
+}
+
+.role-user.role-hijau {
+  color: #10B981FF;
+  background-color: #10b98135;
+}
+
+.button-card-karyawan {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button-card-karyawan .edit-karyawan{
+  background: none;
+  border: none;
+  cursor: pointer;
+  background: #ff803636;
+  height: 35px;
+  width: 35px;
+  color: #ff8036;
+  border-radius: 8px;
+}
+
+.button-card-karyawan .hapus-karyawan{
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary-color);
+  background: #e4363638;
+  height: 35px;
+  width: 35px;
+  border-radius: 8px;
+}
+
+.button-card-karyawan .material-symbols-outlined {
+  font-size: 23px;
+}
+/* Akhir Kontainer Karyawan */
+
