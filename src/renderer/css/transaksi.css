@@ -56,22 +56,73 @@ header.header-transaksi p {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  width: 100%;
+  gap: 5px;
 }
 
 .info-transaksi .material-symbols-outlined {
   font-size: 20px;
   background-color: none;
-  margin-right: 8px;
+  margin-right: 5px;
+}
+
+.jenis-totalitem-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .jenis-transaksi {
   color: var(--paragraph-color);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--weight-bold);
-  margin-bottom: 6px;
+  /* margin-bottom: 6px; */
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
 }
 
+.total-item-transaksi {
+  color: var(--paragraph-color);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+}
+
+.no-harga-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.no-transaksi {
+  color: #fff;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+}
+
+.harga-transaksi {
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: var(--weight-black);
+}
+
+.tanggal-transaksi {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.button-hapus-transaksi button {
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  background-color: transparent;
+  margin-left: 10px;
+}
+
+.button-hapus-transaksi .material-symbols-outlined {
+  font-size: 30px;
+}

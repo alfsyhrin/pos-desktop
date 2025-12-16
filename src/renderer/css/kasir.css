@@ -33,10 +33,10 @@ main {
 .keranjang-belanja-kasir {
   background-color: var(--card-color);
   padding: 16px;
-  border: 1px solid #333;
-  border-left: 2px solid var(--primary-color);
+  border: 2px solid var(--primary-color);
   width: 350px;
-  margin-top: -24px;
+  border-radius: 15px;
+  margin-right: 16px;
 }
 
 .keranjang-belanja-kasir h2 {
@@ -46,12 +46,13 @@ main {
   font-weight: var(--weight-black);
   border-bottom: 1px solid #333;
   padding-bottom: 15px;
+  /* height: 40px; */
 }
 
 .keranjang-belanja-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: 74vh;
+  min-height: 68vh;
   overflow-y: auto;
   justify-content: center;
   align-items: center;
@@ -107,12 +108,29 @@ main {
 /* Akhir Bar Pencarian */
 
 /* Awal List Produk */
-.container-list-produk {
+.container-wrapper-produk {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   margin-top: 16px;
   margin-right: 16px;
   margin-left: 16px;
   height: 72vh;
   overflow-y: auto;
+}
+
+.container-list-produk {
+  flex-wrap: wrap;
+  display: flex;
+  flex-direction: row;
+  gap: 13.5px;
+  /* border: 1px solid #fff; */
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.container-wrapper-produk::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
 }
 
 .card-produk-kasir {
@@ -122,8 +140,8 @@ main {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 200px;
+  justify-content: space-between;
+  width: calc(33.333% - 9px);
   cursor: pointer;
   transition: transform 0.2s;
 }
@@ -169,4 +187,119 @@ main {
   font-size: 14px;
   font-weight: var(--weight-bold);
 }
+
+@media (max-width: 768px) {
+  .card-produk-kasir {
+    width: calc(50% - 10px); /* 2 card per baris pada layar menengah */
+  }
+}
+
+@media (max-width: 480px) {
+  .card-produk-kasir {
+    width: 100%; /* 1 card per baris pada layar kecil */
+  }
+}
 /* Akhir List Produk */
+
+#keranjang-items {
+  /* margin-top: 16px; */
+}
+
+.keranjang-item {
+  background-color: #000;
+  border: 1px solid #333;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.keranjang-item h4 {
+  font-size: 16px;
+  color: #fff;
+}
+
+.keranjang-item p {
+  font-size: 14px;
+  margin: 5px 0;
+  color: var(--paragraph-color);
+}
+
+.keranjang-item .actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.keranjang-item .product-buttons-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.card-produk-kasir button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+.product-qty {
+  font-size: 14px;
+  color: #fff;
+  min-width: 20px;
+  text-align: center;
+  font-weight: var(--weight-bold);
+}
+
+.increase-qty {
+  background-color: var(--primary-color);
+  color: #000;
+  border: none;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  /* display: flex;
+  align-items: center;
+  justify-content: center; */
+}
+
+.decrease-qty {
+  background-color: var(--primary-color);
+  color: #000;
+  border: none;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-total {
+  font-size: 14px;
+  color: #fff;
+}
+
+.remove-item {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: var(--weight-black);
+  position: relative;
+  bottom: 38px;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+}
