@@ -271,6 +271,7 @@ main {
 .card-produk-kasir p {
   color: var(--paragraph-color);
   font-size: 13px;
+  font-weight: 500;
 }
 
 .judul-stok-produk {

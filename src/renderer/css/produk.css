@@ -55,6 +55,116 @@ header.header-produk p {
 }
 /* Akhir Bar Pencarian */
 
+/* Awal Tools Produk */
+.tools-produk {
+  /* width: 100%; */
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-color);
+  margin-top: 16px;
+  margin-left: 16px;
+  margin-right: 16px;
+  padding: 10px;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #333;
+}
+
+.tools-button-produk{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.tools-button-produk button {
+  flex: 1;
+  background-color: #000;
+  color: #fff;
+  border-radius: 8px;
+  border: 1px solid #333;
+  flex-wrap: nowrap;
+  padding: 14px;
+}
+
+button.btn-active {
+  background-color: #e4363638;
+  border: 1px solid var(--primary-color);
+}
+
+.dropdown {
+  position: relative;
+  width: 100%;
+}
+
+/* Tombol dropdown */
+.dropdown-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #000;
+  border: 1px solid #333;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* Menu dropdown */
+.dropdown-menu {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+
+  /* AWAL: tersembunyi */
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: 0.3s ease;
+}
+
+/* Item */
+.dropdown-menu button {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.dropdown-menu button:hover {
+  background: #333;
+}
+
+/* SAAT DI KLIK */
+#dropdown-toggle:checked ~ .dropdown-menu {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Panah berputar */
+#dropdown-toggle:checked + .dropdown-btn .arrow {
+  transform: rotate(180deg);
+}
+
+.arrow {
+  transition: transform 0.3s ease;
+}
+
+/* Akhir Tools Produk */
+
 /* Awal Tambah Produk */
 .tambah-produk-btn {
   background-color: var(--primary-color);
@@ -85,7 +195,7 @@ header.header-produk p {
   margin-top: 16px;
   margin-right: 16px;
   margin-left: 16px;
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
   gap: 10px;
   /* width: 100%; */
 }
