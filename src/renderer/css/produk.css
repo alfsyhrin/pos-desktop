@@ -195,7 +195,6 @@ button.btn-active {
   margin-top: 16px;
   margin-right: 16px;
   margin-left: 16px;
-  /* margin-bottom: 16px; */
   gap: 10px;
   /* width: 100%; */
 }
@@ -205,7 +204,7 @@ button.btn-active {
 .card-detail-produk {
   background-color: var(--card-color);
   padding: 16px;
-  border-radius: 15px;
+  border-radius: 10px;
   border: 1px solid #333;
   flex: 1;
   display: flex;
@@ -252,6 +251,7 @@ button.btn-active {
   padding: 16px;
   background-color: var(--card-color);
   border-radius: 8px;
+  border: 1px solid #333;
 }
 
 .list-produk {
