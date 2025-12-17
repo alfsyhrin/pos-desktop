@@ -9,6 +9,18 @@
       <input type="text" placeholder="Cari produk...">
     </div>
 
+    <div class="filter-produk-kasir">
+      <button class="active">Kesehatan & Kecantikan</button>
+      <button class="">Rumah Tangga & Gaya Hidup</button>
+      <button class="">Fashion & Aksesoris</button>
+      <button class="">Rumah Tangga & Gaya Hidup</button>
+      <button class="">Elektronik</button>
+      <button class="">Bayi & Anak</button>
+      <button class="">Makanan & Minuman</button>
+      <!-- <div class="container-button-filter">
+      </div> -->
+    </div>
+
     <div class="container-wrapper-produk">
 
       <div class="container-list-produk">
@@ -26,7 +38,58 @@
           data-name="Kopi Susu"
           data-price="12000"
           data-sku="SKU-001"
-          data-stock="6">Add to Cart</button>
+          data-stock="6">Tambah Ke Keranjang</button>
+        </div>
+
+        <div class="card-produk-kasir">
+          <div class="judul-stok-produk">
+            <div class="overflow-judul-produk" data-sku="SKU-001" data-stock="10">
+              <h3>Rokok</h3>
+            </div>
+            <p>6</p>
+          </div>
+          <h3>Rp 12.000</h3>
+          <p>SKU: SKU-002</p>
+          <p>Kategori: Makanan</p>
+          <button class="btn-add-cart"
+          data-name="Rokok"
+          data-price="13000"
+          data-sku="SKU-002"
+          data-stock="6">Tambah Ke Keranjang</button>
+        </div>
+
+        <div class="card-produk-kasir">
+          <div class="judul-stok-produk">
+            <div class="overflow-judul-produk" data-sku="SKU-001" data-stock="10">
+              <h3>Kusuka</h3>
+            </div>
+            <p>6</p>
+          </div>
+          <h3>Rp 13.000</h3>
+          <p>SKU: SKU-003</p>
+          <p>Kategori: Makanan</p>
+          <button class="btn-add-cart"
+          data-name="Kusuka"
+          data-price="13000"
+          data-sku="SKU-003"
+          data-stock="6">Tambah Ke Keranjang</button>
+        </div>
+
+        <div class="card-produk-kasir">
+          <div class="judul-stok-produk">
+            <div class="overflow-judul-produk" data-sku="SKU-001" data-stock="10">
+              <h3>Oreo</h3>
+            </div>
+            <p>6</p>
+          </div>
+          <h3>Rp 15.000</h3>
+          <p>SKU: SKU-004</p>
+          <p>Kategori: Makanan</p>
+          <button class="btn-add-cart"
+          data-name="Oreo"
+          data-price="15000"
+          data-sku="SKU-004"
+          data-stock="6">Tambah Ke Keranjang</button>
         </div>
       </div>
     </div>
@@ -34,13 +97,26 @@
 
   <aside class="keranjang-belanja-kasir">
     <h2>Keranjang Belanja</h2>
-    <div class="keranjang-belanja-wrapper" id="keranjang-empty">
-      <span class="material-symbols-outlined">shopping_cart</span>
-      <p class="keranjang-kosong">Keranjang kosong</p>
-      <p class="keranjang-deskripsi">Scan barcode atau pilih produk</p>
-    </div>
     <div id="keranjang-items">
+      <div class="keranjang-belanja-wrapper" id="keranjang-empty">
+        <span class="material-symbols-outlined">shopping_cart</span>
+        <p class="keranjang-kosong">Keranjang kosong</p>
+        <p class="keranjang-deskripsi">Scan barcode atau pilih produk</p>
+      </div>
 
+    </div>
+    <div class="container-pembayaran">
+      <div class="wrap-subtotal">
+        <h4>Subtotal:</h4>
+        <p>12.000</p>
+      </div>
+      <div class="wrap-total">
+        <h3>Total:</h3>
+        <p>12.000</p>
+      </div>
+      <div class="button-pembayaran">
+        <button>Proses Pembayaran</button>
+      </div>
     </div>
   </aside>
 </main>
