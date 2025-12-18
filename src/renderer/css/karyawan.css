@@ -69,6 +69,7 @@ header.header-karyawan p {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
 }
 
 .tambah-karyawan .material-symbols-outlined {

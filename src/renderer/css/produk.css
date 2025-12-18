@@ -179,6 +179,7 @@ button.btn-active {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
 }
 
 .tambah-produk-btn .material-symbols-outlined {

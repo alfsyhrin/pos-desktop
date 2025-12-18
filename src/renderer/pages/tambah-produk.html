@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIPos - Tambah Produk</title>
+  <link href="https://fonts.googleapis.com/css2?family=Asap:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <link rel="stylesheet" href="../css/tambah-produk.css">
+</head>
+<body>
+  <header>
+    <div class="back-button">
+      <a href="../pages/index.html">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </a>
+    </div>
+    <div class="judul-header">
+      <h3>Tambah Produk</h3>
+      <!-- <p>Tambah Produk</p> -->
+    </div>
+  </header>
+
+  <div class="main-container">
+    <!-- TWO CARDS SIDE BY SIDE -->
+    <div class="cards-wrapper">
+      <!-- CARD 1: BARCODE TOOLS -->
+      <div class="card">
+        <h4 class="card-title">
+          <span class="material-symbols-outlined">qr_code_scanner</span>
+          Barcode Tools
+        </h4>
+
+        <!-- Scanner Status -->
+        <div class="scanner-status">
+          <span class="dot"></span>
+          <span>Scanner Woya siap - Arahkan scanner ke barcode</span>
+        </div>
+
+        <!-- Buttons -->
+        <div class="barcode-buttons">
+          <button class="btn btn-primary" onclick="focusScannerInput()">
+            <span class="material-symbols-outlined">wifi</span>
+            WP2DW
+          </button>
+          <button class="btn btn-primary" id="btn-camera" onclick="toggleCamera()">
+            <span class="material-symbols-outlined">photo_camera</span>
+            Scan Kamera
+          </button>
+          <button class="btn btn-success" onclick="generateBarcode()">
+            <span class="material-symbols-outlined">add_circle</span>
+            Generate
+          </button>
+        </div>
+
+        <!-- Barcode Type & Value -->
+        <div class="form-group">
+          <label>Tipe Barcode</label>
+          <select id="barcode-type" onchange="handleTypeChange()">
+            <option value="CODE128">Code 128 (Umum Alfanumerik)</option>
+            <option value="EAN13">EAN-13 (12 Digit)</option>
+            <option value="QR">QR Code (Teks Bebas)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nilai Barcode</label>
+          <div class="input-with-btn">
+            <input type="text" id="barcode-value" placeholder="Masukkan atau scan barcode...">
+            <button class="btn btn-outline" onclick="generateBarcode()">
+              <span class="material-symbols-outlined">refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Camera Container -->
+        <div class="camera-container" id="camera-container">
+          <div id="camera-reader"></div>
+          <div class="camera-controls">
+            <button class="btn btn-outline" onclick="stopCamera()">
+              <span class="material-symbols-outlined">close</span>
+              Tutup Kamera
+            </button>
+          </div>
+        </div>
+
+        <!-- Barcode Preview -->
+        <div class="preview-section">
+          <span class="preview-label">Preview Barcode (Code128/EAN-13)</span>
+          <div class="barcode-preview" id="barcode-preview">
+            <span class="preview-empty">Belum ada barcode</span>
+          </div>
+        </div>
+
+        <!-- QR Code Preview (Separate Container) -->
+        <div class="preview-section" id="qr-section">
+          <span class="preview-label">Preview QR Code</span>
+          <div class="qr-preview" id="qr-preview">
+            <span class="preview-empty">Belum ada QR Code</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: MANUAL PRODUCT INPUT -->
+      <div class="card">
+        <h4 class="card-title">
+          <span class="material-symbols-outlined">inventory_2</span>
+          Isi Produk Manual
+        </h4>
+
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label>Nama Produk *</label>
+            <input type="text" id="nama-produk" placeholder="Masukkan nama produk">
+          </div>
+
+          <div class="form-group form-full">
+            <label>Barcode</label>
+            <div class="input-with-btn">
+              <input type="text" id="product-barcode" placeholder="Scan atau ketik barcode..." readonly>
+              <button class="btn btn-primary" onclick="focusProductBarcode()">
+                <span class="material-symbols-outlined">qr_code_scanner</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Harga Modal</label>
+            <input type="number" id="harga-modal" placeholder="Rp 0">
+          </div>
+
+          <div class="form-group">
+            <label>Harga Jual</label>
+            <input type="number" id="harga-jual" placeholder="Rp 0">
+          </div>
+
+          <div class="form-group">
+            <label>SKU</label>
+            <input type="text" id="sku" placeholder="Stock Keeping Unit">
+          </div>
+
+          <div class="form-group">
+            <label>Stok</label>
+            <input type="number" id="stok" placeholder="0">
+          </div>
+
+          <div class="form-group">
+            <label>Kategori</label>
+            <select id="kategori">
+              <option value="">Pilih Kategori</option>
+              <option value="kesehatan">Kesehatan & Kecantikan</option>
+              <option value="rumah_tangga">Rumah Tangga & Gaya Hidup</option>
+              <option value="fashion">Fashion & Aksesoris</option>
+              <option value="elektronik">Elektronik</option>
+              <option value="bayi_anak">Bayi & Anak</option>
+              <option value="makanan_minuman">Makanan & Minuman</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Diskon</label>
+            <select id="diskon">
+              <option value="">Tidak Ada Diskon</option>
+              <option value="persen">Diskon Persen (%)</option>
+              <option value="potong">Potong Harga</option>
+              <option value="beli_gratis">Beli X Gratis Y</option>
+              <option value="beli_harga">Beli X Total Harga Jadi Y</option>
+            </select>
+          </div>
+
+          <div class="form-group form-full">
+            <label>Deskripsi (Opsional)</label>
+            <textarea id="deskripsi" placeholder="Deskripsi produk..."></textarea>
+          </div>
+
+          <div class="form-group form-full">
+            <label>Image URL (Opsional)</label>
+            <input type="url" id="image-url" placeholder="https://example.com/image.jpg">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="action-buttons">
+      <button class="btn btn-outline" onclick="batalkan()">
+        <span class="material-symbols-outlined">close</span>
+        Batal
+      </button>
+      <button class="btn btn-success" onclick="simpan()">
+        <span class="material-symbols-outlined">save</span>
+        Simpan
+      </button>
+    </div>
+  </div>
+
+  <!-- Hidden input for wired scanner -->
+  <input type="text" id="scanner-input" style="position:absolute;left:-9999px;" autofocus>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../js/barcode.js"></script>
+</body>
+</html>
