@@ -139,19 +139,28 @@ main {
   margin-bottom: 10px;
 }
 
-.button-pembarayan {
+.button-pembayaran {
   width: 100%;
+  /* border: 1px solid white; */
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.button-pembayaran button {
+.button-pembayaran a {
   width: 100%;
   background: var(--primary-color);
   border: none;
   cursor: pointer;
-  padding: 14px;
   border-radius: 8px;
   color: #fff;
   font-weight: var(--weight-bold);
+  text-decoration: none;
+  padding: 15px 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Akhir Keranjang Belanja */

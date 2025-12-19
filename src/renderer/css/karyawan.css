@@ -193,6 +193,10 @@ header.header-karyawan p {
   width: 35px;
   color: #ff8036;
   border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
 }
 
 .button-card-karyawan .hapus-karyawan{

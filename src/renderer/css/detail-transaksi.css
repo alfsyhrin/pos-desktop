@@ -1,0 +1,227 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --background-color: #160808;
+  --primary-color: #E43636;
+  --secondary-color: #d53333ff;
+  --paragraph-color: #818386ff;
+  --card-color: #1D1616;
+  --radius: 18px;
+  --transition: all 0.3s ease;
+  --weight-bold: 500;
+  --weight-black: bold;
+  --hijau: #328E6E;
+  --background-hijau: #1C352D;
+  --input-bg: #2a2020;
+  --border-color: #3a2a2a;
+}
+
+body {
+  margin: 0;
+  font-family: 'Asap', sans-serif;
+  background: var(--background-color);
+  min-height: 100vh;
+  color: #fff;
+}
+
+header {
+  width: 100%;
+  background-color: var(--card-color);
+  border-bottom: 2px solid var(--primary-color);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  gap: 5px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-button {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 1;
+  /* border: 1px solid white; */
+}
+
+.back-button a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: var(--weight-bold);
+  margin-left: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.back-button a:hover {
+  transform: translateX(-3px);
+}
+
+.back-button a .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.judul-header {
+  flex: 1.40;
+  /* border: 1px solid white; */
+}
+
+header h3 {
+  color: #fff;
+  font-size: 28px;
+  font-weight: var(--weight-black);
+}
+
+header p {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Awal Container Jenis Pembayaran */
+.jenis-pembayaran-transaksi {
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px solid #333;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.jenis-pembayaran-transaksi h4{
+  color: var(--paragraph-color);
+  font-weight: var(--weight-bold);
+  font-size: 14px;
+}
+
+.jenis-pembayaran-transaksi p {
+  font-weight: var(--weight-bold);
+  font-size: 18px;
+}
+/* Akhir Container Jenis Pembayaran */
+
+/* Awal Container Item Pembelian */
+.item-pembelian-transaksi {
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px solid #333;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.item-pembelian-transaksi h4 {
+  color: var(--paragraph-color);
+  font-weight: var(--weight-bold);
+  font-size: 14px;
+}
+
+.item-pembelian-transaksi p {
+  font-weight: var(--weight-bold);
+  font-size: 16px;
+}
+/* Akhir Container Item Pembelian */
+
+/* Awal Container Harga Transaksi */
+.harga-transaksi {
+    background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px solid #333;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.wrap-info-harga {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.wrap-tunai {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px;
+  background-color: #e4363638;
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+}
+
+.wrap-info-harga h4{
+  font-weight: var(--weight-bold);
+  font-size: 16px;
+}
+/* Akhir Container Harga Transaksi */
+
+/* Awal Container Button Transaksi */
+.wrap-button-proses-transaksi {
+  background-color: var(--card-color);
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.wrap-button-proses-transaksi button{
+  flex: 1;
+  padding: 15px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.wrap-button-proses-transaksi button .material-symbols-outlined {
+  font-size: 22px;
+}
+
+button.btn-print-struk {
+  background-color: #10B981FF;
+  color: #fff;
+}
+
+button.btn-print-pdf {
+  background-color: #ff8036;
+  color: #fff;
+}
+button.btn-hapus {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+
+/* Akhir Container Button Transaksi */
