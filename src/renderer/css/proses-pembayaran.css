@@ -1,0 +1,207 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --background-color: #160808;
+  --primary-color: #E43636;
+  --secondary-color: #d53333ff;
+  --paragraph-color: #818386ff;
+  --card-color: #1D1616;
+  --radius: 18px;
+  --transition: all 0.3s ease;
+  --weight-bold: 500;
+  --weight-black: bold;
+  --hijau: #328E6E;
+  --background-hijau: #1C352D;
+  --input-bg: #2a2020;
+  --border-color: #3a2a2a;
+}
+
+body {
+  margin: 0;
+  font-family: 'Asap', sans-serif;
+  background: var(--background-color);
+  min-height: 100vh;
+  color: #fff;
+}
+
+header {
+  width: 100%;
+  background-color: var(--card-color);
+  border-bottom: 2px solid var(--primary-color);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  gap: 5px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-button {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 1;
+  /* border: 1px solid white; */
+}
+
+.back-button a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: var(--weight-bold);
+  margin-left: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.back-button a:hover {
+  transform: translateX(-3px);
+}
+
+.back-button a .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.judul-header {
+  flex: 1.49;
+  /* border: 1px solid white; */
+}
+
+header h3 {
+  color: #fff;
+  font-size: 28px;
+  font-weight: var(--weight-black);
+}
+
+header p {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.card-total-pembayaran {
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px solid #333;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.card-tunai-diterima-pembayaran {
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px solid #333;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.card-tunai-diterima-pembayaran label {
+  font-size: 16px;
+  font-weight: var(--weight-bold);
+  margin-bottom: 6px;
+}
+
+.card-tunai-diterima-pembayaran input {
+  background-color: #fff;
+  border: 1px solid #333;
+  border-radius: 8px;
+  width: 100%;
+  background-color: #000;
+  padding: 10px;
+  margin-bottom: 6px;
+}
+
+.card-tunai-diterima-pembayaran p {
+  font-size: 14px;
+  color: var(--paragraph-color);
+}
+
+.wrapper-pecahan-uang-pembayaran {
+  background-color: var(--card-color);
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+
+.wrapper-pecahan-uang-pembayaran button {
+  background: #000;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: var(--paragraph-color);
+  cursor: pointer;
+  padding: 16px;
+  /* width: 190px; */
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  flex: 1;
+}
+
+.wrapper-pecahan-uang-pembayaran button:active {
+  border: transparent;
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+.wrap-button-proses-pembayaran {
+  /* padding: 10px; */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.wrap-button-proses-pembayaran button {
+  background-color: #000;
+  border: 1px solid #333;
+  padding: 15px;
+  border-radius: 8px;
+  color: #fff;
+  flex: 1;
+  font-size: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: var(--weight-bold);
+}
+
+.wrap-button-proses-pembayaran a {
+  background-color: var(--primary-color);
+  border: 1px solid transparent;
+  padding: 15px;
+  border-radius: 8px;
+  color: #fff;
+  flex: 1;
+  text-decoration: none;
+  font-size: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: var(--weight-bold);
+}
