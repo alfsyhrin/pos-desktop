@@ -1,0 +1,383 @@
+
+<div class="main-wrapper">
+  <header class="header-laporan">
+    <h2>APLIKASI PIPOS</h2>
+    <p>Laporan</p>
+  </header>
+  <!-- Tab Navigation -->
+  <div class="tab-nav" aria-label="Menu laporan">
+    <a class="tab-btn active" data-tab="keuangan" href="#keuangan" aria-current="page">
+      <span class="material-symbols-outlined">account_balance</span>
+      <span>Laporan Keuangan</span>
+        </a>
+    <a class="tab-btn" data-tab="dashboard" href="#dashboard">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span>Dashboard</span>
+      </a>
+    <a class="tab-btn" data-tab="produk" href="#produk">
+      <span class="material-symbols-outlined">inventory_2</span>
+      <span>Laporan Produk</span>
+      </a>
+    <a class="tab-btn" data-tab="karyawan" href="#karyawan">
+      <span class="material-symbols-outlined">group</span>
+      <span>Laporan Karyawan</span>
+    </a>
+  </div>
+  
+  <!-- Laporan Keuangan -->
+  <section id="keuangan" class="tab-content active">
+    <div class="export-buttons">
+      <button class="export-btn pdf" onclick="exportKeuanganPDF()">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        Export PDF
+      </button>
+      <button class="export-btn excel" onclick="exportKeuanganExcel()">
+        <span class="material-symbols-outlined">table_chart</span>
+        Export Excel
+      </button>
+    </div>
+  
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">payments</span>
+          <span>Total Pembayaran</span>
+        </div>
+        <p class="card-value">Rp 15.750.000</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">receipt_long</span>
+          <span>Banyaknya Transaksi</span>
+        </div>
+        <p class="card-value">234</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">trending_up</span>
+          <span>Margin</span>
+        </div>
+        <p class="card-value green">32.5%</p>
+      </div>
+    </div>
+  
+    <div class="filter-card">
+      <div class="filter-header">
+        <span class="material-symbols-outlined">filter_alt</span>
+        <span>Filter Waktu</span>
+      </div>
+      <div class="filter-buttons" data-filter-group="keuangan">
+        <button class="filter-btn active">Hari ini</button>
+        <button class="filter-btn">7 hari</button>
+        <button class="filter-btn">30 hari</button>
+        <button class="filter-btn">1 tahun</button>
+        <button class="filter-btn">Semua data</button>
+      </div>
+    </div>
+  
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">account_balance_wallet</span>
+          <span>Total Pendapatan</span>
+        </div>
+        <p class="card-value">Rp 18.500.000</p>
+        <p class="card-subtitle">245 transaksi</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">sell</span>
+          <span>Diskon</span>
+        </div>
+        <p class="card-value red">Rp 850.000</p>
+        <p class="card-subtitle">Total diskon yang diberikan</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">monetization_on</span>
+          <span>Pendapatan Bersih</span>
+        </div>
+        <p class="card-value">Rp 17.650.000</p>
+        <p class="card-subtitle">Setelah diskon</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span>Modal / HPP</span>
+        </div>
+        <p class="card-value">Rp 11.850.000</p>
+        <p class="card-subtitle">Estimasi biaya produksi</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">savings</span>
+          <span>Laba Kotor</span>
+        </div>
+        <p class="card-value green">Rp 5.800.000</p>
+        <p class="card-subtitle">Pendapatan bersih - Modal</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">account_balance</span>
+          <span>Laba Bersih</span>
+        </div>
+        <p class="card-value green">Rp 4.250.000</p>
+        <p class="card-subtitle">Margin 24.1%</p>
+      </div>
+      <div class="card col-span-3">
+        <div class="card-header">
+          <span class="material-symbols-outlined">calculate</span>
+          <span>Rata-rata Transaksi</span>
+        </div>
+        <p class="card-value">Rp 67.308</p>
+        <p class="card-subtitle">Per transaksi</p>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Dashboard -->
+  <section id="dashboard" class="tab-content">
+    <div class="export-buttons">
+      <button class="export-btn pdf" onclick="exportDashboardPDF()">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        Export PDF
+      </button>
+      <button class="export-btn excel" onclick="exportDashboardExcel()">
+        <span class="material-symbols-outlined">table_chart</span>
+        Export Excel
+      </button>
+    </div>
+  
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">arrow_downward</span>
+          <span>Kas Keluar</span>
+        </div>
+        <p class="chart-card-value red">Rp 20.000.000</p>
+        <div class="chart-container">
+          <canvas id="kasKeluarChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">compare_arrows</span>
+          <span>Masuk vs Keluar</span>
+        </div>
+        <div class="chart-container" style="height: 160px;">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="pie-legend">
+          <div class="legend-item">
+            <div class="legend-dot green"></div>
+            <span>Masuk</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot red"></div>
+            <span>Keluar</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">account_balance</span>
+          <span>Saldo</span>
+        </div>
+        <p class="chart-card-value green">Rp 47.000.000</p>
+        <div class="chart-container">
+          <canvas id="saldoChart"></canvas>
+        </div>
+      </div>
+    </div>
+  
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">arrow_upward</span>
+          <span>Kas Masuk</span>
+        </div>
+        <p class="chart-card-value green">Rp 45.000.000</p>
+        <div class="chart-container">
+          <canvas id="kasMasukChart"></canvas>
+        </div>
+      </div>
+      <div class="card transaksi-card">
+        <span class="material-symbols-outlined">receipt_long</span>
+        <p class="card-subtitle">Total Transaksi</p>
+        <p class="value">1,234</p>
+        <p class="card-subtitle">transaksi minggu ini</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">trending_up</span>
+          <span>Penjualan Tertinggi</span>
+        </div>
+        <p class="chart-card-value green">Rp 2.100.000</p>
+        <div class="chart-container">
+          <canvas id="penjualanTertinggiChart"></canvas>
+        </div>
+      </div>
+    </div>
+  
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">trending_down</span>
+          <span>Penjualan Terendah</span>
+        </div>
+        <p class="chart-card-value red">Rp 15.000</p>
+        <div class="chart-container">
+          <canvas id="penjualanTerendahChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">calculate</span>
+          <span>Rata-rata Harian</span>
+        </div>
+        <p class="chart-card-value">Rp 510.000</p>
+        <div class="chart-container">
+          <canvas id="rataRataChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Laporan Produk -->
+  <section id="produk" class="tab-content">
+    <div class="export-buttons">
+      <button class="export-btn pdf" onclick="exportProdukPDF()">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        Export PDF
+      </button>
+      <button class="export-btn excel" onclick="exportProdukExcel()">
+        <span class="material-symbols-outlined">table_chart</span>
+        Export Excel
+      </button>
+    </div>
+  
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">payments</span>
+          <span>Total Pembayaran</span>
+        </div>
+        <p class="card-value">Rp 15.750.000</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">receipt_long</span>
+          <span>Banyaknya Transaksi</span>
+        </div>
+        <p class="card-value">234</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">trending_up</span>
+          <span>Margin</span>
+        </div>
+        <p class="card-value green">32.5%</p>
+      </div>
+    </div>
+  
+    <div class="filter-card">
+      <div class="filter-header">
+        <span class="material-symbols-outlined">filter_alt</span>
+        <span>Filter Waktu</span>
+      </div>
+      <div class="filter-buttons" data-filter-group="produk">
+        <button class="filter-btn active">Hari ini</button>
+        <button class="filter-btn">7 hari</button>
+        <button class="filter-btn">30 hari</button>
+        <button class="filter-btn">1 tahun</button>
+        <button class="filter-btn">Semua data</button>
+      </div>
+    </div>
+  
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">star</span>
+          <span>10 Produk Terlaris</span>
+        </div>
+        <div class="scrollable-list" id="produkTerlarisList"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">warning</span>
+          <span>Produk Menipis</span>
+        </div>
+        <div id="produkMenipisList"></div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Laporan Karyawan -->
+  <section id="karyawan" class="tab-content">
+    <div class="export-buttons">
+      <button class="export-btn pdf" onclick="exportKaryawanPDF()">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        Export PDF
+      </button>
+      <button class="export-btn excel" onclick="exportKaryawanExcel()">
+        <span class="material-symbols-outlined">table_chart</span>
+        Export Excel
+      </button>
+    </div>
+  
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">payments</span>
+          <span>Total Pembayaran</span>
+        </div>
+        <p class="card-value">Rp 15.750.000</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">receipt_long</span>
+          <span>Banyaknya Transaksi</span>
+        </div>
+        <p class="card-value">234</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">trending_up</span>
+          <span>Margin</span>
+        </div>
+        <p class="card-value green">32.5%</p>
+      </div>
+    </div>
+  
+    <div class="filter-card">
+      <div class="filter-header">
+        <span class="material-symbols-outlined">filter_alt</span>
+        <span>Filter Waktu</span>
+      </div>
+      <div class="filter-buttons" data-filter-group="karyawan">
+        <button class="filter-btn active">Hari ini</button>
+        <button class="filter-btn">7 hari</button>
+        <button class="filter-btn">30 hari</button>
+        <button class="filter-btn">1 tahun</button>
+        <button class="filter-btn">Semua data</button>
+      </div>
+    </div>
+  
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined green">analytics</span>
+          <span>Performa Karyawan</span>
+        </div>
+        <div id="performaKaryawanList"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="material-symbols-outlined">leaderboard</span>
+          <span>Penjualan Terbanyak Karyawan</span>
+        </div>
+        <div class="scrollable-list" id="penjualanKaryawanList"></div>
+      </div>
+    </div>
+  </section>
+</div>
