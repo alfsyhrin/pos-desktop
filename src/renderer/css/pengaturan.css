@@ -91,6 +91,7 @@ button.edit-toko {
   justify-content: center;
   align-items: center;
   padding: 3px 8px;
+  cursor: pointer;
 }
 
 button.edit-toko .material-symbols-outlined {
@@ -207,4 +208,86 @@ button.edit-toko .material-symbols-outlined {
   margin-left: 16px;
   margin-right: 16px;
   margin-bottom: 16px;
+}
+
+.input-edit {
+  width: 100%;
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-card {
+  background: var(--card-color);
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal-card h3 {
+  color: #fff;
+  margin-bottom: 15px;
+  font-size: 22px;
+  text-align: center;
+}
+
+.modal-card label {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.modal-card input,
+.modal-card textarea {
+  width: 100%;
+  padding: 15px 10px;
+  margin: 5px 0 15px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-cancel {
+  background: #333;
+  color: #fff;
+  border: none;
+  padding: 12px 14px;
+  border-radius: 6px;
+  width: 100px;
+  cursor: pointer;
+}
+
+.btn-save {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 12px 14px;
+  border-radius: 6px;
+  width: 100px;
+  cursor: pointer;
 }
