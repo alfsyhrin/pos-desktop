@@ -50,6 +50,10 @@
       
       // Generate preview barcode
       generateBarcodeFromValue(barcode);
+        // --- NEW: inform global handler (produk page) ---
+  if (window.onBarcodeScanned && typeof window.onBarcodeScanned === 'function') {
+    try { window.onBarcodeScanned(barcode); } catch (e) { console.error('onBarcodeScanned handler error', e); }
+  }
     }
 
     function focusScannerInput() {

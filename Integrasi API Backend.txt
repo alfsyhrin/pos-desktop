@@ -1,0 +1,36 @@
+Integrasi API Backend BetaKasir diganti ke PiPos di Electron JS:
+
+Konfigurasi API Endpoint
+
+Simpan base URL backend (misal: http://103.126.116.119:5000/api) di file konfigurasi Electron.
+Gunakan library seperti axios atau fetch untuk request ke backend.
+Otentikasi
+
+Setelah login, simpan token JWT di localStorage atau file config.
+Sertakan header Authorization: Bearer <token> di setiap request API.
+CRUD Produk
+
+Gunakan endpoint /api/stores/:store_id/products untuk list, tambah, edit, dan hapus produk.
+Untuk upload gambar produk, gunakan endpoint /api/products/upload-image dengan form-data.
+Manajemen Owner & Pengaturan Bisnis
+
+Untuk halaman pengaturan owner, gunakan:
+GET /api/owners/:id untuk ambil data owner.
+PUT /api/owners/:id untuk update data owner/bisnis.
+Sinkronisasi Offline-Online
+
+Simpan data lokal di SQLite (gunakan package seperti better-sqlite3 atau sqlite3). database offline : offline_db.sql
+Tambahkan flag is_synced pada data lokal.
+Saat online, kirim data is_synced = 0 ke backend via API, update flag jika sukses.
+Backup & Restore
+
+Untuk backup, ambil data dari SQLite dan simpan sebagai file JSON.
+Untuk restore, baca file JSON dan insert/update ke SQLite serta sinkronkan ke backend jika online.
+Error Handling
+
+Tampilkan pesan error dari response backend.
+Validasi data sebelum request ke backend.
+Testing
+
+Gunakan Postman untuk uji endpoint backend sebelum integrasi di Electron.
+Pastikan semua response API sesuai dengan dokumentasi di README.md.

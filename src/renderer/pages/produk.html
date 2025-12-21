@@ -17,8 +17,17 @@
   <div class="tools-produk">
     <div class="tools-button-produk">
       <button class="btn-active">WP2DW</button>
-      <button>Scan Kamera</button>
+      <button id="btn-camera" onclick="startCamera()">Scan Kamera</button>
     </div>
+    <input type="text" id="scanner-input" style="position:absolute;left:-9999px;" autofocus>
+
+    <div class="camera-container" id="camera-container" style="display:none;">
+      <div id="camera-reader"></div>
+      <div class="camera-controls">
+        <button class="btn btn-outline" onclick="stopCamera()">Tutup Kamera</button>
+      </div>
+    </div>
+
     <div class="dropdown">
       <input type="checkbox" id="dropdown-toggle" hidden>
   
@@ -28,13 +37,21 @@
       </label>
   
       <div class="dropdown-menu">
-        <button>Code 128 (Umum, Alfanumerik)</button>
-        <button>EAN-13 (12 Digit)</button>
-        <button>QR (Teks Bebas)</button>
       </div>
     </div>
   </div>
 
+    <!-- Modal pemilihan toko untuk owner (muncul jika store_id tidak ada) -->
+  <div id="store-selector-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:9999;">
+    <div style="background:#1f1414; padding:20px; border-radius:8px; width:420px; max-height:70vh; overflow:auto;">
+      <h3 style="margin-top:0; color:#fff;">Pilih Toko</h3>
+      <div id="store-list"></div>
+      <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+        <button id="store-refresh" style="padding:8px 12px;">Refresh</button>
+        <button id="store-cancel" style="padding:8px 12px;">Batal</button>
+      </div>
+    </div>
+  </div>
   
   <div class="card-produk-wrapper">
     <div class="card-detail-produk">
@@ -64,86 +81,9 @@
   
   <div class="list-produk-container">
     <h3>Daftar Produk</h3>
-    <div class="list-produk">
-      <div class="card-produk">
-        <span class="material-symbols-outlined card-icon">shopping_bag</span>
-        <div class="info-produk">
-          <div class="nama-produk-stok-wrapper">
-            <h4>Kopi Susu</h4>
-            <h4>Stok: 10</h4>
-          </div>
-          <div class="kode-harga-button-wrapper">
-            <div class="kode-harga-wrapper">
-              <p class="kode-produk">SKU: SKU-001</p>
-              <p class="harga-produk">Rp 12.500</p>
-            </div>
-            <div class="button-produk-wrapper">
-              <button class="edit-produk"><span class="material-symbols-outlined">edit</span></button>
-              <button class="hapus-produk"><span class="material-symbols-outlined">delete</span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-  
-      <div class="card-produk">
-        <span class="material-symbols-outlined card-icon">shopping_bag</span>
-        <div class="info-produk">
-          <div class="nama-produk-stok-wrapper">
-            <h4>Kopi Susu</h4>
-            <h4>Stok: 10</h4>
-          </div>
-          <div class="kode-harga-button-wrapper">
-            <div class="kode-harga-wrapper">
-              <p class="kode-produk">SKU: SKU-001</p>
-              <p class="harga-produk">Rp 12.500</p>
-            </div>
-            <div class="button-produk-wrapper">
-              <button class="edit-produk"><span class="material-symbols-outlined">edit</span></button>
-              <button class="hapus-produk"><span class="material-symbols-outlined">delete</span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-  
-      <div class="card-produk">
-        <span class="material-symbols-outlined card-icon">shopping_bag</span>
-        <div class="info-produk">
-          <div class="nama-produk-stok-wrapper">
-            <h4>Kopi Susu</h4>
-            <h4>Stok: 10</h4>
-          </div>
-          <div class="kode-harga-button-wrapper">
-            <div class="kode-harga-wrapper">
-              <p class="kode-produk">SKU: SKU-001</p>
-              <p class="harga-produk">Rp 12.500</p>
-            </div>
-            <div class="button-produk-wrapper">
-              <button class="edit-produk"><span class="material-symbols-outlined">edit</span></button>
-              <button class="hapus-produk"><span class="material-symbols-outlined">delete</span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-  
-      <div class="card-produk">
-        <span class="material-symbols-outlined card-icon">shopping_bag</span>
-        <div class="info-produk">
-          <div class="nama-produk-stok-wrapper">
-            <h4>Kopi Susu</h4>
-            <h4>Stok: 10</h4>
-          </div>
-          <div class="kode-harga-button-wrapper">
-            <div class="kode-harga-wrapper">
-              <p class="kode-produk">SKU: SKU-001</p>
-              <p class="harga-produk">Rp 12.500</p>
-            </div>
-            <div class="button-produk-wrapper">
-              <button class="edit-produk"><span class="material-symbols-outlined">edit</span></button>
-              <button class="hapus-produk"><span class="material-symbols-outlined">delete</span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="list-produk"></div>
   </div>
 </main>
+<script src="../js/api.js"></script>
+<script src="../js/produk.js"></script>
+<script src="../js/barcode.js"></script>

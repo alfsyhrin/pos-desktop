@@ -11,7 +11,8 @@ const routes = {
   laporan: '../pages/laporan.html',
   pengaturan: '../pages/pengaturan.html',
   aktivitas: '../pages/log-aktivitas.html',
-  login: '../pages/login.html'
+  login: '../pages/login.html',
+  editProduk: '../pages/edit-produk.html'
 };
 
 const content = document.getElementById('app-content');
@@ -20,9 +21,14 @@ const sidebarItems = document.querySelectorAll('.sidebar-item');
 /**
  * Load halaman ke dalam content
  */
-function loadPage(page) {
-  const path = routes[page];
+function loadPage(page, params = {}) {
+  const token = localStorage.getItem('token');
+  if (!token && page !== 'login') {
+    window.location.href = 'login.html';
+    return;
+  }
 
+  const path = routes[page];
   if (!path) {
     content.innerHTML = `<h2>404 - Halaman tidak ditemukan</h2>`;
     return;
@@ -37,6 +43,28 @@ function loadPage(page) {
       content.innerHTML = html;
       setActiveMenu(page);
       saveLastPage(page);
+
+      // Dashboard
+      if (page === 'dashboard') {
+        const script = document.createElement('script');
+        script.src = '../js/dashboard.js';
+        script.defer = true;
+        document.body.appendChild(script);
+      }
+
+      // Produk
+      if (page === 'produk') {
+        if (window.renderProdukPage) window.renderProdukPage();
+      }
+
+      // Edit Produk (inject id ke window.location.search)
+      if (page === 'editProduk') {
+        // Simulasikan window.location.search agar edit-produk.js tetap bisa pakai URLSearchParams
+        if (params.id) {
+          window.history.replaceState({}, '', `?id=${params.id}`);
+        }
+        if (window.initEditProdukPage) window.initEditProdukPage();
+      }
     })
     .catch(err => {
       content.innerHTML = `<h2>Error loading page</h2>`;
@@ -97,3 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastPage = getLastPage();
   loadPage(lastPage);
 });
+
+window.addEventListener('hashchange', () => {
+  const page = location.hash.replace('#', '') || 'dashboard';
+  loadPage(page);
+});
+
+window.loadPage = loadPage;
