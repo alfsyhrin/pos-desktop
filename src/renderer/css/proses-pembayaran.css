@@ -53,7 +53,7 @@ header {
 
 .back-button a {
   text-decoration: none;
-  color: #fff;
+  color: var(--foreground-color);
   font-weight: var(--weight-bold);
   margin-left: 5px;
   display: flex;
@@ -76,7 +76,7 @@ header {
 }
 
 header h3 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 28px;
   font-weight: var(--weight-black);
 }
@@ -103,6 +103,10 @@ header p {
   margin-bottom: 16px;
 }
 
+.card-total-pembayaran h4 {
+  color: var(--foreground-color);
+}
+
 .card-tunai-diterima-pembayaran {
   background-color: var(--card-color);
   border-radius: 10px;
@@ -119,14 +123,15 @@ header p {
   font-size: 16px;
   font-weight: var(--weight-bold);
   margin-bottom: 6px;
+  color: var(--foreground-color);
 }
 
 .card-tunai-diterima-pembayaran input {
-  background-color: #fff;
+  background-color: var(--foreground-color);
   border: 1px solid #333;
   border-radius: 8px;
   width: 100%;
-  background-color: #000;
+  background-color: var(--background-color);
   padding: 10px;
   margin-bottom: 6px;
 }
@@ -150,7 +155,7 @@ header p {
 }
 
 .wrapper-pecahan-uang-pembayaran button {
-  background: #000;
+  background: var(--background-color);
   border: 1px solid #333;
   border-radius: 8px;
   color: var(--paragraph-color);
@@ -166,7 +171,7 @@ header p {
 .wrapper-pecahan-uang-pembayaran button:active {
   border: transparent;
   background-color: var(--primary-color);
-  color: #fff;
+  color: var(--foreground-color);
 }
 
 .wrap-button-proses-pembayaran {
@@ -178,17 +183,18 @@ header p {
 }
 
 .wrap-button-proses-pembayaran button {
-  background-color: #000;
+  background-color: var(--background-color);
   border: 1px solid #333;
   padding: 15px;
   border-radius: 8px;
-  color: #fff;
+  color: var(--foreground-color);
   flex: 1;
   font-size: 15px;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: var(--weight-bold);
+  color: var(--foreground-color);
 }
 
 .wrap-button-proses-pembayaran a {
@@ -196,7 +202,7 @@ header p {
   border: 1px solid transparent;
   padding: 15px;
   border-radius: 8px;
-  color: #fff;
+  color: var(--foreground-color);
   flex: 1;
   text-decoration: none;
   font-size: 15px;
@@ -204,4 +210,5 @@ header p {
   justify-content: center;
   align-items: center;
   font-weight: var(--weight-bold);
+  color: white;
 }

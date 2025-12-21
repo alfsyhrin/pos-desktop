@@ -6,27 +6,44 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  
 }
 
 :root {
-  --background-color: #160808;
+    --background-color: #0a0a0a;
+    --primary-color: #E43636;
+    --secondary-color: #d53333;
+    --paragraph-color: #818386;
+    --card-color: #1a1a1a;
+    --foreground-color: #f2f2f2;
+    --radius: 10px;
+    --transition: all 0.3s ease;
+    --weight-bold: 600;
+    --weight-black: 700;
+    --hijau: #328E6E;
+    --background-hijau: #1C352D;
+    --input-bg: #2a2020;
+    --border-color: #2a2a2a;
+    --muted-color: #1a1a1a;
+}
+
+body.theme-light {
+  --background-color: #f5f5f5;
   --primary-color: #E43636;
-  --secondary-color: #d53333ff;
-  --paragraph-color: #818386ff;
-  --card-color: #1D1616;
-  --radius: 18px;
-  --transition:all 0.3s ease;
-  --weight-bold: 500;
-  --weight-black: bold;
-  --hijau: #328E6E;
-  --background-hijau: #1C352D;
+  --secondary-color: #d53333;
+  --paragraph-color: #555555;
+  --card-color: #ffffff;
+  --foreground-color: #111111;
+  --hijau: #2f8f6a;
+  --background-hijau: #e6f4ef;
+  --input-bg: #f0f0f0;
+  --border-color: #dddddd;
+  --muted-color: #f3f3f3;
 }
 
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #000;
+  background: var(--background-color);
   font-family: 'Asap', sans-serif;
 }
 
@@ -39,7 +56,7 @@ body {
 .sidebar {
   width: 250px;
   background: var(--card-color);
-  color: #fff;
+  color: var(--foreground-color);
   padding: 13px 16px 16px 16px;
   border-right: 1px solid #333;
   display: flex;
@@ -88,7 +105,7 @@ body {
   text-align: center;
   font-family: 'Science Gothic', sans-serif;
   font-weight: 500;
-  color: white;
+  color: var(--foreground-color);
   font-size: 24px;
 }
 
@@ -160,7 +177,7 @@ nav span.material-symbols-outlined {
 .profil-info .username {
   font-size: 16px;
   font-weight: bold;
-  color: #fff;
+  color: var(--foreground-color);
 }
 .profil-info .email {
   font-size: 12px;

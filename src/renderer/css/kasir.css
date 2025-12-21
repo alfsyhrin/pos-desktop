@@ -7,7 +7,7 @@ header.header-kasir {
 }
 
 header.header-kasir h2 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 30px;
 }
 
@@ -43,7 +43,7 @@ main {
 }
 
 .keranjang-belanja-kasir h2 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 20px;
   margin-bottom: 10px;
   font-weight: var(--weight-black);
@@ -71,7 +71,7 @@ main {
   justify-content: flex-start;
   align-items: center;
   /* border: 1px solid #fff; */
-  height: 50vh;
+  height: 55vh;
   width: 100%;
   padding-left: 16px;
   padding-right: 16px;
@@ -107,7 +107,7 @@ main {
 }
 
 .container-pembayaran {
-  background-color: #000;
+  background-color: var(--background-color);
   padding: 10px;
   width: 100%;
   border-bottom-left-radius: 15px;
@@ -118,7 +118,7 @@ main {
 .wrap-subtotal {
   display: flex;
   justify-content: space-between;
-  color: #fff;
+  color: var(--foreground-color);
   margin-bottom: 10px;
 }
 
@@ -135,7 +135,7 @@ main {
 .wrap-total {
   display: flex;
   justify-content: space-between;
-  color: #fff;
+  color: var(--foreground-color);
   margin-bottom: 10px;
 }
 
@@ -214,7 +214,7 @@ main {
 }
 
 .filter-produk-kasir button {
-  background-color: #000;
+  background-color: var(--background-color);
   color: var(--paragraph-color);
   font-weight: var(--weight-bold); 
   padding: 13px 15px;
@@ -227,7 +227,7 @@ main {
 .filter-produk-kasir button.active {
   background-color: #e4363638;
   border: 1px solid var(--primary-color);
-  color: #fff;
+  color: var(--foreground-color);
 }
 /* Akhir Filter Produk */
 
@@ -299,7 +299,7 @@ main {
 }
 
 .judul-stok-produk h3 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 16px;
   font-weight: var(--weight-bold);
 }

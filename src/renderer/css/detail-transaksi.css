@@ -25,7 +25,7 @@ body {
   font-family: 'Asap', sans-serif;
   background: var(--background-color);
   min-height: 100vh;
-  color: #fff;
+  color: var(--foreground-color);
 }
 
 header {
@@ -53,7 +53,7 @@ header {
 
 .back-button a {
   text-decoration: none;
-  color: #fff;
+  color: var(--foreground-color);
   font-weight: var(--weight-bold);
   margin-left: 5px;
   display: flex;
@@ -76,7 +76,7 @@ header {
 }
 
 header h3 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 28px;
   font-weight: var(--weight-black);
 }

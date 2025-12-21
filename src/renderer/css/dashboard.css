@@ -6,6 +6,7 @@
 }
 /* Akhir Container */
 
+
 /* Awal Header */
 header.header-dashboard {
   background-color: var(--card-color);
@@ -15,7 +16,7 @@ header.header-dashboard {
 }
 
 header.header-dashboard h2 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 30px;
 }
 
@@ -24,6 +25,29 @@ header.header-dashboard p {
   color: var(--paragraph-color);
 }
 /* Akhir Header */
+
+/* Awal Wrapper Theme */
+.wrapper-theme {
+  background-color: var(--card-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.wrapper-theme button {
+  flex: 1;
+  border-radius: 8px;
+  border: none;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+/* Akhir Wrapper Theme */
+
 
 /* Awal Card Langganan */
 .card-langganan-dashboard {
@@ -49,7 +73,7 @@ header.header-dashboard p {
 .judul-wrapper h3 {
   display: flex;
   font-size: 17px;
-  color: #fff;
+  color: var(--foreground-color);
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -105,7 +129,7 @@ header.header-dashboard p {
 .info-langganan-wrapper .info-langganan-subjudul {
   font-size: 14px;
   font-weight: var(--weight-bold);
-  color: #fff;
+  color: var(--foreground-color);
 }
 
 .info-langganan-wrapper .info-langganan-subjudul-hijau {
@@ -146,16 +170,17 @@ header.header-dashboard p {
 }
 
 .penjualan-info .penjualan-judul {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--paragraph-color);
   margin-bottom: 6px;
+  font-weight: var(--weight-bold);
   
 }
 
 .penjualan-info .penjualan-angka {
   font-size: 21px;
   font-weight: var(--weight-bold);
-  color: #fff;
+  color: var(--foreground-color);
   font-weight: var(--weight-black);
 }
 /* Akhir Card Penjualan */
