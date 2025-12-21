@@ -74,8 +74,14 @@ header.header-logaktivitas p {
 
 .waktu-log {
   color: var(--paragraph-color);
-  font-size: 12px;
+  
   text-align: right;
   width: 150px;
   font-weight: var(--weight-bold);
+  display: flex;
+  flex-direction: column;
+}
+
+.waktu-log p {
+  font-size: 12px;
 }
