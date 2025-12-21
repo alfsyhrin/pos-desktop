@@ -1,562 +1,623 @@
-// Data
-const produkTerlaris = [
-  { rank: 1, nama: "Kopi Susu Gula Aren", terjual: 156, pendapatan: 3120000 },
-  { rank: 2, nama: "Es Teh Manis", terjual: 142, pendapatan: 1420000 },
-  { rank: 3, nama: "Nasi Goreng Spesial", terjual: 98, pendapatan: 2450000 },
-  { rank: 4, nama: "Mie Ayam Bakso", terjual: 87, pendapatan: 1740000 },
-  { rank: 5, nama: "Ayam Geprek", terjual: 76, pendapatan: 1900000 },
-  { rank: 6, nama: "Es Jeruk", terjual: 68, pendapatan: 680000 },
-  { rank: 7, nama: "Cappuccino", terjual: 54, pendapatan: 1350000 },
-  { rank: 8, nama: "Americano", terjual: 48, pendapatan: 960000 },
-  { rank: 9, nama: "Croissant", terjual: 42, pendapatan: 840000 },
-  { rank: 10, nama: "Roti Bakar", terjual: 38, pendapatan: 570000 },
-];
+// ===== CURRENT FILTERS =====
+let currentFilters = {
+    keuangan: 'today',
+    produk: 'today',
+    karyawan: 'today'
+};
 
-const produkMenipis = [
-  { nama: "Kopi Arabika 250gr", stok: 5, minimum: 20 },
-  { nama: "Gula Aren 1kg", stok: 8, minimum: 25 },
-  { nama: "Susu Full Cream 1L", stok: 12, minimum: 30 },
-  { nama: "Roti Tawar", stok: 3, minimum: 15 },
-  { nama: "Telur Ayam", stok: 10, minimum: 50 },
-];
-
-const performaKaryawan = [
-  { nama: "Budi Santoso", transaksi: 89, pendapatan: 4450000, rating: 4.8 },
-  { nama: "Siti Rahayu", transaksi: 76, pendapatan: 3800000, rating: 4.6 },
-  { nama: "Ahmad Yusuf", transaksi: 65, pendapatan: 3250000, rating: 4.5 },
-  { nama: "Dewi Lestari", transaksi: 58, pendapatan: 2900000, rating: 4.4 },
-  { nama: "Eko Prasetyo", transaksi: 45, pendapatan: 2250000, rating: 4.2 },
-];
-
-const penjualanKaryawan = [
-  { nama: "Budi Santoso", transaksi: 89, pendapatan: 4450000 },
-  { nama: "Siti Rahayu", transaksi: 76, pendapatan: 3800000 },
-  { nama: "Ahmad Yusuf", transaksi: 65, pendapatan: 3250000 },
-  { nama: "Dewi Lestari", transaksi: 58, pendapatan: 2900000 },
-  { nama: "Eko Prasetyo", transaksi: 45, pendapatan: 2250000 },
-  { nama: "Rina Wijaya", transaksi: 38, pendapatan: 1900000 },
-  { nama: "Joko Susilo", transaksi: 32, pendapatan: 1600000 },
-  { nama: "Maya Sari", transaksi: 28, pendapatan: 1400000 },
-];
-
-// Format Currency
-function formatCurrency(value) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(value);
+// ===== FILTER FUNCTIONALITY =====
+function setFilter(tab, filter, btn) {
+    currentFilters[tab] = filter;
+    
+    const filterSection = btn.parentElement;
+    filterSection.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    console.log(`Filter ${tab} set to ${filter}`);
 }
 
-// Get Initials
-function getInitials(name) {
-  return name.split(' ').map(n => n[0]).join('');
-}
-
-// Tab Navigation + Hash Routes (laporan.html#dashboard, dst)
-    const TAB_IDS = ['keuangan', 'dashboard', 'produk', 'karyawan'];
-
-    function normalizeTabId(tabId) {
-      return TAB_IDS.includes(tabId) ? tabId : 'keuangan';
-    }
-
-    function getTabFromHash() {
-      const raw = (window.location.hash || '#keuangan').replace('#', '').trim();
-      return normalizeTabId(raw);
-    }
-
-    function setActiveTab(tabId) {
-      const activeId = normalizeTabId(tabId);
-
-      document.querySelectorAll('.tab-btn').forEach((b) => {
-        const isActive = b.getAttribute('data-tab') === activeId;
-        b.classList.toggle('active', isActive);
-        if (isActive) b.setAttribute('aria-current', 'page');
-        else b.removeAttribute('aria-current');
-      });
-
-      document.querySelectorAll('.tab-content').forEach((c) => {
-        c.classList.toggle('active', c.id === activeId);
-      });
-
-      if (activeId === 'dashboard') {
-        // Wait a tick so canvas size is correct when section just became visible
-        setTimeout(initCharts, 50);
-      }
-    }
-
-    function initTabNavigation() {
-      document.querySelectorAll('.tab-btn').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          // Use hash as the "route" so it works on any website hosting this file
-          e.preventDefault();
-          const tabId = normalizeTabId(btn.getAttribute('data-tab') || 'keuangan');
-
-          if (window.location.hash !== `#${tabId}`) {
-            window.location.hash = tabId;
-          } else {
-            // If hash doesn't change, still update UI
-            setActiveTab(tabId);
-          }
-        });
-      });
-
-      // Initial route
-      const initialTab = getTabFromHash();
-      if (!window.location.hash) {
-        // Ensure a stable default URL for deep-linking
-        history.replaceState(null, '', `#${initialTab}`);
-      }
-      setActiveTab(initialTab);
-
-      // Listen for manual hash changes / back-forward
-      window.addEventListener('hashchange', () => {
-        setActiveTab(getTabFromHash());
-        });
-    }
-
-
-// Filter Buttons - wrapped in function
-function initFilterButtons() {
-  document.querySelectorAll('.filter-buttons').forEach(group => {
-    group.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-      });
+// ===== TAB FUNCTIONALITY =====
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
     });
-  });
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    document.getElementById('tab-' + tabName).classList.add('active');
+    event.target.closest('.tab-btn').classList.add('active');
+    
+    if (tabName === 'dashboard') {
+        setTimeout(initDashboardCharts, 100);
+    }
 }
 
-// Render Product Lists
-function renderProdukTerlaris() {
-  const container = document.getElementById('produkTerlarisList');
-  container.innerHTML = produkTerlaris.map(p => `
-    <div class="list-item">
-      <div class="list-item-left">
-        <div class="rank-badge ${p.rank <= 3 ? 'top' : ''}">${p.rank}</div>
-        <div class="list-item-info">
-          <h4>${p.nama}</h4>
-          <p>${p.terjual} terjual</p>
-        </div>
-      </div>
-      <span class="list-item-value">${formatCurrency(p.pendapatan)}</span>
-    </div>
-  `).join('');
+// ===== DATA =====
+const topProductsData = [
+    { name: 'iPhone 15 Pro Max', category: 'Elektronik', sales: 245, revenue: 367500000 },
+    { name: 'Samsung Galaxy S24', category: 'Elektronik', sales: 198, revenue: 237600000 },
+    { name: 'MacBook Pro M3', category: 'Komputer', sales: 156, revenue: 390000000 },
+    { name: 'iPad Pro 12.9"', category: 'Tablet', sales: 134, revenue: 187600000 },
+    { name: 'AirPods Pro 2', category: 'Aksesoris', sales: 287, revenue: 86100000 },
+    { name: 'Sony WH-1000XM5', category: 'Audio', sales: 112, revenue: 44800000 },
+    { name: 'Nintendo Switch OLED', category: 'Gaming', sales: 98, revenue: 49000000 },
+    { name: 'Apple Watch Ultra 2', category: 'Wearable', sales: 89, revenue: 106800000 },
+    { name: 'Canon EOS R6 Mark II', category: 'Kamera', sales: 45, revenue: 135000000 },
+    { name: 'DJI Mini 4 Pro', category: 'Drone', sales: 67, revenue: 80400000 }
+];
+
+const lowStockData = [
+    { name: 'Samsung Galaxy S24 Ultra', stock: 3, minStock: 10, status: 'critical' },
+    { name: 'AirPods Max', stock: 5, minStock: 15, status: 'warning' },
+    { name: 'Sony Alpha A7 IV', stock: 2, minStock: 8, status: 'critical' },
+    { name: 'Bose QC Ultra', stock: 7, minStock: 12, status: 'warning' },
+    { name: 'GoPro Hero 12', stock: 4, minStock: 10, status: 'warning' },
+    { name: 'Kindle Paperwhite', stock: 6, minStock: 15, status: 'warning' },
+    { name: 'Logitech MX Master 3S', stock: 8, minStock: 20, status: 'warning' },
+    { name: 'Apple Pencil Pro', stock: 1, minStock: 10, status: 'critical' }
+];
+
+const employeePerformanceData = [
+    { name: 'Ahmad Rizki', position: 'Sales Manager', performance: 98, sales: 125, target: 100 },
+    { name: 'Siti Nurhaliza', position: 'Senior Sales', performance: 95, sales: 112, target: 100 },
+    { name: 'Budi Santoso', position: 'Sales Executive', performance: 88, sales: 95, target: 100 },
+    { name: 'Dewi Kartika', position: 'Sales Executive', performance: 92, sales: 108, target: 100 },
+    { name: 'Rudi Hermawan', position: 'Junior Sales', performance: 78, sales: 72, target: 100 },
+    { name: 'Eka Putri', position: 'Sales Executive', performance: 85, sales: 89, target: 100 }
+];
+
+const topSellersData = [
+    { name: 'Ahmad Rizki', position: 'Sales Manager', totalSales: 18500000, transactions: 125 },
+    { name: 'Siti Nurhaliza', position: 'Senior Sales', totalSales: 15200000, transactions: 112 },
+    { name: 'Dewi Kartika', position: 'Sales Executive', totalSales: 12800000, transactions: 108 },
+    { name: 'Budi Santoso', position: 'Sales Executive', totalSales: 11500000, transactions: 95 },
+    { name: 'Eka Putri', position: 'Sales Executive', totalSales: 9800000, transactions: 89 },
+    { name: 'Rudi Hermawan', position: 'Junior Sales', totalSales: 7200000, transactions: 72 }
+];
+
+// ===== RENDER FUNCTIONS =====
+function renderTopProducts() {
+    const container = document.getElementById('top-products');
+    container.innerHTML = topProductsData.map((product, index) => {
+        let rankClass = 'normal';
+        if (index === 0) rankClass = 'gold';
+        else if (index === 1) rankClass = 'silver';
+        else if (index === 2) rankClass = 'bronze';
+        
+        return `
+            <div class="product-item">
+                <div class="product-rank ${rankClass}">${index + 1}</div>
+                <div class="product-info">
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-category">${product.category}</div>
+                </div>
+                <div class="product-stats">
+                    <div class="product-value">${formatCurrency(product.revenue)}</div>
+                    <div class="product-qty">${product.sales} terjual</div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
-function renderProdukMenipis() {
-  const container = document.getElementById('produkMenipisList');
-  container.innerHTML = produkMenipis.map(p => `
-    <div class="list-item">
-      <div class="list-item-left">
-        <span class="material-symbols-outlined" style="color: var(--primary-color);">inventory</span>
-        <div class="list-item-info">
-          <h4>${p.nama}</h4>
-          <p>Min. stok: ${p.minimum}</p>
+function renderLowStockProducts() {
+    const container = document.getElementById('low-stock-products');
+    container.innerHTML = lowStockData.map(product => `
+        <div class="low-stock-item ${product.status === 'critical' ? 'critical' : ''}">
+            <div class="stock-icon">
+                <span class="material-symbols-outlined">inventory</span>
+            </div>
+            <div class="stock-info">
+                <div class="stock-name">${product.name}</div>
+                <div class="stock-qty">Stok: ${product.stock} / Min: ${product.minStock}</div>
+            </div>
+            <span class="stock-badge ${product.status}">${product.status === 'critical' ? 'Kritis' : 'Menipis'}</span>
         </div>
-      </div>
-      <div style="text-align: right;">
-        <span class="list-item-value red">${p.stok}</span>
-        <p style="font-size: 0.75rem; color: var(--paragraph-color);">tersisa</p>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
 }
 
-function renderPerformaKaryawan() {
-  const container = document.getElementById('performaKaryawanList');
-  container.innerHTML = performaKaryawan.map(k => `
-    <div class="performance-card">
-      <div class="performance-header">
-        <div class="performance-left">
-          <div class="avatar">${getInitials(k.nama)}</div>
-          <div class="list-item-info">
-            <h4>${k.nama}</h4>
-            <p>${k.transaksi} transaksi</p>
-          </div>
-        </div>
-        <div class="rating">
-          <span class="material-symbols-outlined">star</span>
-          <span>${k.rating}</span>
-        </div>
-      </div>
-      <div class="performance-footer">
-        <span style="font-size: 0.875rem; color: var(--paragraph-color);">Total Pendapatan</span>
-        <span class="list-item-value">${formatCurrency(k.pendapatan)}</span>
-      </div>
-    </div>
-  `).join('');
+function renderEmployeePerformance() {
+    const container = document.getElementById('employee-performance');
+    container.innerHTML = employeePerformanceData.map(emp => {
+        let perfClass = 'average';
+        if (emp.performance >= 95) perfClass = 'excellent';
+        else if (emp.performance >= 85) perfClass = 'good';
+        else if (emp.performance < 75) perfClass = 'poor';
+        
+        return `
+            <div class="employee-item">
+                <div class="employee-avatar">${emp.name.charAt(0)}</div>
+                <div class="employee-info">
+                    <div class="employee-name">${emp.name}</div>
+                    <div class="employee-position">${emp.position}</div>
+                </div>
+                <div class="employee-stats">
+                    <div class="employee-stat">
+                        <div class="employee-stat-value">${emp.performance}%</div>
+                        <div class="employee-stat-label">Performa</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="performance-bar">
+                        <div class="performance-fill ${perfClass}" style="width: ${emp.performance}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
-function renderPenjualanKaryawan() {
-  const container = document.getElementById('penjualanKaryawanList');
-  container.innerHTML = penjualanKaryawan.map((k, i) => `
-    <div class="list-item">
-      <div class="list-item-left">
-        <div class="rank-badge ${i < 3 ? 'top' : ''}">${i + 1}</div>
-        <div class="avatar green">${getInitials(k.nama)}</div>
-        <div class="list-item-info">
-          <h4>${k.nama}</h4>
-          <p>${k.transaksi} transaksi</p>
-        </div>
-      </div>
-      <span class="list-item-value">${formatCurrency(k.pendapatan)}</span>
-    </div>
-  `).join('');
+function renderTopSellers() {
+    const container = document.getElementById('top-sellers');
+    container.innerHTML = topSellersData.map((emp, index) => {
+        let rankClass = 'normal';
+        if (index === 0) rankClass = 'gold';
+        else if (index === 1) rankClass = 'silver';
+        else if (index === 2) rankClass = 'bronze';
+        
+        return `
+            <div class="employee-item">
+                <div class="product-rank ${rankClass}">${index + 1}</div>
+                <div class="employee-info">
+                    <div class="employee-name">${emp.name}</div>
+                    <div class="employee-position">${emp.position}</div>
+                </div>
+                <div class="employee-stats">
+                    <div class="employee-stat">
+                        <div class="employee-stat-value">${formatCurrency(emp.totalSales)}</div>
+                        <div class="employee-stat-label">${emp.transactions} transaksi</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
-// Initialize Charts
+// ===== CHART INITIALIZATION =====
 let charts = {};
 
-function initCharts() {
-  const chartConfig = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false }
-    },
-    scales: {
-      x: {
-        grid: { color: '#3a2a2a' },
-        ticks: { color: '#818386' }
-      },
-      y: {
-        grid: { color: '#3a2a2a' },
-        ticks: { color: '#818386' }
-      }
+function initDashboardCharts() {
+    Object.keys(charts).forEach(key => {
+        if (charts[key]) charts[key].destroy();
+    });
+
+    const labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    
+    Chart.defaults.color = '#818386';
+    Chart.defaults.borderColor = '#2a2a2a';
+
+    // Donut Chart
+    const ctxDonut = document.getElementById('chartDonut').getContext('2d');
+    charts.donut = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+            labels: ['Masuk', 'Keluar'],
+            datasets: [{
+                data: [45000000, 20000000],
+                backgroundColor: ['#328E6E', '#E43636'],
+                borderColor: '#1a1a1a',
+                borderWidth: 3,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1a1a1a',
+                    titleColor: '#f2f2f2',
+                    bodyColor: '#f2f2f2',
+                    borderColor: '#2a2a2a',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + formatCurrency(context.raw);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Kas Keluar Chart
+    const ctxKasKeluar = document.getElementById('chartKasKeluar').getContext('2d');
+    charts.kasKeluar = new Chart(ctxKasKeluar, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Kas Keluar',
+                data: [2500000, 3200000, 2800000, 3500000, 3000000, 2200000, 2800000],
+                borderColor: '#E43636',
+                backgroundColor: 'rgba(228, 54, 54, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            }]
+        },
+        options: getChartOptions()
+    });
+
+    // Saldo Chart
+    const ctxSaldo = document.getElementById('chartSaldo').getContext('2d');
+    charts.saldo = new Chart(ctxSaldo, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Saldo',
+                data: [25000000, 30000000, 35000000, 38000000, 42000000, 45000000, 47000000],
+                borderColor: '#328E6E',
+                backgroundColor: 'rgba(50, 142, 110, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            }]
+        },
+        options: getChartOptions()
+    });
+
+    // Kas Masuk Chart
+    const ctxKasMasuk = document.getElementById('chartKasMasuk').getContext('2d');
+    charts.kasMasuk = new Chart(ctxKasMasuk, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Kas Masuk',
+                data: [5000000, 6000000, 7500000, 8000000, 9000000, 10000000, 9500000],
+                borderColor: '#328E6E',
+                backgroundColor: 'rgba(50, 142, 110, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            }]
+        },
+        options: getChartOptions()
+    });
+
+    // Penjualan Tertinggi Chart
+    const ctxTertinggi = document.getElementById('chartTertinggi').getContext('2d');
+    charts.tertinggi = new Chart(ctxTertinggi, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Tertinggi',
+                data: [800000, 1200000, 1500000, 1400000, 1800000, 2100000, 1900000],
+                borderColor: '#328E6E',
+                backgroundColor: 'rgba(50, 142, 110, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            }]
+        },
+        options: getChartOptions()
+    });
+
+    // Penjualan Terendah Chart
+    const ctxTerendah = document.getElementById('chartTerendah').getContext('2d');
+    charts.terendah = new Chart(ctxTerendah, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Terendah',
+                data: [25000, 32000, 28000, 18000, 22000, 35000, 15000],
+                borderColor: '#E43636',
+                backgroundColor: 'rgba(228, 54, 54, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            }]
+        },
+        options: getChartOptions()
+    });
+
+    // Rata-rata Harian Chart
+    const ctxRataHarian = document.getElementById('chartRataHarian').getContext('2d');
+    charts.rataHarian = new Chart(ctxRataHarian, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Rata-rata',
+                data: [350000, 420000, 480000, 510000, 550000, 680000, 510000],
+                borderColor: '#328E6E',
+                backgroundColor: 'rgba(50, 142, 110, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            }]
+        },
+        options: getChartOptions()
+    });
+}
+
+function getChartOptions() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#1a1a1a',
+                titleColor: '#f2f2f2',
+                bodyColor: '#f2f2f2',
+                borderColor: '#2a2a2a',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 10,
+                callbacks: {
+                    label: function(context) {
+                        return formatCurrency(context.raw);
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                ticks: { 
+                    color: '#818386', 
+                    font: { family: 'Asap', size: 10 } 
+                }
+            },
+            y: {
+                grid: { color: '#2a2a2a', drawBorder: false },
+                ticks: {
+                    color: '#818386',
+                    font: { family: 'Asap', size: 10 },
+                    callback: function(value) {
+                        if (value >= 1000000) {
+                            return (value / 1000000).toFixed(1) + '.000.000';
+                        } else if (value >= 1000) {
+                            return (value / 1000).toFixed(0) + '.000';
+                        }
+                        return value;
+                    }
+                }
+            }
+        }
+    };
+}
+
+// ===== EXPORT FUNCTIONS =====
+async function exportPDF(tabName) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const titles = {
+        keuangan: 'Laporan Keuangan',
+        dashboard: 'Dashboard',
+        produk: 'Laporan Produk',
+        karyawan: 'Laporan Karyawan'
+    };
+
+    doc.setFontSize(20);
+    doc.setTextColor(228, 54, 54);
+    doc.text(titles[tabName], 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(129, 131, 134);
+    doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 30);
+    
+    let startY = 40;
+
+    if (tabName === 'keuangan') {
+        doc.setFontSize(14);
+        doc.setTextColor(30, 41, 59);
+        doc.text('Ringkasan Keuangan', 14, startY);
+        
+        doc.autoTable({
+            startY: startY + 5,
+            head: [['Keterangan', 'Jumlah']],
+            body: [
+                ['Total Pembayaran', 'Rp 15.750.000'],
+                ['Banyak Transaksi', '234'],
+                ['Margin', '32.5%'],
+                ['Total Pendapatan', 'Rp 18.500.000'],
+                ['Diskon', 'Rp 850.000'],
+                ['Pendapatan Bersih', 'Rp 17.650.000'],
+                ['Modal/HPP', 'Rp 11.850.000'],
+                ['Laba Kotor', 'Rp 5.800.000'],
+                ['Laba Bersih', 'Rp 4.250.000'],
+                ['Rata-rata Transaksi', 'Rp 67.308']
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [228, 54, 54] }
+        });
+    } else if (tabName === 'produk') {
+        doc.setFontSize(14);
+        doc.text('Ringkasan Produk', 14, startY);
+        
+        doc.autoTable({
+            startY: startY + 5,
+            head: [['Keterangan', 'Jumlah']],
+            body: [
+                ['Total Produk', '1,247'],
+                ['Total Produk Terjual', '3,856'],
+                ['Stok Menipis', '23'],
+                ['Stok Habis', '8']
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [228, 54, 54] }
+        });
+
+        doc.text('10 Produk Teratas', 14, doc.lastAutoTable.finalY + 15);
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 20,
+            head: [['Rank', 'Nama Produk', 'Kategori', 'Terjual', 'Pendapatan']],
+            body: topProductsData.map((p, i) => [
+                i + 1, p.name, p.category, p.sales, formatCurrency(p.revenue)
+            ]),
+            theme: 'grid',
+            headStyles: { fillColor: [228, 54, 54] }
+        });
+    } else if (tabName === 'karyawan') {
+        doc.setFontSize(14);
+        doc.text('Ringkasan Karyawan', 14, startY);
+        
+        doc.autoTable({
+            startY: startY + 5,
+            head: [['Keterangan', 'Jumlah']],
+            body: [
+                ['Total Karyawan', '48'],
+                ['Rata-rata Performa', '89.2%'],
+                ['Total Penjualan', 'Rp 85.200.000'],
+                ['Kehadiran', '98.5%']
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [228, 54, 54] }
+        });
+
+        doc.text('Performa Karyawan', 14, doc.lastAutoTable.finalY + 15);
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 20,
+            head: [['Nama', 'Posisi', 'Performa', 'Target']],
+            body: employeePerformanceData.map(e => [
+                e.name, e.position, e.performance + '%', e.target + '%'
+            ]),
+            theme: 'grid',
+            headStyles: { fillColor: [228, 54, 54] }
+        });
+    } else if (tabName === 'dashboard') {
+        doc.setFontSize(12);
+        doc.text('Ringkasan Dashboard', 14, startY);
+        
+        doc.autoTable({
+            startY: startY + 5,
+            head: [['Keterangan', 'Jumlah']],
+            body: [
+                ['Total Transaksi', '1,234'],
+                ['Total Kas Masuk', 'Rp 45.000.000'],
+                ['Total Kas Keluar', 'Rp 20.000.000'],
+                ['Saldo', 'Rp 47.000.000']
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [228, 54, 54] }
+        });
     }
-  };
 
-  const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    doc.save(`${titles[tabName]}_${new Date().toISOString().split('T')[0]}.pdf`);
+}
 
-  // Destroy existing charts
-  Object.values(charts).forEach(chart => chart && chart.destroy());
+function exportExcel(tabName) {
+    const titles = {
+        keuangan: 'Laporan Keuangan',
+        dashboard: 'Dashboard',
+        produk: 'Laporan Produk',
+        karyawan: 'Laporan Karyawan'
+    };
 
-  // Kas Keluar
-  charts.kasKeluar = new Chart(document.getElementById('kasKeluarChart'), {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: [{
-        data: [2500000, 1800000, 3200000, 2100000, 2800000, 4500000, 3100000],
-        borderColor: '#E43636',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0
-      }]
-    },
-    options: chartConfig
-  });
+    let data = [];
+    let sheetName = titles[tabName];
 
-  // Pie Chart
-  charts.pie = new Chart(document.getElementById('pieChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Kas Masuk', 'Kas Keluar'],
-      datasets: [{
-        data: [45000000, 20000000],
-        backgroundColor: ['#328E6E', '#E43636'],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      cutout: '50%'
+    if (tabName === 'keuangan') {
+        data = [
+            ['Laporan Keuangan'],
+            ['Tanggal Export:', new Date().toLocaleDateString('id-ID')],
+            [],
+            ['Ringkasan'],
+            ['Keterangan', 'Jumlah'],
+            ['Total Pembayaran', 15750000],
+            ['Banyak Transaksi', 234],
+            ['Margin (%)', 32.5],
+            ['Total Pendapatan', 18500000],
+            ['Diskon', 850000],
+            ['Pendapatan Bersih', 17650000],
+            ['Modal/HPP', 11850000],
+            ['Laba Kotor', 5800000],
+            ['Laba Bersih', 4250000],
+            ['Rata-rata Transaksi', 67308]
+        ];
+    } else if (tabName === 'produk') {
+        data = [
+            ['Laporan Produk'],
+            ['Tanggal Export:', new Date().toLocaleDateString('id-ID')],
+            [],
+            ['Ringkasan'],
+            ['Keterangan', 'Jumlah'],
+            ['Total Produk', 1247],
+            ['Total Produk Terjual', 3856],
+            ['Stok Menipis', 23],
+            ['Stok Habis', 8],
+            [],
+            ['10 Produk Teratas'],
+            ['Rank', 'Nama Produk', 'Kategori', 'Terjual', 'Pendapatan'],
+            ...topProductsData.map((p, i) => [i + 1, p.name, p.category, p.sales, p.revenue])
+        ];
+    } else if (tabName === 'karyawan') {
+        data = [
+            ['Laporan Karyawan'],
+            ['Tanggal Export:', new Date().toLocaleDateString('id-ID')],
+            [],
+            ['Ringkasan'],
+            ['Keterangan', 'Jumlah'],
+            ['Total Karyawan', 48],
+            ['Rata-rata Performa (%)', 89.2],
+            ['Total Penjualan', 85200000],
+            ['Kehadiran (%)', 98.5],
+            [],
+            ['Performa Karyawan'],
+            ['Nama', 'Posisi', 'Performa (%)', 'Sales', 'Target'],
+            ...employeePerformanceData.map(e => [e.name, e.position, e.performance, e.sales, e.target])
+        ];
+    } else if (tabName === 'dashboard') {
+        data = [
+            ['Dashboard'],
+            ['Tanggal Export:', new Date().toLocaleDateString('id-ID')],
+            [],
+            ['Ringkasan'],
+            ['Keterangan', 'Jumlah'],
+            ['Total Transaksi', 1234],
+            ['Total Kas Masuk', 45000000],
+            ['Total Kas Keluar', 20000000],
+            ['Saldo', 47000000]
+        ];
     }
-  });
 
-  // Saldo
-  charts.saldo = new Chart(document.getElementById('saldoChart'), {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: [{
-        data: [25000000, 28000000, 31000000, 34000000, 39000000, 44000000, 47000000],
-        borderColor: '#328E6E',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0
-      }]
-    },
-    options: chartConfig
-  });
-
-  // Kas Masuk
-  charts.kasMasuk = new Chart(document.getElementById('kasMasukChart'), {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: [{
-        data: [5500000, 4800000, 6200000, 5100000, 7800000, 9500000, 6100000],
-        borderColor: '#328E6E',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0
-      }]
-    },
-    options: chartConfig
-  });
-
-  // Penjualan Tertinggi
-  charts.tertinggi = new Chart(document.getElementById('penjualanTertinggiChart'), {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: [{
-        data: [1250000, 980000, 1450000, 1120000, 1680000, 2100000, 1350000],
-        borderColor: '#328E6E',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0
-      }]
-    },
-    options: chartConfig
-  });
-
-  // Penjualan Terendah
-  charts.terendah = new Chart(document.getElementById('penjualanTerendahChart'), {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: [{
-        data: [25000, 18000, 32000, 21000, 15000, 45000, 28000],
-        borderColor: '#E43636',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0
-      }]
-    },
-    options: chartConfig
-  });
-
-  // Rata-rata
-  charts.rataRata = new Chart(document.getElementById('rataRataChart'), {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: [{
-        data: [450000, 380000, 520000, 410000, 580000, 750000, 510000],
-        borderColor: '#E43636',
-        borderWidth: 2,
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0
-      }]
-    },
-    options: chartConfig
-  });
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, `${titles[tabName]}_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
-// Export Functions
-function exportKeuanganPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  doc.setFontSize(18);
-  doc.setTextColor(228, 54, 54);
-  doc.text('Laporan Keuangan - PIPOS', 14, 20);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(129, 131, 134);
-  doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 28);
-  
-  doc.autoTable({
-    startY: 35,
-    head: [['Kategori', 'Nilai', 'Keterangan']],
-    body: [
-      ['Total Pendapatan', 'Rp 18.500.000', '245 transaksi'],
-      ['Diskon', 'Rp 850.000', 'Total diskon'],
-      ['Pendapatan Bersih', 'Rp 17.650.000', 'Setelah diskon'],
-      ['Modal / HPP', 'Rp 11.850.000', 'Estimasi biaya'],
-      ['Laba Kotor', 'Rp 5.800.000', 'Pendapatan - Modal'],
-      ['Laba Bersih', 'Rp 4.250.000', 'Margin 24.1%'],
-      ['Rata-rata Transaksi', 'Rp 67.308', 'Per transaksi']
-    ],
-    headStyles: { fillColor: [228, 54, 54] },
-    theme: 'grid'
-  });
-  
-  doc.save('laporan-keuangan.pdf');
+// ===== UTILITIES =====
+function formatCurrency(value) {
+    if (value >= 1000000000) {
+        return 'Rp ' + (value / 1000000000).toFixed(1) + ' M';
+    } else if (value >= 1000000) {
+        return 'Rp ' + (value / 1000000).toFixed(1) + ' Jt';
+    } else if (value >= 1000) {
+        return 'Rp ' + (value / 1000).toFixed(0) + ' Rb';
+    }
+    return 'Rp ' + value.toLocaleString('id-ID');
 }
 
-function exportKeuanganExcel() {
-  const data = [
-    ['Laporan Keuangan - PIPOS'],
-    ['Tanggal: ' + new Date().toLocaleDateString('id-ID')],
-    [],
-    ['Kategori', 'Nilai', 'Keterangan'],
-    ['Total Pendapatan', 'Rp 18.500.000', '245 transaksi'],
-    ['Diskon', 'Rp 850.000', 'Total diskon'],
-    ['Pendapatan Bersih', 'Rp 17.650.000', 'Setelah diskon'],
-    ['Modal / HPP', 'Rp 11.850.000', 'Estimasi biaya'],
-    ['Laba Kotor', 'Rp 5.800.000', 'Pendapatan - Modal'],
-    ['Laba Bersih', 'Rp 4.250.000', 'Margin 24.1%'],
-    ['Rata-rata Transaksi', 'Rp 67.308', 'Per transaksi']
-  ];
-  
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
-  XLSX.writeFile(wb, 'laporan-keuangan.xlsx');
-}
-
-function exportDashboardPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  doc.setFontSize(18);
-  doc.setTextColor(228, 54, 54);
-  doc.text('Dashboard - PIPOS', 14, 20);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(129, 131, 134);
-  doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 28);
-  
-  doc.autoTable({
-    startY: 35,
-    head: [['Hari', 'Kas Masuk', 'Kas Keluar', 'Saldo']],
-    body: [
-      ['Senin', 'Rp 5.500.000', 'Rp 2.500.000', 'Rp 25.000.000'],
-      ['Selasa', 'Rp 4.800.000', 'Rp 1.800.000', 'Rp 28.000.000'],
-      ['Rabu', 'Rp 6.200.000', 'Rp 3.200.000', 'Rp 31.000.000'],
-      ['Kamis', 'Rp 5.100.000', 'Rp 2.100.000', 'Rp 34.000.000'],
-      ['Jumat', 'Rp 7.800.000', 'Rp 2.800.000', 'Rp 39.000.000'],
-      ['Sabtu', 'Rp 9.500.000', 'Rp 4.500.000', 'Rp 44.000.000'],
-      ['Minggu', 'Rp 6.100.000', 'Rp 3.100.000', 'Rp 47.000.000']
-    ],
-    headStyles: { fillColor: [228, 54, 54] },
-    theme: 'grid'
-  });
-  
-  doc.save('dashboard.pdf');
-}
-
-function exportDashboardExcel() {
-  const data = [
-    ['Dashboard - PIPOS'],
-    ['Tanggal: ' + new Date().toLocaleDateString('id-ID')],
-    [],
-    ['Hari', 'Kas Masuk', 'Kas Keluar', 'Saldo'],
-    ['Senin', 5500000, 2500000, 25000000],
-    ['Selasa', 4800000, 1800000, 28000000],
-    ['Rabu', 6200000, 3200000, 31000000],
-    ['Kamis', 5100000, 2100000, 34000000],
-    ['Jumat', 7800000, 2800000, 39000000],
-    ['Sabtu', 9500000, 4500000, 44000000],
-    ['Minggu', 6100000, 3100000, 47000000]
-  ];
-  
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Dashboard');
-  XLSX.writeFile(wb, 'dashboard.xlsx');
-}
-
-function exportProdukPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  doc.setFontSize(18);
-  doc.setTextColor(228, 54, 54);
-  doc.text('Laporan Produk - PIPOS', 14, 20);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(129, 131, 134);
-  doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 28);
-  
-  doc.autoTable({
-    startY: 35,
-    head: [['Rank', 'Nama Produk', 'Terjual', 'Pendapatan']],
-    body: produkTerlaris.map(p => [p.rank, p.nama, p.terjual, formatCurrency(p.pendapatan)]),
-    headStyles: { fillColor: [228, 54, 54] },
-    theme: 'grid'
-  });
-  
-  doc.save('laporan-produk.pdf');
-}
-
-function exportProdukExcel() {
-  const data = [
-    ['Laporan Produk - PIPOS'],
-    ['Tanggal: ' + new Date().toLocaleDateString('id-ID')],
-    [],
-    ['Rank', 'Nama Produk', 'Terjual', 'Pendapatan'],
-    ...produkTerlaris.map(p => [p.rank, p.nama, p.terjual, p.pendapatan])
-  ];
-  
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Produk');
-  XLSX.writeFile(wb, 'laporan-produk.xlsx');
-}
-
-function exportKaryawanPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  doc.setFontSize(18);
-  doc.setTextColor(228, 54, 54);
-  doc.text('Laporan Karyawan - PIPOS', 14, 20);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(129, 131, 134);
-  doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 28);
-  
-  doc.autoTable({
-    startY: 35,
-    head: [['Rank', 'Nama', 'Transaksi', 'Pendapatan', 'Rating']],
-    body: penjualanKaryawan.map((k, i) => [
-      i + 1,
-      k.nama,
-      k.transaksi,
-      formatCurrency(k.pendapatan),
-      performaKaryawan.find(p => p.nama === k.nama)?.rating || '-'
-    ]),
-    headStyles: { fillColor: [228, 54, 54] },
-    theme: 'grid'
-  });
-  
-  doc.save('laporan-karyawan.pdf');
-}
-
-function exportKaryawanExcel() {
-  const data = [
-    ['Laporan Karyawan - PIPOS'],
-    ['Tanggal: ' + new Date().toLocaleDateString('id-ID')],
-    [],
-    ['Rank', 'Nama', 'Transaksi', 'Pendapatan', 'Rating'],
-    ...penjualanKaryawan.map((k, i) => [
-      i + 1,
-      k.nama,
-      k.transaksi,
-      k.pendapatan,
-      performaKaryawan.find(p => p.nama === k.nama)?.rating || '-'
-    ])
-  ];
-  
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Karyawan');
-  XLSX.writeFile(wb, 'laporan-karyawan.xlsx');
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  // Initialize tab navigation first
-  initTabNavigation();
-  initFilterButtons();
-  
-  // Then render lists
-  renderProdukTerlaris();
-  renderProdukMenipis();
-  renderPerformaKaryawan();
-  renderPenjualanKaryawan();
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    renderTopProducts();
+    renderLowStockProducts();
+    renderEmployeePerformance();
+    renderTopSellers();
 });

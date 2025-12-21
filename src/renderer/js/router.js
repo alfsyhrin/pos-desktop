@@ -97,3 +97,5 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastPage = getLastPage();
   loadPage(lastPage);
 });
+
+
