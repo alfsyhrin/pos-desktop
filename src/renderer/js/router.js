@@ -126,16 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPage(lastPage);
 });
 
-<<<<<<< HEAD
 window.addEventListener('hashchange', () => {
   const page = location.hash.replace('#', '') || 'dashboard';
   loadPage(page);
 });
 
 window.loadPage = loadPage;
-<<<<<<< HEAD
-=======
-
->>>>>>> 0882782a99b5ceb1a65bebe47cd98d417550e41e
-=======
->>>>>>> main
