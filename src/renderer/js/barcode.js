@@ -50,10 +50,6 @@
       
       // Generate preview barcode
       generateBarcodeFromValue(barcode);
-        // --- NEW: inform global handler (produk page) ---
-  if (window.onBarcodeScanned && typeof window.onBarcodeScanned === 'function') {
-    try { window.onBarcodeScanned(barcode); } catch (e) { console.error('onBarcodeScanned handler error', e); }
-  }
     }
 
     function focusScannerInput() {
@@ -70,6 +66,33 @@
     // BARCODE GENERATION
     // ==========================================
     
+// Defensive helpers + ensure UI
+function safeGet(id) { return document.getElementById(id) || null; }
+
+function ensureToastContainer() {
+  let t = safeGet('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.position = 'fixed';
+    t.style.right = '16px';
+    t.style.bottom = '16px';
+    t.style.zIndex = '99999';
+    document.body.appendChild(t);
+  }
+  return t;
+}
+function showToast(msg, type = 'info') {
+  const toast = ensureToastContainer();
+  toast.textContent = msg;
+  toast.className = 'toast ' + type + ' show';
+  if (toast._hideTimeout) clearTimeout(toast._hideTimeout);
+  toast._hideTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Safe DOM operations wrappers used later
+function setInputValue(id, val) { const el = safeGet(id); if (el) el.value = val; }
+
     function handleTypeChange() {
       const type = document.getElementById('barcode-type').value;
       const input = document.getElementById('barcode-value');

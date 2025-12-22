@@ -3,10 +3,21 @@
   <p>Kasir</p>
 </header>
 <main>
+  <!-- Modal pemilihan toko untuk owner -->
+<div id="store-selector-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:9999;">
+  <div style="background:#1f1414; padding:20px; border-radius:8px; width:420px; max-height:70vh; overflow:auto;">
+    <h3 style="margin-top:0; color:#fff;">Pilih Toko</h3>
+    <div id="store-list"></div>
+    <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+      <button id="store-refresh" style="padding:8px 12px;">Refresh</button>
+      <button id="store-cancel" style="padding:8px 12px;">Batal</button>
+    </div>
+  </div>
+</div>
   <aside class="produk-kasir">
     <div class="bar-pencarian-kasir">
       <span class="material-symbols-outlined">search</span>
-      <input type="text" placeholder="Cari produk...">
+      <input type="text" id="search-produk-kasir" placeholder="Cari produk...">
     </div>
 
     <div class="filter-produk-kasir">
@@ -23,8 +34,8 @@
 
     <div class="container-wrapper-produk">
 
-      <div class="container-list-produk">
-        <div class="card-produk-kasir">
+      <div class="container-list-produk" id="produk-list-kasir">
+        <!-- <div class="card-produk-kasir">
           <div class="judul-stok-produk">
             <div class="overflow-judul-produk" data-sku="SKU-001" data-stock="10">
               <h3>Kopi Susu</h3>
@@ -90,7 +101,7 @@
           data-price="15000"
           data-sku="SKU-004"
           data-stock="6">Tambah Ke Keranjang</button>
-        </div>
+        </div> -->
       </div>
     </div>
   </aside>

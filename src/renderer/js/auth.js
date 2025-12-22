@@ -14,19 +14,18 @@ async function login() {
     });
     localStorage.setItem('token', res.token);
 
-    // Simpan store_id jika ada di response
-    if (res.user && res.user.store_id) {
-      localStorage.setItem('store_id', res.user.store_id);
-    } else if (res.user && res.user.owner_id) {
-      // Jika user adalah owner, ambil store_id dari API profil atau store utama
-      // (tambahkan logic sesuai kebutuhan jika multi-store)
-      // localStorage.setItem('store_id', ...);
-    }
-
-    // Setelah login sukses dan token sudah disimpan
+    // Ambil profil lengkap
     const profile = await window.apiRequest('/auth/profile');
-    if (profile.user && profile.user.store_id) {
-      localStorage.setItem('store_id', profile.user.store_id);
+
+    // simpan role dan id yang benar
+    if (profile.user) {
+      localStorage.setItem('role', (profile.user.role || '').toString());
+      localStorage.setItem('user_id', String(profile.user.id || profile.user.user_id || ''));
+      // owner_id: jika user adalah owner, owner_id = user.id, jika bukan, ada owner_id
+      const ownerId = profile.user.owner_id || profile.user.id || null;
+      if (ownerId) localStorage.setItem('owner_id', String(ownerId));
+      // store_id jika ada (admin/kasir)
+      if (profile.user.store_id) localStorage.setItem('store_id', String(profile.user.store_id));
     }
 
     window.location.href = 'index.html';

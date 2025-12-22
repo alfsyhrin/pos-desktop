@@ -1,119 +1,152 @@
 /* =========================
-   HELPER: UPDATE VIEW
+   ====== KERANJANG FRONTEND ======
 ========================= */
+let cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
+
+// Update tampilan keranjang
 function updateKeranjangView() {
+  const itemsContainer = document.getElementById('keranjang-items');
   const emptyView = document.getElementById('keranjang-empty');
-  const itemsContainer = document.getElementById('keranjang-items');
-
-  if (!emptyView || !itemsContainer) return;
-
-  if (itemsContainer.children.length > 0) {
-    emptyView.style.display = 'none';
-  } else {
-    emptyView.style.display = 'flex';
-  }
-}
-
-/* =========================
-   ADD TO CART
-========================= */
-function addToCart(productName, productPrice, productSKU, productStock) {
-  const itemsContainer = document.getElementById('keranjang-items');
   if (!itemsContainer) return;
 
-  let cartItem = document.getElementById(`cart-${productSKU}`);
+  itemsContainer.innerHTML = '';
+  if (!cart.length) {
+    if (emptyView) emptyView.style.display = 'flex';
+    updateSubtotalTotal(0);
+    return;
+  }
+  if (emptyView) emptyView.style.display = 'none';
 
-  // =====================
-  // JIKA PRODUK SUDAH ADA
-  // =====================
-  if (cartItem) {
-    const qtyEl = cartItem.querySelector('.product-qty');
-    const totalEl = cartItem.querySelector('.product-total');
-    let qty = parseInt(qtyEl.textContent);
-
-    if (qty < productStock) {
-      qty++;
-      qtyEl.textContent = qty;
-      totalEl.textContent = `Rp ${qty * productPrice}`;
+  let subtotal = 0;
+  cart.forEach((item, idx) => {
+    let diskonLabel = '';
+    let hargaSetelahDiskon = item.price;
+    if (item.discount_type && item.discount_value) {
+      if (item.discount_type === 'percentage') {
+        diskonLabel = `Diskon: ${item.discount_value}%`;
+        hargaSetelahDiskon = Math.round(item.price * (1 - item.discount_value / 100));
+      } else if (item.discount_type === 'amount' || item.discount_type === 'nominal') {
+        diskonLabel = `Diskon: Rp ${Number(item.discount_value).toLocaleString('id-ID')}`;
+        hargaSetelahDiskon = Math.max(0, item.price - item.discount_value);
+      }
     }
+    // Info bundle/buyxgety
+    if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
+      diskonLabel = `Promo: Beli ${item.buy_qty} Gratis ${item.free_qty}`;
+    }
+    if (item.discount_type === 'bundle' && item.bundle_qty && item.bundle_value) {
+      diskonLabel = `Promo: ${item.bundle_qty} pcs Rp ${Number(item.bundle_value).toLocaleString('id-ID')}`;
+    }
+    const totalItem = hargaSetelahDiskon * item.quantity;
+    subtotal += totalItem;
 
-  } else {
-    // =====================
-    // JIKA PRODUK BARU
-    // =====================
-    const newCartItem = document.createElement('div');
-    newCartItem.className = 'keranjang-item';
-    newCartItem.id = `cart-${productSKU}`;
-
-    newCartItem.innerHTML = `
-      <h4>${productName}</h4>
-      <p>SKU: ${productSKU}</p>
-      <p>Harga: Rp ${productPrice}</p>
-      
+    const el = document.createElement('div');
+    el.className = 'keranjang-item';
+    el.innerHTML = `
+      <h4>${item.name}</h4>
+      <p>SKU: ${item.sku}</p>
+      <p>Harga: Rp ${item.price.toLocaleString('id-ID')}</p>
+      ${diskonLabel ? `<p class="diskon-info">${diskonLabel}</p>` : ''}
       <div class="actions">
-        <h4 class="product-total">Rp ${productPrice}</h4>
+        <h4 class="product-total">Rp ${totalItem.toLocaleString('id-ID')}</h4>
         <div class="product-buttons-wrapper">
-          <button class="decrease-qty">-</button>
-          <span class="product-qty">1</span>
-          <button class="increase-qty">+</button>
-          <button class="remove-item">✕</button>
+          <button class="decrease-qty" data-idx="${idx}">-</button>
+          <span class="product-qty">${item.quantity}</span>
+          <button class="increase-qty" data-idx="${idx}">+</button>
+          <button class="remove-item" data-idx="${idx}">✕</button>
         </div>
       </div>
     `;
+    itemsContainer.appendChild(el);
+  });
+  updateSubtotalTotal(subtotal);
+}
 
-    itemsContainer.appendChild(newCartItem);
+// Update subtotal dan total
+function updateSubtotalTotal(subtotal) {
+  const subtotalEl = document.querySelector('.wrap-subtotal p');
+  const totalEl = document.querySelector('.wrap-total p');
+  if (subtotalEl) subtotalEl.textContent = subtotal.toLocaleString('id-ID');
+  if (totalEl) totalEl.textContent = subtotal.toLocaleString('id-ID');
+}
 
-    const qtyEl = newCartItem.querySelector('.product-qty');
-    const totalEl = newCartItem.querySelector('.product-total');
+// setelah update cart, simpan
+function saveCart() {
+  localStorage.setItem('pos_cart', JSON.stringify(cart));
+}
 
-    // ➕ Tambah qty
-    newCartItem.querySelector('.increase-qty').addEventListener('click', () => {
-      let qty = parseInt(qtyEl.textContent);
-      if (qty < productStock) {
-        qty++;
-        qtyEl.textContent = qty;
-        totalEl.textContent = `Rp ${qty * productPrice}`;
-      }
-    });
-
-    // ➖ Kurangi qty
-    newCartItem.querySelector('.decrease-qty').addEventListener('click', () => {
-      let qty = parseInt(qtyEl.textContent);
-      if (qty > 1) {
-        qty--;
-        qtyEl.textContent = qty;
-        totalEl.textContent = `Rp ${qty * productPrice}`;
-      }
-    });
-
-    // ❌ Hapus item
-    newCartItem.querySelector('.remove-item').addEventListener('click', () => {
-      newCartItem.remove();
-      updateKeranjangView();
+// Tambah produk ke cart (frontend) — sekarang menyimpan diskon jika ada
+function addToCartFrontend({
+  id, name, price, sku, stock,
+  discount_type = null, discount_value = 0,
+  buy_qty = 0, free_qty = 0,
+  bundle_qty = 0, bundle_value = 0
+}) {
+  let idx = cart.findIndex(item => item.id === id);
+  if (idx !== -1) {
+    if (cart[idx].quantity < stock) cart[idx].quantity += 1;
+  } else {
+    cart.push({
+      id, name, price, sku, stock, quantity: 1,
+      discount_type, discount_value,
+      buy_qty, free_qty,
+      bundle_qty, bundle_value
     });
   }
-
+  saveCart && saveCart();
   updateKeranjangView();
 }
 
-/* =========================
-   EVENT LISTENER BUTTON
-========================= */
+// Event tombol tambah ke keranjang (ambil discount dari data-attr jika tersedia)
 document.addEventListener('click', function (e) {
   const btn = e.target.closest('.btn-add-cart');
   if (!btn) return;
-
+  const id = parseInt(btn.dataset.id);
   const name = btn.dataset.name;
   const price = parseInt(btn.dataset.price);
   const sku = btn.dataset.sku;
   const stock = parseInt(btn.dataset.stock);
-
-  addToCart(name, price, sku, stock);
+  const discount_type = btn.dataset.discountType || btn.dataset.jenisDiskon || null;
+  const discount_value = Number(btn.dataset.discountValue || btn.dataset.nilaiDiskon || 0);
+  const buy_qty = Number(btn.dataset.buyQty || 0);
+  const free_qty = Number(btn.dataset.freeQty || 0);
+  const bundle_qty = Number(btn.dataset.bundleQty || 0);
+  const bundle_value = Number(btn.dataset.bundleValue || 0);
+  addToCartFrontend({
+    id, name, price, sku, stock,
+    discount_type, discount_value,
+    buy_qty, free_qty,
+    bundle_qty, bundle_value
+  });
+  alert('Berhasil ditambahkan ke keranjang!');
 });
 
-/* =========================
-   INIT SAAT HALAMAN LOAD
-========================= */
+// Event tombol +, -, hapus di cart
+document.addEventListener('click', function (e) {
+  if (e.target.classList.contains('increase-qty')) {
+    const idx = parseInt(e.target.dataset.idx);
+    if (cart[idx].quantity < cart[idx].stock) cart[idx].quantity += 1;
+    saveCart();
+    updateKeranjangView();
+  }
+  if (e.target.classList.contains('decrease-qty')) {
+    const idx = parseInt(e.target.dataset.idx);
+    if (cart[idx].quantity > 1) cart[idx].quantity -= 1;
+    saveCart();
+    updateKeranjangView();
+  }
+  if (e.target.classList.contains('remove-item')) {
+    const idx = parseInt(e.target.dataset.idx);
+    cart.splice(idx, 1);
+    saveCart();
+    updateKeranjangView();
+  }
+});
+
+// Inisialisasi tampilan keranjang saat load
 document.addEventListener('DOMContentLoaded', () => {
   updateKeranjangView();
 });
+
+// Export cart untuk proses pembayaran
+window.getKasirCart = () => cart;

@@ -234,21 +234,6 @@
   document.getElementById('buyxgety-wrapper').style.display = (type === 'buyxgety') ? 'block' : 'none';
   document.getElementById('bundle-wrapper').style.display = (type === 'bundle') ? 'block' : 'none';
 }
-    // NEW: prefilling barcode bila ada query param ?barcode=...
-    document.addEventListener('DOMContentLoaded', function() {
-      const params = new URLSearchParams(window.location.search);
-      const bc = params.get('barcode');
-      if (bc) {
-        const pb = document.getElementById('product-barcode');
-        const bv = document.getElementById('barcode-value');
-        if (pb) pb.value = bc;
-        if (bv) bv.value = bc;
-        // call generateBarcodeFromValue if available
-        if (window.generateBarcodeFromValue) {
-          try { window.generateBarcodeFromValue(bc); } catch(e) { /* ignore */ }
-        }
-      }
-    });
   </script>
 </body>
 </html>

@@ -1,0 +1,234 @@
+// new file: fetch & render list, delete user
+(function(){
+  function tryInit() {
+    const container = document.querySelector('.container-card-karyawan');
+    if (container) initKaryawanPage();
+    setupSearchHandler(); // attach search when page present
+  }
+
+  // try immediately (page may be static)
+  tryInit();
+
+  // observe app content for injected page (router)
+  const appRoot = document.getElementById('app-content') || document.body;
+  const mo = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.addedNodes && m.addedNodes.length) {
+        if (document.querySelector('.container-card-karyawan')) {
+          initKaryawanPage();
+          setupSearchHandler();
+          mo.disconnect();
+          break;
+        }
+      }
+    }
+  });
+  mo.observe(appRoot, { childList: true, subtree: true });
+
+  // also re-run when custom event 'page:change' emitted by router (if router supports)
+  window.addEventListener('page:change', () => { tryInit(); });
+})();
+
+async function apiGet(path, opts = {}) {
+  if (window.apiRequest) {
+    return window.apiRequest(path, opts);
+  }
+  const token = localStorage.getItem('token');
+  const res = await fetch(`http://103.126.116.119:5000/api${path}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    ...opts
+  });
+  return res.ok ? res.json() : Promise.reject(await res.json().catch(()=>res.status));
+}
+
+async function fetchStoreUsers(storeId, q = '', opts = {}) {
+  const qStr = q ? `?search=${encodeURIComponent(q)}` : '';
+  return await apiGet(`/stores/${storeId}/users${qStr}`, opts);
+}
+
+async function initKaryawanPage(search = '') {
+  const container = document.querySelector('.container-card-karyawan');
+  if (!container) return;
+  container.innerHTML = '<p>Memuat...</p>';
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+
+  try {
+    if (role === 'cashier') {
+      container.innerHTML = '<p>Akses ditolak. Halaman ini hanya untuk admin/owner.</p>';
+      return;
+    }
+
+    if (role === 'admin') {
+      const storeId = localStorage.getItem('store_id');
+      if (!storeId) return container.innerHTML = '<p>Store tidak ditemukan untuk admin.</p>';
+      const res = await fetchStoreUsers(storeId, search);
+      if (!res || !res.success) return container.innerHTML = `<p>Gagal memuat: ${res?.message || 'unknown'}</p>`;
+      renderList(container, res.data || []);
+      return;
+    }
+
+    if (role === 'owner') {
+      let storeId = localStorage.getItem('store_id');
+      if (!storeId) {
+        // fetch stores for owner and show modal selection
+        const ownerId = localStorage.getItem('owner_id') || localStorage.getItem('user_id');
+        let stores = [];
+        try {
+          // try owners/:id/stores or /stores and filter
+          const r1 = await apiGet(`/owners/${ownerId}/stores`).catch(()=>null);
+          if (r1 && r1.data) stores = r1.data;
+          if (!stores.length) {
+            const r2 = await apiGet(`/stores`).catch(()=>null);
+            if (r2 && Array.isArray(r2.data)) stores = (r2.data || []).filter(s => String(s.owner_id) === String(ownerId));
+            else if (Array.isArray(r2)) stores = r2;
+          }
+        } catch (e) { /* ignore */ }
+
+        // if still empty, fallback prompt
+        if (!stores || !stores.length) {
+          const pick = prompt('Anda owner. Masukkan store_id untuk manajemen karyawan:');
+          if (pick) {
+            localStorage.setItem('store_id', String(pick));
+            storeId = String(pick);
+          }
+        } else {
+          await showStoreSelectionModal(stores);
+          storeId = localStorage.getItem('store_id');
+        }
+      }
+
+      if (!storeId) return container.innerHTML = '<p>Store belum dipilih.</p>';
+      const res = await fetchStoreUsers(storeId, search);
+      if (!res || !res.success) return container.innerHTML = `<p>Gagal memuat: ${res?.message || 'unknown'}</p>`;
+      renderList(container, res.data || []);
+      return;
+    }
+
+    container.innerHTML = '<p>Role tidak dikenali.</p>';
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p>Error: ${err?.message || err}</p>`;
+  }
+}
+
+function renderList(container, users) {
+  // users may be array or object wrapper
+  const list = Array.isArray(users) ? users : (users.data || users || []);
+  if (!list || !list.length) {
+    container.innerHTML = '<p>Hasil tidak ditemukan.</p>';
+    return;
+  }
+  container.innerHTML = '';
+  list.forEach(u => {
+    const card = document.createElement('div');
+    card.className = 'card-karyawan';
+    card.dataset.id = u.id;
+    card.innerHTML = `
+      <div class="icon-karyawan ${u.role==='admin'?'icon-hijau':'icon-oranye'}"><span class="material-symbols-outlined">person</span></div>
+      <div class="info-card-karyawan">
+        <h3>${escapeHtml(u.name||u.username)}</h3>
+        <p class="id-karyawan">ID: ${u.id}</p>
+        <div class="role-nomor-karyawan">
+          <p class="role-user ${u.role==='cashier'?'role-oranye':''}">${u.role}</p>
+          <p class="nomor-user">${u.phone||''}</p>
+        </div>
+      </div>
+      <div class="button-card-karyawan">
+        <a href="../pages/edit-karyawan.html?id=${u.id}" class="edit-karyawan"><span class="material-symbols-outlined">edit</span></a>
+        <button class="hapus-karyawan"><span class="material-symbols-outlined">delete</span></button>
+      </div>
+    `;
+    container.appendChild(card);
+    const btn = card.querySelector('.hapus-karyawan');
+    if (btn) btn.addEventListener('click', () => confirmDelete(u.id, card));
+  });
+}
+
+function escapeHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function confirmDelete(id, cardEl) {
+  if (!confirm('Hapus karyawan ini?')) return;
+  try {
+    const storeId = localStorage.getItem('store_id');
+    if (!storeId) {
+      if (window.showToast) showToast('Store belum dipilih. Tidak bisa menghapus user.', 'error');
+      else alert('Store belum dipilih. Tidak bisa menghapus user.');
+      return;
+    }
+    const token = localStorage.getItem('token');
+    const url = `http://103.126.116.119:5000/api/stores/${storeId}/users/${id}`;
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json().catch(()=>null);
+    if (res.ok && data && data.success) {
+      cardEl.remove();
+      if (window.showToast) showToast('Karyawan berhasil dihapus.', 'success');
+      else alert('Karyawan berhasil dihapus.');
+    } else {
+      const msg = data?.message || res.status;
+      if (window.showToast) showToast('Gagal hapus: ' + msg, 'error');
+      else alert('Gagal hapus: ' + msg);
+    }
+  } catch (err) {
+    console.error(err);
+    if (window.showToast) showToast('Gagal hapus: ' + (err.message || err), 'error');
+    else alert('Gagal hapus: ' + (err.message || err));
+  }
+}
+
+function showStoreSelectionModal(stores = []) {
+  return new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.className = 'store-select-modal';
+    modal.style = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    const box = document.createElement('div');
+    box.style = 'background:#1b1b1b;padding:20px;border-radius:8px;max-width:600px;width:90%;color:#fff;';
+    box.innerHTML = `<h3>Pilih toko untuk manajemen karyawan</h3><div class="list-stores" style="margin-top:10px;"></div><div style="text-align:right;margin-top:12px;"><button class="cancel-store" style="margin-right:8px;">Batal</button></div>`;
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+    const listEl = box.querySelector('.list-stores');
+    stores.forEach(s => {
+      const btn = document.createElement('button');
+      btn.textContent = `${s.id} — ${s.name || s.branch || s.store_name || '-'}`;
+      btn.style = 'display:block;margin:6px 0;padding:8px;border-radius:6px;width:100%;text-align:left;';
+      btn.addEventListener('click', () => {
+        localStorage.setItem('store_id', String(s.id));
+        document.body.removeChild(modal);
+        resolve(s.id);
+      });
+      listEl.appendChild(btn);
+    });
+    box.querySelector('.cancel-store').addEventListener('click', () => {
+      document.body.removeChild(modal);
+      resolve(null);
+    });
+  });
+}
+
+// add search handler with debounce and live API call
+let _karyawanSearchTimer = null;
+function setupSearchHandler() {
+  const input = document.querySelector('.bar-pencarian-karyawan input');
+  if (!input) return;
+  if (input.dataset._searchBound) return;
+  input.dataset._searchBound = '1';
+
+  input.addEventListener('input', (e) => {
+    const q = (e.target.value || '').trim();
+    if (_karyawanSearchTimer) clearTimeout(_karyawanSearchTimer);
+    _karyawanSearchTimer = setTimeout(() => {
+      // call initKaryawanPage with search term
+      initKaryawanPage(q);
+    }, 350);
+  });
+
+  // optional: submit on Enter immediately
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (_karyawanSearchTimer) clearTimeout(_karyawanSearchTimer);
+      initKaryawanPage((e.target.value || '').trim());
+    }
+  });
+}
