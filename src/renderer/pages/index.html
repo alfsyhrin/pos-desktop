@@ -22,7 +22,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="light-theme">
 <div class="layout">
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -33,6 +33,10 @@
         <p class="info-paket">PRO</p>
       </div>
       <nav>
+        <div class="wrapper-theme">
+          <button id="btn-dark"><span class="material-symbols-outlined">dark_mode</span>Dark</button>
+          <button id="btn-light"><span class="material-symbols-outlined">light_mode</span>Light</button>
+        </div>
         <a href="#" data-page="dashboard" class="sidebar-item active"><span class="material-symbols-outlined fill">home</span>Beranda</a>
         <a href="#" data-page="kasir" class="sidebar-item"><span class="material-symbols-outlined fill">local_grocery_store</span>Kasir</a>
         <a href="#" data-page="produk" class="sidebar-item"><span class="material-symbols-outlined fill">view_in_ar</span>Produk</a>
@@ -42,6 +46,7 @@
         <a href="#" data-page="pengaturan" class="sidebar-item"><span class="material-symbols-outlined fill">settings</span>Pengaturan</a>
         <a href="#" data-page="aktivitas" class="sidebar-item"><span class="material-symbols-outlined fill">list_alt</span>Log Aktivitas</a>
         <a href="#" class="sidebar-item logout"><span class="material-symbols-outlined fill">logout</span>Logout</a>
+        
       </nav>
     </div>
 
@@ -79,5 +84,6 @@
 <script src="../js/dashboard.js"></script>
 <script src="../js/edit-produk.js"></script>
 <script src="../js/barcode.js"></script>
+<script src="../js/theme.js"></script>
 </body>
 </html>

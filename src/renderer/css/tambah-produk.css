@@ -1,3 +1,5 @@
+
+
 * {
   margin: 0;
   padding: 0;
@@ -25,7 +27,7 @@ body {
   font-family: 'Asap', sans-serif;
   background: var(--background-color);
   min-height: 100vh;
-  color: #fff;
+  color: var(--foreground-color);
 }
 
 header {
@@ -53,7 +55,7 @@ header {
 
 .back-button a {
   text-decoration: none;
-  color: #fff;
+  color: var(--foreground-color);
   font-weight: var(--weight-bold);
   margin-left: 5px;
   display: flex;
@@ -76,7 +78,7 @@ header {
 }
 
 header h3 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 28px;
   font-weight: var(--weight-black);
 }
@@ -185,7 +187,7 @@ header p {
 
 .btn-outline:hover {
   background-color: var(--primary-color);
-  color: #fff;
+  color: var(--foreground-color);
 }
 
 .form-group {
@@ -207,7 +209,7 @@ header p {
   background-color: var(--input-bg);
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  color: #fff;
+  color: var(--foreground-color);
   font-family: 'Asap', sans-serif;
   font-size: 14px;
   transition: var(--transition);
@@ -264,6 +266,7 @@ header p {
   align-items: center;
   justify-content: center;
   margin-bottom: 15px;
+  border: 1px solid var(--border-color);
 }
 
 .barcode-preview svg,
@@ -280,6 +283,7 @@ header p {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border-color);
 }
 
 .qr-preview canvas {
@@ -360,7 +364,7 @@ header p {
   right: 20px;
   padding: 15px 25px;
   border-radius: 10px;
-  color: #fff;
+  color: var(--foreground-color);
   font-weight: var(--weight-bold);
   z-index: 1000;
   transform: translateX(150%);

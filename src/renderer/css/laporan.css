@@ -26,7 +26,7 @@ header.header-laporan {
 }
 
 header.header-laporan h2 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 30px;
 }
 
@@ -351,6 +351,7 @@ body {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .dashboard-grid-bottom {

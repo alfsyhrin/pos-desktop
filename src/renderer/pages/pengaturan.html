@@ -13,7 +13,7 @@
           <h3>Informasi Toko</h3>
           <p>Data toko yang digunakan untuk identitas & nota</p>
         </div>
-        <button class="edit-toko"><span class="material-symbols-outlined">edit</span>Edit</button>
+        <button class="edit-toko" onclick="openModal()"><span class="material-symbols-outlined">edit</span>Edit</button>
       </div>
       <div class="detail-info-toko">
         <div class="detail-toko-wrapper">
@@ -28,17 +28,17 @@
   
         <div class="detail-toko-wrapper">
           <p class="detail-toko-judul">Nama</p>
-          <p class="detail-toko-deskripsi">CV Betarak Indonesia</p>
+          <p class="detail-toko-deskripsi" data-field="nama">CV Betarak Indonesia</p>
         </div>
   
         <div class="detail-toko-wrapper">
           <p class="detail-toko-judul">Alamat</p>
-          <p class="detail-toko-deskripsi">Jl. North Sangaji, Kota Ternate Utara, Kota Ternate</p>
+          <p class="detail-toko-deskripsi" data-field="alamat">Jl. North Sangaji, Kota Ternate Utara, Kota Ternate</p>
         </div>
   
         <div class="detail-toko-wrapper">
           <p class="detail-toko-judul">Telepon</p>
-          <p class="detail-toko-deskripsi">+62 812-3456-7890</p>
+          <p class="detail-toko-deskripsi" data-field="telepon">+62 812-3456-7890</p>
         </div>
   
         <div class="detail-toko-wrapper">
@@ -64,7 +64,7 @@
   <div class="card-billing" style="margin-bottom: 16px;">
     <span class="material-symbols-outlined logo-billing">rocket_launch</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: #fff; font-weight: var(--weight-bold); font-size: 14px;">PRO</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">PRO</p>
       <p style="color: #10B981FF; font-size: 14px; font-weight: var(--weight-bold);">Aktiv</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
@@ -91,7 +91,7 @@
   <div class="card-billing">
     <span class="material-symbols-outlined backup-data">cloud_upload</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: #fff; font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
       <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Simpan data ke file</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
@@ -100,7 +100,7 @@
   <div class="card-billing">
     <span class="material-symbols-outlined copy-data">cloud_download</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: #fff; font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
       <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Simpan data ke file</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
@@ -109,7 +109,7 @@
   <div class="card-billing" style="margin-bottom: 16px;">
     <span class="material-symbols-outlined hapus-data">delete</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: #fff; font-weight: var(--weight-bold); font-size: 14px;">Hapus Semua Data</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Hapus Semua Data</p>
       <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Reset aplikasi ke kondisi awal</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
@@ -119,7 +119,7 @@
   <div class="card-billing">
     <span class="material-symbols-outlined hapus-data">info</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: #fff; font-weight: var(--weight-bold); font-size: 14px;">Tentang PIPos</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Tentang PIPos</p>
       <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Aplikasi kasir untuk toko & minimarket</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
@@ -127,7 +127,7 @@
   <div class="card-billing" style="margin-bottom: 16px;">
     <span class="material-symbols-outlined hapus-data">headset_mic</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: #fff; font-weight: var(--weight-bold); font-size: 14px;">Bantuan & Dukungan</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Bantuan & Dukungan</p>
       <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Kami siap membantu anda</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
@@ -137,9 +137,30 @@
   <div class="card-billing" style="margin-bottom: 16px;">
     <span class="material-symbols-outlined hapus-data">help_outline</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: #fff; font-weight: var(--weight-bold); font-size: 14px;">Bagaimana Cara Upgrade?</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Bagaimana Cara Upgrade?</p>
       <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Masuk ke Plan & Billing, lalu Pilih Paket</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
 </main>
+
+<!-- MODAL EDIT TOKO -->
+<div class="modal-overlay" id="modalEditToko">
+  <div class="modal-card">
+    <h3>Edit Informasi Toko</h3>
+
+    <label>Nama Toko</label>
+    <input type="text" id="editNama" />
+
+    <label>Alamat</label>
+    <textarea id="editAlamat"></textarea>
+
+    <label>No HP</label>
+    <input type="text" id="editTelepon" />
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-save" onclick="saveEdit()">Simpan</button>
+    </div>
+  </div>
+</div>

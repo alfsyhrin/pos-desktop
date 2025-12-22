@@ -7,7 +7,7 @@ header.header-karyawan {
 }
 
 header.header-karyawan h2 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 30px;
 }
 
@@ -135,7 +135,7 @@ header.header-karyawan p {
 
 .info-card-karyawan h3 {
   font-size: 17px;
-  color: #fff;
+  color: var(--foreground-color);
   font-weight: var(--weight-bold);
 }
 

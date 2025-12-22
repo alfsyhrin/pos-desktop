@@ -7,7 +7,7 @@ header.header-logaktivitas {
 }
 
 header.header-logaktivitas h2 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 30px;
 }
 
@@ -62,7 +62,7 @@ header.header-logaktivitas p {
 }
 
 .info-log h3 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 15px;
   font-weight: var(--weight-bold);
 }

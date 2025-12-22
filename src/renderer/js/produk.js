@@ -52,16 +52,16 @@ function showStoreSelector(stores) {
   if (!modal || !list) return;
   list.innerHTML = '';
   if (stores.length === 0) {
-    list.innerHTML = '<p style="color:#fff">Tidak ada toko. Tekan Refresh.</p>';
+    list.innerHTML = '<p style="color:var(--foreground-color)">Tidak ada toko. Tekan Refresh.</p>';
   } else {
     stores.forEach(s => {
       const el = document.createElement('div');
       el.style.padding = '8px';
       el.style.marginBottom = '6px';
-      el.style.background = '#2a1f1f';
+      el.style.background = 'var(--card-color)';
       el.style.borderRadius = '6px';
       el.style.cursor = 'pointer';
-      el.style.color = '#fff';
+      el.style.color = 'var(--foreground-color)';
       el.textContent = `${s.name || s.storeName || s.title || 'Toko'}${s.id ? ' — ID: ' + s.id : ''}`;
       el.dataset.storeId = s.id;
       el.addEventListener('click', () => {
