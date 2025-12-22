@@ -1,63 +1,671 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <link rel="stylesheet" href="../css/detail-transaksi.css">
-  <link rel="stylesheet" href="../css/global.css">
+  <title>Detail Transaksi</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Asap:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --background-color: #160808;
+      --foreground-color: #ffffff;
+      --primary-color: #E43636;
+      --secondary-color: #d53333ff;
+      --paragraph-color: #818386ff;
+      --card-color: #1D1616;
+      --radius: 18px;
+      --transition: all 0.3s ease;
+      --weight-bold: 500;
+      --weight-black: bold;
+      --hijau: #328E6E;
+      --background-hijau: #1C352D;
+      --input-bg: #2a2020;
+      --border-color: #3a2a2a;
+      --orange: #ff8036;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Asap', sans-serif;
+      background: var(--background-color);
+      min-height: 100vh;
+      color: var(--foreground-color);
+      padding-bottom: 20px;
+    }
+
+    header {
+      width: 100%;
+      background-color: var(--card-color);
+      border-bottom: 2px solid var(--primary-color);
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      gap: 5px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-button {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      flex: 1;
+    }
+
+    .back-button a {
+      text-decoration: none;
+      color: var(--foreground-color);
+      font-weight: var(--weight-bold);
+      margin-left: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .back-button a:hover {
+      transform: translateX(-3px);
+    }
+
+    .back-button a .material-symbols-outlined {
+      font-size: 28px;
+    }
+
+    .judul-header {
+      flex: 1.40;
+    }
+
+    header h3 {
+      color: var(--foreground-color);
+      font-size: 28px;
+      font-weight: var(--weight-black);
+    }
+
+    header p {
+      color: var(--paragraph-color);
+      font-size: 14px;
+    }
+
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Container Jenis Pembayaran */
+    .jenis-pembayaran-transaksi {
+      background-color: var(--card-color);
+      border-radius: 10px;
+      border: 1px solid #333;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+
+    .jenis-pembayaran-transaksi h4 {
+      color: var(--paragraph-color);
+      font-weight: var(--weight-bold);
+      font-size: 14px;
+    }
+
+    .jenis-pembayaran-transaksi p {
+      color: var(--foreground-color);
+      font-weight: var(--weight-bold);
+      font-size: 18px;
+    }
+
+    /* Container Item Pembelian */
+    .item-pembelian-transaksi {
+      background-color: var(--card-color);
+      border-radius: 10px;
+      border: 1px solid #333;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+
+    .item-pembelian-transaksi h4 {
+      color: var(--paragraph-color);
+      font-weight: var(--weight-bold);
+      font-size: 14px;
+    }
+
+    .item-pembelian-transaksi p {
+      color: var(--foreground-color);
+      font-weight: var(--weight-bold);
+      font-size: 16px;
+    }
+
+    .item-pembelian-transaksi .sku {
+      color: var(--paragraph-color);
+      font-size: 14px;
+    }
+
+    /* Container Harga Transaksi */
+    .harga-transaksi {
+      background-color: var(--card-color);
+      border-radius: 10px;
+      border: 1px solid #333;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+
+    .wrap-info-harga {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 4px 0;
+    }
+
+    .wrap-info-harga h4 {
+      font-weight: var(--weight-bold);
+      font-size: 16px;
+      color: var(--foreground-color);
+    }
+
+    .wrap-info-harga h4.label {
+      color: var(--paragraph-color);
+    }
+
+    .wrap-info-harga.border-bottom {
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--primary-color);
+    }
+
+    .wrap-info-harga.grand-total {
+      margin-bottom: 10px;
+    }
+
+    .wrap-tunai {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      padding: 10px;
+      background-color: #e4363638;
+      border: 1px solid var(--primary-color);
+      border-radius: 8px;
+      gap: 5px;
+    }
+
+    /* Container Button Transaksi */
+    .wrap-button-proses-transaksi {
+      background-color: var(--card-color);
+      border: 1px solid #333;
+      padding: 10px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .wrap-button-proses-transaksi button {
+      flex: 1;
+      min-width: 120px;
+      padding: 15px;
+      border-radius: 8px;
+      border: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-family: 'Asap', sans-serif;
+      font-size: 14px;
+      font-weight: var(--weight-bold);
+      transition: var(--transition);
+    }
+
+    .wrap-button-proses-transaksi button:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
+    .wrap-button-proses-transaksi button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .wrap-button-proses-transaksi button .material-symbols-outlined {
+      font-size: 22px;
+    }
+
+    button.btn-print-struk {
+      background-color: #10B981;
+      color: #fff;
+    }
+
+    button.btn-print-pdf {
+      background-color: #ff8036;
+      color: #fff;
+    }
+
+    button.btn-hapus {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+
+    /* Printer Status Section */
+    .printer-status-section {
+      background-color: var(--card-color);
+      border-radius: 10px;
+      border: 1px solid #333;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .printer-status-section h4 {
+      color: var(--paragraph-color);
+      font-weight: var(--weight-bold);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .printer-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .printer-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-indicator.connected {
+      background: #10B981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    .status-indicator.disconnected {
+      background: var(--primary-color);
+      box-shadow: 0 0 10px rgba(228, 54, 54, 0.5);
+    }
+
+    .status-indicator.connecting {
+      background: var(--orange);
+      box-shadow: 0 0 10px rgba(255, 128, 54, 0.5);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-text {
+      color: var(--foreground-color);
+      font-weight: var(--weight-bold);
+      font-size: 16px;
+    }
+
+    .printer-name-text {
+      color: var(--paragraph-color);
+      font-size: 13px;
+    }
+
+    .printer-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-icon:hover:not(:disabled) {
+      transform: scale(1.05);
+    }
+
+    .btn-icon:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-icon.primary {
+      background-color: #10B981;
+      color: #fff;
+    }
+
+    .btn-icon.danger {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+
+    .btn-icon.secondary {
+      background-color: var(--input-bg);
+      color: var(--foreground-color);
+      border: 1px solid #333;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: var(--weight-bold);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      max-width: 90%;
+      text-align: center;
+      font-family: 'Asap', sans-serif;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .toast.success {
+      background: #10B981;
+      color: white;
+    }
+
+    .toast.error {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--card-color);
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.show .modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: var(--weight-black);
+      color: var(--foreground-color);
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--input-bg);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--foreground-color);
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      background: var(--border-color);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: var(--weight-bold);
+      color: var(--paragraph-color);
+      margin-bottom: 8px;
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Asap', sans-serif;
+      transition: var(--transition);
+      background: var(--input-bg);
+      color: var(--foreground-color);
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .form-select option {
+      background: var(--card-color);
+      color: var(--foreground-color);
+    }
+
+    /* Receipt Preview */
+    .receipt-preview {
+      background: #fff;
+      color: #000;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .receipt-preview .center {
+      text-align: center;
+    }
+
+    .receipt-preview .bold {
+      font-weight: bold;
+    }
+
+    .receipt-preview .large {
+      font-size: 13px;
+    }
+
+    .receipt-preview .divider {
+      border-top: 1px dashed #999;
+      margin: 6px 0;
+    }
+
+    .btn-save {
+      width: 100%;
+      padding: 14px;
+      background: #10B981;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: var(--weight-bold);
+      font-family: 'Asap', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .btn-save:hover {
+      opacity: 0.9;
+    }
+
+    @media (max-width: 600px) {
+      .wrap-button-proses-transaksi {
+        flex-direction: column;
+      }
+
+      .wrap-button-proses-transaksi button {
+        width: 100%;
+      }
+
+      .printer-status-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .printer-buttons {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
     <div class="back-button">
-      <a href="../pages/proses-pembayaran.html">
+      <a href="javascript:history.back()">
         <span class="material-symbols-outlined">arrow_back</span>
       </a>
     </div>
     <div class="judul-header">
       <h3>Detail Transaksi</h3>
-      <!-- <p>Tambah Produk</p> -->
     </div>
   </header>
+
   <div class="main-container">
+    <!-- No. Transaksi -->
     <div class="jenis-pembayaran-transaksi">
       <h4>No. Transaksi</h4>
-      <p>TX251219YG035P</p>
+      <p id="tx-id">TX251219YG035P</p>
     </div>
+
+    <!-- Tanggal & Waktu -->
     <div class="jenis-pembayaran-transaksi">
       <h4>Tanggal & Waktu</h4>
-      <p>19 Des 2025, 10:51</p>
+      <p id="tx-date">19 Des 2025, 10:51</p>
     </div>
+
+    <!-- Metode Pembayaran -->
     <div class="jenis-pembayaran-transaksi">
       <h4>Metode Pembayaran</h4>
-      <p>Tunai</p>
+      <p id="tx-method">Tunai</p>
     </div>
+
+    <!-- Item Pembelian -->
     <div class="item-pembelian-transaksi">
       <h4>Item pembelian</h4>
       <p>Sunscreen SPF 50</p>
       <p>Rp. 45.000 x 1</p>
-      <p style="color: var(--paragraph-color); font-size: 14px;">SKU: SKU-002</p>
+      <p class="sku">SKU: SKU-002</p>
     </div>
+
+    <!-- Harga Transaksi -->
     <div class="harga-transaksi">
       <div class="wrap-info-harga">
-        <h4  style="color: var(--paragraph-color)">Sub Total:</h4>
+        <h4 class="label">Sub Total:</h4>
         <h4>Rp. 45.000</h4>
       </div>
       <div class="wrap-info-harga">
-        <h4  style="color: var(--paragraph-color)">Total Diskon</h4>
+        <h4 class="label">Total Diskon</h4>
         <h4>-Rp. 4.500</h4>
       </div>
-      <div class="wrap-info-harga" style="padding-bottom: 10px; border-bottom: 1px solid var(--primary-color);">
-        <h4  style="color: var(--paragraph-color)">PPN (10.0%)</h4>
+      <div class="wrap-info-harga border-bottom">
+        <h4 class="label">PPN (10.0%)</h4>
         <h4>Rp. 4.500</h4>
       </div>
-      <div class="wrap-info-harga" style="margin-bottom: 10px;">
+      <div class="wrap-info-harga grand-total">
         <h4>GRAND TOTAL</h4>
         <h4>Rp. 49.000</h4>
       </div>
       <div class="wrap-tunai">
-        <div class="wrap-info-harga" style="margin-bottom: 5px;">
+        <div class="wrap-info-harga">
           <h4>Tunai Diterima</h4>
           <h4>Rp. 150.000</h4>
         </div>
@@ -67,13 +675,520 @@
         </div>
       </div>
     </div>
+
+    <!-- Printer Status -->
+    <div class="printer-status-section">
+      <h4>Printer Bluetooth - Xprinter XP-58IIZ</h4>
+      <div class="printer-status-row">
+        <div class="printer-info">
+          <div class="status-indicator disconnected" id="status-indicator"></div>
+          <div class="status-text-wrap">
+            <span class="status-text" id="status-text">Tidak Terhubung</span>
+            <span class="printer-name-text" id="printer-name" style="display: none;"></span>
+          </div>
+        </div>
+        <div class="printer-buttons">
+          <button class="btn-icon primary" id="btn-connect" title="Hubungkan">
+            <span class="material-symbols-outlined">bluetooth</span>
+          </button>
+          <button class="btn-icon danger" id="btn-disconnect" title="Putuskan" disabled>
+            <span class="material-symbols-outlined">bluetooth_disabled</span>
+          </button>
+          <button class="btn-icon secondary" id="btn-settings" title="Pengaturan">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
     <div class="wrap-button-proses-transaksi">
-      <button class="btn-print-struk"><span class="material-symbols-outlined">print</span> Print Struk</button>
-      <button class="btn-print-pdf"><span class="material-symbols-outlined">picture_as_pdf</span>Print PDF</button>
-      <button class="btn-hapus"><span class="material-symbols-outlined">delete</span>Hapus</button>
+      <button class="btn-print-struk" id="btn-print" disabled>
+        <span class="material-symbols-outlined">print</span> Print Struk
+      </button>
+      <button class="btn-print-pdf" id="btn-pdf">
+        <span class="material-symbols-outlined">picture_as_pdf</span> Print PDF
+      </button>
+      <button class="btn-hapus" id="btn-delete">
+        <span class="material-symbols-outlined">delete</span> Hapus
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Pengaturan Printer</h3>
+        <button class="modal-close" id="btn-close-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Nama Toko</label>
+        <input type="text" class="form-input" id="store-name" value="TOKO SAYA" placeholder="Nama Toko">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Alamat Toko</label>
+        <input type="text" class="form-input" id="store-address" value="Jl. Contoh No. 123" placeholder="Alamat Toko">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Telepon Toko</label>
+        <input type="text" class="form-input" id="store-phone" value="021-12345678" placeholder="Nomor Telepon">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Ukuran Kertas</label>
+        <select class="form-select" id="paper-width">
+          <option value="58" selected>58mm (XP-58IIZ)</option>
+          <option value="72">72mm</option>
+          <option value="80">80mm</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Persentase PPN (%)</label>
+        <input type="number" class="form-input" id="tax-percentage" value="10" min="0" max="100" step="0.1">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Preview Struk</label>
+        <div class="receipt-preview" id="receipt-preview"></div>
+      </div>
+      
+      <button class="btn-save" id="btn-save-settings">
+        <span class="material-symbols-outlined">save</span>
+        Simpan Pengaturan
+      </button>
     </div>
   </div>
   <script src="../js/notifications.js"></script>
   <script src="../js/theme.js"></script>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span id="toast-message"></span>
+  </div>
+
+  <script>
+    // ==========================================
+    // Receipt Bluetooth Printer - Xprinter XP-58IIZ
+    // ==========================================
+
+    const SPP_UUID = '00001101-0000-1000-8000-00805f9b34fb';
+
+    // State
+    let bluetoothDevice = null;
+    let characteristic = null;
+    let isConnected = false;
+
+    // DOM Elements
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const printerNameEl = document.getElementById('printer-name');
+    const btnConnect = document.getElementById('btn-connect');
+    const btnDisconnect = document.getElementById('btn-disconnect');
+    const btnPrint = document.getElementById('btn-print');
+    const btnSettings = document.getElementById('btn-settings');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnSaveSettings = document.getElementById('btn-save-settings');
+    const btnPdf = document.getElementById('btn-pdf');
+    const btnDelete = document.getElementById('btn-delete');
+    const modalSettings = document.getElementById('modal-settings');
+    const paperWidthSelect = document.getElementById('paper-width');
+    const taxPercentageInput = document.getElementById('tax-percentage');
+    const storeNameInput = document.getElementById('store-name');
+    const storeAddressInput = document.getElementById('store-address');
+    const storePhoneInput = document.getElementById('store-phone');
+    const receiptPreview = document.getElementById('receipt-preview');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    // Transaction Data
+    const transactionData = {
+      idFull: document.getElementById('tx-id').textContent,
+      createdAt: new Date(2025, 11, 19, 10, 51),
+      method: document.getElementById('tx-method').textContent,
+      items: [
+        {
+          name: 'Sunscreen SPF 50',
+          price: 45000,
+          qty: 1,
+          lineTotal: 45000,
+          sku: 'SKU-002',
+          discountAmount: 0
+        }
+      ],
+      subtotal: 45000,
+      discount: 4500,
+      tax: 4500,
+      total: 49000,
+      received: 150000,
+      change: 105000
+    };
+
+    // ==========================================
+    // Utility Functions
+    // ==========================================
+
+    function showToast(message, type = 'success') {
+      toastMessage.textContent = message;
+      toast.className = 'toast ' + type;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function formatRupiah(value) {
+      const raw = Math.abs(value).toString();
+      let result = '';
+      for (let i = 0; i < raw.length; i++) {
+        if ((raw.length - i) % 3 === 0 && i !== 0) result += '.';
+        result += raw[i];
+      }
+      return (value < 0 ? '-' : '') + 'Rp. ' + result;
+    }
+
+    function formatDate(date) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const dd = String(date.getDate()).padStart(2, '0');
+      const mm = months[date.getMonth()];
+      const yyyy = date.getFullYear();
+      const hh = String(date.getHours()).padStart(2, '0');
+      const min = String(date.getMinutes()).padStart(2, '0');
+      const ss = String(date.getSeconds()).padStart(2, '0');
+      return `${dd} ${mm} ${yyyy} ${hh}:${min}:${ss}`;
+    }
+
+    function getLineChars(paperWidth) {
+      if (paperWidth <= 58) return 32; // XP-58IIZ: 32 karakter
+      if (paperWidth <= 72) return 42;
+      return 48;
+    }
+
+    function leftRight(left, right, lineChars) {
+      const space = lineChars - left.length - right.length;
+      return left + ' '.repeat(Math.max(space, 1)) + right;
+    }
+
+    // ==========================================
+    // UI Update Functions
+    // ==========================================
+
+    function updateUI() {
+      if (isConnected) {
+        statusIndicator.className = 'status-indicator connected';
+        statusText.textContent = 'Terhubung';
+        printerNameEl.style.display = 'block';
+        printerNameEl.textContent = bluetoothDevice?.name || 'Xprinter XP-58IIZ';
+        btnConnect.disabled = true;
+        btnDisconnect.disabled = false;
+        btnPrint.disabled = false;
+      } else {
+        statusIndicator.className = 'status-indicator disconnected';
+        statusText.textContent = 'Tidak Terhubung';
+        printerNameEl.style.display = 'none';
+        btnConnect.disabled = false;
+        btnDisconnect.disabled = true;
+        btnPrint.disabled = true;
+      }
+    }
+
+    function updateReceiptPreview() {
+      const storeInfo = {
+        name: storeNameInput.value || 'TOKO SAYA',
+        address: storeAddressInput.value || 'Alamat Toko',
+        phone: storePhoneInput.value || '021-12345678'
+      };
+      
+      const paperWidth = parseInt(paperWidthSelect.value);
+      const taxPercentage = parseFloat(taxPercentageInput.value) || 10;
+      const lineChars = getLineChars(paperWidth);
+      const divider = '-'.repeat(lineChars);
+      const tx = transactionData;
+      
+      let html = '';
+      html += `<div class="center bold large">${storeInfo.name}</div>`;
+      html += `<div class="center">${storeInfo.address}</div>`;
+      html += `<div class="center">${storeInfo.phone}</div>`;
+      html += `<div class="divider"></div>`;
+      html += `<div class="center bold">STRUK PEMBAYARAN</div>`;
+      html += `<div>No   : ${tx.idFull}</div>`;
+      html += `<div>Tgl  : ${formatDate(tx.createdAt)}</div>`;
+      html += `<div>Kasir: Admin</div>`;
+      html += `<div>Bayar: ${tx.method}</div>`;
+      html += `<div class="divider"></div>`;
+      html += `<div class="bold">ITEM PEMBELIAN</div>`;
+      
+      tx.items.forEach(item => {
+        let nama = item.name;
+        if (nama.length > lineChars - 4) nama = nama.substring(0, lineChars - 4) + '...';
+        html += `<div>${nama}</div>`;
+        html += `<div>${leftRight(`${item.qty}x${formatRupiah(item.price)}`, formatRupiah(item.lineTotal), lineChars)}</div>`;
+      });
+      
+      html += `<div class="divider"></div>`;
+      html += `<div>${leftRight('Subtotal', formatRupiah(tx.subtotal), lineChars)}</div>`;
+      if (tx.discount > 0) {
+        html += `<div>${leftRight('Diskon', formatRupiah(-tx.discount), lineChars)}</div>`;
+      }
+      const taxAmount = Math.round((tx.subtotal - tx.discount) * taxPercentage / 100);
+      html += `<div>${leftRight(`PPN ${taxPercentage}%`, formatRupiah(taxAmount), lineChars)}</div>`;
+      html += `<div class="bold">${leftRight('TOTAL', formatRupiah(tx.total), lineChars)}</div>`;
+      html += `<div></div>`;
+      html += `<div>${leftRight('Tunai', formatRupiah(tx.received), lineChars)}</div>`;
+      html += `<div>${leftRight('Kembali', formatRupiah(tx.change), lineChars)}</div>`;
+      html += `<div class="divider"></div>`;
+      html += `<div class="center bold">TERIMA KASIH</div>`;
+      html += `<div class="center">Barang tidak dapat dikembalikan</div>`;
+      
+      receiptPreview.innerHTML = html;
+    }
+
+    // ==========================================
+    // Bluetooth Functions
+    // ==========================================
+
+    async function connectPrinter() {
+      try {
+        statusIndicator.className = 'status-indicator connecting';
+        statusText.textContent = 'Menghubungkan...';
+        
+        if (!navigator.bluetooth) {
+          throw new Error('Web Bluetooth tidak didukung. Gunakan Chrome atau Edge.');
+        }
+        
+        bluetoothDevice = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [SPP_UUID]
+        });
+        
+        if (!bluetoothDevice) throw new Error('Tidak ada perangkat yang dipilih');
+        
+        const server = await bluetoothDevice.gatt.connect();
+        const service = await server.getPrimaryService(SPP_UUID);
+        const characteristics = await service.getCharacteristics();
+        
+        characteristic = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse);
+        
+        if (!characteristic) throw new Error('Karakteristik tidak ditemukan');
+        
+        isConnected = true;
+        updateUI();
+        showToast('Printer berhasil terhubung!', 'success');
+        
+        bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+          isConnected = false;
+          characteristic = null;
+          updateUI();
+          showToast('Printer terputus', 'error');
+        });
+        
+      } catch (error) {
+        console.error('Connection error:', error);
+        isConnected = false;
+        updateUI();
+        showToast('Gagal: ' + error.message, 'error');
+      }
+    }
+
+    async function disconnectPrinter() {
+      try {
+        if (bluetoothDevice?.gatt.connected) bluetoothDevice.gatt.disconnect();
+        isConnected = false;
+        characteristic = null;
+        bluetoothDevice = null;
+        updateUI();
+        showToast('Printer diputuskan', 'success');
+      } catch (error) {
+        showToast('Gagal: ' + error.message, 'error');
+      }
+    }
+
+    async function writeBytes(bytes) {
+      if (!characteristic) throw new Error('Printer tidak terhubung');
+      const data = new Uint8Array(bytes);
+      const chunkSize = 100; // XP-58IIZ chunk size optimal
+      
+      for (let i = 0; i < data.length; i += chunkSize) {
+        const chunk = data.slice(i, i + chunkSize);
+        if (characteristic.properties.writeWithoutResponse) {
+          await characteristic.writeValueWithoutResponse(chunk);
+        } else {
+          await characteristic.writeValue(chunk);
+        }
+        await new Promise(r => setTimeout(r, 30));
+      }
+    }
+
+    // ==========================================
+    // ESC/POS Commands
+    // ==========================================
+
+    const ESC = {
+      init: () => [0x1B, 0x40],
+      alignLeft: () => [0x1B, 0x61, 0x00],
+      alignCenter: () => [0x1B, 0x61, 0x01],
+      boldOn: () => [0x1B, 0x45, 0x01],
+      boldOff: () => [0x1B, 0x45, 0x00],
+      sizeNormal: () => [0x1D, 0x21, 0x00],
+      sizeLarge: () => [0x1D, 0x21, 0x11],
+      doubleHeightOn: () => [0x1B, 0x21, 0x10],
+      doubleHeightOff: () => [0x1B, 0x21, 0x00],
+      feed: (n) => [0x1B, 0x64, n],
+      cut: () => [0x1D, 0x56, 0x00], // Full cut untuk XP-58IIZ
+      text: (s) => Array.from(new TextEncoder().encode(s + '\n'))
+    };
+
+    function buildReceiptBytes(tx, storeInfo, taxPercentage, paperWidth) {
+      const out = [];
+      const add = (bytes) => out.push(...bytes);
+      const lineChars = getLineChars(paperWidth);
+      const divider = '-'.repeat(lineChars);
+      const taxAmount = Math.round((tx.subtotal - tx.discount) * taxPercentage / 100);
+      
+      add(ESC.init());
+      
+      // Header
+      add(ESC.alignCenter());
+      add(ESC.doubleHeightOn());
+      add(ESC.boldOn());
+      add(ESC.text(storeInfo.name));
+      add(ESC.doubleHeightOff());
+      add(ESC.boldOff());
+      add(ESC.text(storeInfo.address));
+      add(ESC.text(storeInfo.phone));
+      add(ESC.text(divider));
+      
+      // Transaction
+      add(ESC.boldOn());
+      add(ESC.text('STRUK PEMBAYARAN'));
+      add(ESC.boldOff());
+      add(ESC.alignLeft());
+      add(ESC.text(`No   : ${tx.idFull}`));
+      add(ESC.text(`Tgl  : ${formatDate(tx.createdAt)}`));
+      add(ESC.text('Kasir: Admin'));
+      add(ESC.text(`Bayar: ${tx.method}`));
+      add(ESC.text(divider));
+      
+      // Items
+      add(ESC.boldOn());
+      add(ESC.text('ITEM PEMBELIAN'));
+      add(ESC.boldOff());
+      
+      tx.items.forEach(item => {
+        let nama = item.name;
+        if (nama.length > lineChars - 4) nama = nama.substring(0, lineChars - 4) + '...';
+        add(ESC.text(nama));
+        add(ESC.text(leftRight(`${item.qty}x${formatRupiah(item.price)}`, formatRupiah(item.lineTotal), lineChars)));
+      });
+      
+      add(ESC.text(divider));
+      
+      // Summary
+      add(ESC.text(leftRight('Subtotal', formatRupiah(tx.subtotal), lineChars)));
+      if (tx.discount > 0) {
+        add(ESC.text(leftRight('Diskon', formatRupiah(-tx.discount), lineChars)));
+      }
+      add(ESC.text(leftRight(`PPN ${taxPercentage}%`, formatRupiah(taxAmount), lineChars)));
+      
+      add(ESC.boldOn());
+      add(ESC.sizeLarge());
+      add(ESC.text(leftRight('TOTAL', formatRupiah(tx.total), lineChars)));
+      add(ESC.sizeNormal());
+      add(ESC.boldOff());
+      
+      add(ESC.text(''));
+      add(ESC.text(leftRight('Tunai', formatRupiah(tx.received), lineChars)));
+      add(ESC.text(leftRight('Kembali', formatRupiah(tx.change), lineChars)));
+      add(ESC.text(divider));
+      
+      // Footer
+      add(ESC.alignCenter());
+      add(ESC.boldOn());
+      add(ESC.doubleHeightOn());
+      add(ESC.text('TERIMA KASIH'));
+      add(ESC.doubleHeightOff());
+      add(ESC.text('Barang tidak dapat dikembalikan'));
+      add(ESC.boldOff());
+      
+      add(ESC.feed(4));
+      add(ESC.cut());
+      
+      return out;
+    }
+
+    // ==========================================
+    // Print Functions
+    // ==========================================
+
+    async function printReceipt() {
+      try {
+        const storeInfo = {
+          name: storeNameInput.value || 'TOKO SAYA',
+          address: storeAddressInput.value || 'Alamat Toko',
+          phone: storePhoneInput.value || '021-12345678'
+        };
+        
+        const paperWidth = parseInt(paperWidthSelect.value);
+        const taxPercentage = parseFloat(taxPercentageInput.value) || 10;
+        
+        const bytes = buildReceiptBytes(transactionData, storeInfo, taxPercentage, paperWidth);
+        await writeBytes(bytes);
+        
+        showToast('Struk berhasil dicetak!', 'success');
+      } catch (error) {
+        console.error('Print error:', error);
+        showToast('Gagal: ' + error.message, 'error');
+      }
+    }
+
+    // ==========================================
+    // Event Listeners
+    // ==========================================
+
+    btnConnect.addEventListener('click', connectPrinter);
+    btnDisconnect.addEventListener('click', disconnectPrinter);
+    btnPrint.addEventListener('click', printReceipt);
+
+    btnSettings.addEventListener('click', () => {
+      modalSettings.classList.add('show');
+      updateReceiptPreview();
+    });
+
+    btnCloseModal.addEventListener('click', () => modalSettings.classList.remove('show'));
+    btnSaveSettings.addEventListener('click', () => {
+      modalSettings.classList.remove('show');
+      showToast('Pengaturan disimpan!', 'success');
+    });
+
+    modalSettings.addEventListener('click', (e) => {
+      if (e.target === modalSettings) modalSettings.classList.remove('show');
+    });
+
+    btnPdf.addEventListener('click', () => window.print());
+
+    btnDelete.addEventListener('click', () => {
+      if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+        showToast('Transaksi dihapus', 'error');
+      }
+    });
+
+    // Update preview on settings change
+    [paperWidthSelect, taxPercentageInput, storeNameInput, storeAddressInput, storePhoneInput].forEach(el => {
+      el.addEventListener('input', updateReceiptPreview);
+      el.addEventListener('change', updateReceiptPreview);
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      updateUI();
+      if (!navigator.bluetooth) {
+        showToast('Web Bluetooth tidak didukung', 'error');
+      }
+    });
+  </script>
 </body>
 </html>
