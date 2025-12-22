@@ -129,11 +129,12 @@ window.initEditProdukPage = async function() {
         }
       }
 
-      alert('Produk berhasil diupdate!');
+      if (window.showToast) showToast('Produk berhasil diupdate!', 'success');
+      else alert('Produk berhasil diupdate!');
       loadPage('produk');
     } catch (err) {
-      console.error('Gagal update produk:', err);
-      alert('Gagal update produk!');
+      if (window.showToast) showToast('Gagal update produk!', 'error');
+      else alert('Gagal update produk!');
     }
   });
 };

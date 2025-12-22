@@ -166,7 +166,11 @@ window.tambahProduk = async function tambahProduk() {
   const sku = (document.getElementById('sku').value || '').trim();
   const stok = Number(document.getElementById('stok').value || 0);
   const kategori = document.getElementById('kategori').value;
-  if (!kategori) { alert('Kategori wajib dipilih!'); return; }
+  if (!kategori) {
+    if (window.showToast) showToast('Kategori wajib dipilih!', 'warn');
+    else alert('Kategori wajib dipilih!');
+    return;
+  }
   const deskripsi = (document.getElementById('deskripsi').value || '').trim();
   const imageUrl = (document.getElementById('image-url').value || '').trim();
   const promoType = document.getElementById('promo-type').value || "";
@@ -229,12 +233,14 @@ window.tambahProduk = async function tambahProduk() {
     const productId = res?.data?.id || res?.id;
     if (productId) await uploadGambarProduk(productId);
 
-    alert('Produk berhasil ditambahkan!');
+    if (window.showToast) showToast('Produk berhasil ditambahkan!', 'success');
+    else alert('Produk berhasil ditambahkan!');
     window.location.href = 'index.html#produk';
   } catch (err) {
     console.error('Gagal menambahkan produk:', err);
     const serverMsg = err.response?.message || err.message || JSON.stringify(err.response) || 'Terjadi kesalahan server';
-    alert(`Gagal menambahkan produk: ${serverMsg}`);
+    if (window.showToast) showToast(`Gagal menambahkan produk: ${serverMsg}`, 'error');
+    else alert(`Gagal menambahkan produk: ${serverMsg}`);
   }
 };
 

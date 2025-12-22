@@ -118,7 +118,8 @@ document.addEventListener('click', function (e) {
     buy_qty, free_qty,
     bundle_qty, bundle_value
   });
-  alert('Berhasil ditambahkan ke keranjang!');
+  if (window.showToast) showToast('Berhasil ditambahkan ke keranjang!', 'success');
+  else alert('Berhasil ditambahkan ke keranjang!');
 });
 
 // Event tombol +, -, hapus di cart

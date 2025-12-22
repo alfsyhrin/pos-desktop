@@ -3,7 +3,8 @@ async function login() {
   const password = document.getElementById('password').value;
 
   if (!email || !password) {
-    alert('Email dan password wajib diisi');
+    if (window.showToast) showToast('Email dan password wajib diisi', 'warn');
+    else alert('Email dan password wajib diisi');
     return;
   }
 
@@ -21,16 +22,16 @@ async function login() {
     if (profile.user) {
       localStorage.setItem('role', (profile.user.role || '').toString());
       localStorage.setItem('user_id', String(profile.user.id || profile.user.user_id || ''));
-      // owner_id: jika user adalah owner, owner_id = user.id, jika bukan, ada owner_id
       const ownerId = profile.user.owner_id || profile.user.id || null;
       if (ownerId) localStorage.setItem('owner_id', String(ownerId));
-      // store_id jika ada (admin/kasir)
       if (profile.user.store_id) localStorage.setItem('store_id', String(profile.user.store_id));
     }
 
+    if (window.showToast) showToast('Login berhasil', 'success');
     window.location.href = 'index.html';
   } catch (err) {
-    alert('Login gagal: ' + err.message);
+    if (window.showToast) showToast('Login gagal: ' + err.message, 'error');
+    else alert('Login gagal: ' + err.message);
   }
 }
 

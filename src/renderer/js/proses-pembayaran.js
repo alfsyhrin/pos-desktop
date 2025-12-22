@@ -66,8 +66,16 @@ function inisialisasiBayar() {
     const kembalian = uangDiterima - grandTotal;
 
     // Validasi
-    if (!cart.length) return alert('Keranjang kosong!');
-    if (uangDiterima < grandTotal) return alert('Uang diterima kurang dari total belanja!');
+    if (!cart.length) {
+      if (window.showToast) showToast('Keranjang kosong!', 'warn');
+      else alert('Keranjang kosong!');
+      return;
+    }
+    if (uangDiterima < grandTotal) {
+      if (window.showToast) showToast('Uang diterima kurang dari total belanja!', 'warn');
+      else alert('Uang diterima kurang dari total belanja!');
+      return;
+    }
 
     // Siapkan payload transaksi
     const storeId = localStorage.getItem('store_id');
@@ -107,6 +115,7 @@ function inisialisasiBayar() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        if (window.showToast) showToast('Transaksi berhasil!', 'success');
         // Simpan data transaksi ke localStorage untuk detail-transaksi.html
         localStorage.setItem('last_transaction', JSON.stringify(data.data));
         // Kosongkan cart
@@ -115,7 +124,8 @@ function inisialisasiBayar() {
         // Redirect ke detail transaksi
         window.location.href = 'detail-transaksi.html';
       } else {
-        alert('Gagal transaksi: ' + (data.message || res.status));
+        if (window.showToast) showToast('Gagal transaksi: ' + (data.message || res.status), 'error');
+        else alert('Gagal transaksi: ' + (data.message || res.status));
       }
     } catch (err) {
       alert('Gagal transaksi: ' + (err.message || err));
