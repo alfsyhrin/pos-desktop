@@ -122,9 +122,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     products.forEach(product => {
+      const imageUrlRaw = product.image_url || product.imageUrl || '';
+      const imageUrl = imageUrlRaw
+        ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
+        : '';
+      // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
+      const imgTag = imageUrl
+        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee;"
+            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:48px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+        : `<span class="material-symbols-outlined card-icon" style="font-size:48px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+
       const productCard = `
         <div class="card-produk">
-          <span class="material-symbols-outlined card-icon">shopping_bag</span>
+          ${imgTag}
           <div class="info-produk">
             <div class="nama-produk-stok-wrapper">
               <h4>${product.name}</h4>
@@ -235,6 +245,7 @@ window.tambahProduk = async function tambahProduk() {
 
     if (window.showToast) showToast('Produk berhasil ditambahkan!', 'success');
     else alert('Produk berhasil ditambahkan!');
+    // Setelah sukses tambah/edit produk:
     window.location.href = 'index.html#produk';
   } catch (err) {
     console.error('Gagal menambahkan produk:', err);
@@ -447,9 +458,19 @@ window.renderProdukPage = async function renderProdukPage() {
     }
 
     products.forEach(product => {
+      const imageUrlRaw = product.image_url || product.imageUrl || '';
+      const imageUrl = imageUrlRaw
+        ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
+        : '';
+      // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
+      const imgTag = imageUrl
+        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee;"
+            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:48px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+        : `<span class="material-symbols-outlined card-icon" style="font-size:48px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+
       const productCard = `
         <div class="card-produk">
-          <span class="material-symbols-outlined card-icon">shopping_bag</span>
+          ${imgTag}
           <div class="info-produk">
             <div class="nama-produk-stok-wrapper">
               <h4>${product.name}</h4>
@@ -521,9 +542,19 @@ async function cariProduk(q, category = '') {
     }
 
     products.forEach(product => {
+      const imageUrlRaw = product.image_url || product.imageUrl || '';
+      const imageUrl = imageUrlRaw
+        ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
+        : '';
+      // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
+      const imgTag = imageUrl
+        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee;"
+            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:48px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+        : `<span class="material-symbols-outlined card-icon" style="font-size:48px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+
       const productCard = `
         <div class="card-produk">
-          <span class="material-symbols-outlined card-icon">shopping_bag</span>
+          ${imgTag}
           <div class="info-produk">
             <div class="nama-produk-stok-wrapper">
               <h4>${product.name}</h4>

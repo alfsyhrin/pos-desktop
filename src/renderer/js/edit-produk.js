@@ -110,31 +110,44 @@ window.initEditProdukPage = async function() {
         body
       });
 
-      // Image upload handling unchanged...
+      // === Tambahan: upload gambar jika ada file ===
       const fileInput = document.getElementById('product-image');
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        if (window.uploadGambarProduk) {
-          await window.uploadGambarProduk(productId, fileInput.files[0]);
-        } else {
-          const formData = new FormData();
-          formData.append('image', fileInput.files[0]);
-          formData.append('product_id', productId);
-          const token = localStorage.getItem('token');
-          const resUpload = await fetch(`${BASE_URL}/products/upload-image`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData
-          });
-          if (!resUpload.ok) throw new Error('Gagal upload gambar');
-        }
+        await uploadGambarProdukEdit(storeId, productId, fileInput.files[0]);
       }
 
       if (window.showToast) showToast('Produk berhasil diupdate!', 'success');
       else alert('Produk berhasil diupdate!');
-      loadPage('produk');
+      // Setelah sukses tambah/edit produk:
+      window.location.href = 'index.html#produk';
     } catch (err) {
       if (window.showToast) showToast('Gagal update produk!', 'error');
       else alert('Gagal update produk!');
     }
   });
 };
+
+async function uploadGambarProdukEdit(storeId, productId, file) {
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('product_id', productId);
+  formData.append('image', file);
+
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${BASE_URL}/stores/${storeId}/upload-image`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+        // Jangan set Content-Type, biarkan browser yang atur boundary
+      },
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Gagal upload gambar produk');
+    return data;
+  } catch (err) {
+    console.error('Gagal upload gambar produk:', err);
+    throw err;
+  }
+}

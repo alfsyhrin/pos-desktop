@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (email) body.email = email;
 
     const url = storeId
-      ? `http://103.126.116.119:5000/api/stores/${storeId}/users`
-      : `http://103.126.116.119:5000/api/stores/users`;
+      ? `http://103.126.116.119:8001/api/stores/${storeId}/users`
+      : `http://103.126.116.119:8001/api/stores/users`;
 
     try {
       simpanBtn.disabled = true;

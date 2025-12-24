@@ -382,3 +382,12 @@ button.btn-active {
   flex-direction: row;
   gap: 8px;
 }
+
+.card-img {
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #eee;
+}
