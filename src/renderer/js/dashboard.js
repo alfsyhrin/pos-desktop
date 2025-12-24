@@ -32,6 +32,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const planEl = document.querySelector('.info-langganan-subjudul');
     if (planEl) planEl.textContent = 'Gagal memuat data';
   }
+
+  // Tambahan: render nama bisnis/toko di header dashboard
+  try {
+    const profile = await window.apiRequest('/auth/profile');
+    const user = profile.user || {};
+    const headerEl = document.getElementById('headerStoreName');
+    if (headerEl) {
+      if (user.role === 'owner') {
+        headerEl.textContent = user.business_name || 'APLIKASI PIPOS';
+      } else if (user.role === 'admin' || user.role === 'cashier') {
+        headerEl.textContent = user.store_name || 'APLIKASI PIPOS';
+      } else {
+        headerEl.textContent = 'APLIKASI PIPOS';
+      }
+    }
+  } catch (err) {
+    // fallback, biarkan default
+  }
 });
 
 // Helper untuk format tanggal (YYYY-MM-DD ke 25 Desember 2025)

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://103.126.116.119:5000/api';
+const BASE_URL = 'http://103.126.116.119:8001/api';
 
 function getToken() {
   return localStorage.getItem('token');

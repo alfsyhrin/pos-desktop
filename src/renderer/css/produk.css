@@ -7,7 +7,7 @@ header.header-produk {
 }
 
 header.header-produk h2 {
-  color: var(--foreground-color);
+  color: #fff;
   font-size: 30px;
 }
 
@@ -82,8 +82,8 @@ header.header-produk p {
 
 .tools-button-produk button {
   flex: 1;
-  background-color: var(--background-color);
-  color: var(--foreground-color);
+  background-color: #000;
+  color: #fff;
   border-radius: 8px;
   border: 1px solid #333;
   flex-wrap: nowrap;
@@ -106,9 +106,9 @@ button.btn-active {
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  background: var(--background-color);
+  background: #000;
   border: 1px solid #333;
-  color: var(--foreground-color);
+  color: white;
   border-radius: 8px;
   cursor: pointer;
   font-size: 15px;
@@ -228,7 +228,7 @@ button.btn-active {
 }
 
 .detail-produk-info p {
-  color: var(--foreground-color);
+  color: #fff;
   font-size: 18px;
   font-weight: var(--weight-bold);
 }
@@ -237,7 +237,7 @@ button.btn-active {
   font-size: 25px;
   color: var(--primary-color);
   padding: 8px;
-  background-color: var(--foreground-color);
+  background-color: #fff;
   border-radius: 50%;
 }
 /* Akhir Card Detail Produk */
@@ -270,14 +270,14 @@ button.btn-active {
 }
 
 .list-produk-container h3 {
-  color: var(--foreground-color);
+  color: #fff;
   font-size: 18px;
   margin-bottom: 16px;
   font-weight: var(--weight-black);
 }
 
 .card-produk {
-  background-color: var(--card-color);
+  background-color: #151010ff;
   border: 1px solid #333;
   border-radius: 8px;
   padding: 12px;
@@ -306,7 +306,7 @@ button.btn-active {
 }
 
 .nama-produk-stok-wrapper h4 {
-  color: var(--foreground-color);
+  color: #fff;
   font-size: 14px;
   font-weight: var(--weight-bold);
 }
@@ -317,7 +317,7 @@ button.btn-active {
 }
 
 .info-produk .harga-produk {
-  color: var(--foreground-color);
+  color: #fff;
   font-size: 14px;
   font-weight: var(--weight-bold);
 }

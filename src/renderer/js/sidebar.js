@@ -8,30 +8,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const profile = await window.apiRequest('/auth/profile');
     const user = profile.user || {};
-    // ensure localStorage synced
+
+    // Simpan ke localStorage
     if (user.role) localStorage.setItem('role', String(user.role));
     if (user.id) localStorage.setItem('user_id', String(user.id));
     if (user.owner_id) localStorage.setItem('owner_id', String(user.owner_id));
     if (user.store_id) localStorage.setItem('store_id', String(user.store_id));
-    // render owner info if available
-    const ownerId = user.owner_id || user.id;
-    if (ownerId) {
-      try {
-        const ownerRes = await window.apiRequest(`/owners/${ownerId}`);
-        const ownerData = ownerRes.data || {};
-        const usernameEl = document.querySelector('.username');
-        const emailEl = document.querySelector('.email');
-        if (usernameEl) usernameEl.textContent = ownerData.business_name || ownerData.name || '-';
-        if (emailEl) emailEl.textContent = ownerData.email || '-';
-      } catch (e) {
-        // ignore owner details error
-      }
+
+    // Render info sidebar sesuai role
+    const usernameEl = document.querySelector('.username');
+    const emailEl = document.querySelector('.email');
+    if (user.role === 'owner') {
+      if (usernameEl) usernameEl.textContent = user.business_name || '-';
+      if (emailEl) emailEl.textContent = user.email || '-';
+    } else if (user.role === 'admin' || user.role === 'cashier') {
+      if (usernameEl) usernameEl.textContent = user.store_name || '-';
+      if (emailEl) emailEl.textContent = user.username || '-';
     }
   } catch (err) {
     console.error('Gagal memuat profil sidebar:', err);
   }
 
-  // logout binding (cari beberapa selector)
+  // logout binding (tidak berubah)
   const logoutSelectors = ['.sidebar-item.logout', '#logout-btn', 'a[href="#logout"]'];
   logoutSelectors.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
@@ -47,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-// role-based sidebar visibility (kept separate so it runs even if profile fetch fails)
+// role-based sidebar visibility (tidak berubah)
 document.addEventListener('DOMContentLoaded', () => {
   const role = (localStorage.getItem('role') || '').toLowerCase();
   const mapping = {
