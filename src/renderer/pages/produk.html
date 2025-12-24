@@ -16,8 +16,8 @@
 
   <div class="tools-produk">
     <div class="tools-button-produk">
-      <button class="btn-active">WP2DW</button>
-      <button>Scan Kamera</button>
+      <button class="btn-active"  id="btn-wp2dw">WP2DW</button>
+      <button id="btn-scan-camera">Scan Kamera</button>
     </div>
     <div class="dropdown">
       <input type="checkbox" id="dropdown-toggle" hidden>
@@ -73,6 +73,16 @@
   <div class="list-produk-container">
     <h3>Daftar Produk</h3>
     <div class="list-produk"></div>
+  </div>
+  <input type="text" id="scanner-input" style="position:absolute;left:-9999px;" autocomplete="off">
+  <div id="toast" class="toast"></div>
+  <div class="camera-container" id="camera-container" style="display:none;">
+    <div id="camera-reader"></div>
+    <div class="camera-controls" style="text-align:center;margin-top:10px;">
+      <button class="btn btn-outline" id="btn-close-camera" type="button">
+        <span class="material-symbols-outlined">close</span> Tutup Kamera
+      </button>
+    </div>
   </div>
 </main>
 <script src="../js/api.js"></script>

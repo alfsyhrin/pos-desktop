@@ -1,5 +1,4 @@
-
-    let html5QrCode = null;
+let html5QrCode = null;
     let cameraActive = false;
     let scannerBuffer = '';
     let scannerTimeout = null;
@@ -41,7 +40,10 @@
 
     function handleScannedBarcode(barcode) {
       showToast('Barcode terdeteksi: ' + barcode, 'success');
-      
+      // Panggil handler pencarian produk di produk.js
+      if (window.onBarcodeScanned) {
+        window.onBarcodeScanned(barcode);
+      }
       // Isi kolom barcode di tools
       document.getElementById('barcode-value').value = barcode;
       
@@ -215,63 +217,107 @@ function setInputValue(id, val) { const el = safeGet(id); if (el) el.value = val
       }
     }
 
-    async function startCamera() {
-      const container = document.getElementById('camera-container');
-      const btn = document.getElementById('btn-camera');
-      
-      try {
-        container.classList.add('active');
-        
-        html5QrCode = new Html5Qrcode("camera-reader");
-        
-        const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
-        };
-        
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          config,
-          (decodedText) => {
-            // Barcode/QR berhasil di-scan
-            handleScannedBarcode(decodedText);
-            stopCamera();
-          },
-          (errorMessage) => {
-            // Ignore scan errors (normal saat mencari barcode)
-          }
-        );
-        
-        cameraActive = true;
-        btn.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Stop Kamera';
-        showToast('Kamera aktif - Arahkan ke barcode', 'info');
-        
-      } catch (error) {
-        container.classList.remove('active');
-        showToast('Gagal membuka kamera: ' + error.message, 'error');
-        console.error('Camera error:', error);
-      }
-    }
+async function startCamera() {
+  // tunggu singkat agar SPA bisa menyisipkan elemen produk.html ke DOM
+  let cameraReader = document.getElementById('camera-reader');
+  let retry = 0;
+  while (!cameraReader && retry < 20) { // tunggu sampai 2s total
+    await new Promise(r => setTimeout(r, 100));
+    cameraReader = document.getElementById('camera-reader');
+    retry++;
+  }
 
-    function stopCamera() {
-      const container = document.getElementById('camera-container');
-      const btn = document.getElementById('btn-camera');
-      
-      if (html5QrCode && cameraActive) {
-        html5QrCode.stop().then(() => {
-          html5QrCode.clear();
-          cameraActive = false;
-          container.classList.remove('active');
-          btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
-        }).catch(err => {
-          console.error('Error stopping camera:', err);
-        });
-      } else {
-        container.classList.remove('active');
-        btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
-      }
+  // fallback: buat container/reader jika belum ada (mencegah null)
+  let container = document.getElementById('camera-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'camera-container';
+    container.style.display = 'none';
+    document.body.appendChild(container);
+  }
+  if (!cameraReader) {
+    cameraReader = document.createElement('div');
+    cameraReader.id = 'camera-reader';
+    container.appendChild(cameraReader);
+  }
+
+  // pilih button yang ada di halaman (dukung btn-camera atau btn-scan-camera)
+  const btn = document.getElementById('btn-camera') || document.getElementById('btn-scan-camera') || null;
+
+  // pastikan library Html5Qrcode tersedia
+  if (typeof Html5Qrcode === 'undefined') {
+    showToast('Library scanner belum dimuat (Html5Qrcode).', 'error');
+    return;
+  }
+
+  try {
+    container.style.display = 'block';
+    container.classList.add('active');
+    cameraReader.innerHTML = ''; // aman karena kita sudah memastikan cameraReader ada
+
+    // inisialisasi html5QrCode
+    if (html5QrCode) {
+      try { await html5QrCode.clear(); } catch (_) {}
+      html5QrCode = null;
     }
+    html5QrCode = new Html5Qrcode("camera-reader");
+
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText) => {
+        handleScannedBarcode(decodedText);
+        stopCamera();
+      },
+      (errorMessage) => { /* ignore frame decode errors */ }
+    );
+
+    cameraActive = true;
+    if (btn) btn.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Stop Kamera';
+    showToast('Kamera aktif - Arahkan ke barcode', 'info');
+  } catch (error) {
+    container.classList.remove('active');
+    container.style.display = 'none';
+    showToast('Gagal membuka kamera: ' + (error?.message || error), 'error');
+    console.error('Camera error:', error);
+  }
+}
+
+function stopCamera() {
+  const container = document.getElementById('camera-container');
+  const btn = document.getElementById('btn-camera') || document.getElementById('btn-scan-camera') || null;
+
+  if (html5QrCode && cameraActive) {
+    html5QrCode.stop().then(() => {
+      try { html5QrCode.clear(); } catch (_) {}
+      html5QrCode = null;
+      cameraActive = false;
+      if (container) {
+        container.classList.remove('active');
+        container.style.display = 'none';
+      }
+      if (btn) btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
+    }).catch(err => {
+      console.error('Error stopping camera:', err);
+      if (container) {
+        container.classList.remove('active');
+        container.style.display = 'none';
+      }
+      if (btn) btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
+      cameraActive = false;
+      html5QrCode = null;
+    });
+  } else {
+    if (container) {
+      container.classList.remove('active');
+      container.style.display = 'none';
+    }
+    if (btn) btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
+    cameraActive = false;
+    if (html5QrCode) { try { html5QrCode.clear(); } catch (_) {} html5QrCode = null; }
+  }
+}
 
     // ==========================================
     // FORM ACTIONS
@@ -331,9 +377,9 @@ function setInputValue(id, val) { const el = safeGet(id); if (el) el.value = val
     
     function showToast(message, type = 'info') {
       const toast = document.getElementById('toast');
+      if (!toast) return; // <-- Tambahkan ini agar tidak error jika toast tidak ada
       toast.textContent = message;
       toast.className = 'toast ' + type + ' show';
-      
       setTimeout(() => {
         toast.classList.remove('show');
       }, 3000);
@@ -343,3 +389,103 @@ function setInputValue(id, val) { const el = safeGet(id); if (el) el.value = val
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('scanner-input').focus();
     });
+
+    // Handler barcode scan khusus halaman produk
+window.handleScannedBarcode = async function(barcode) {
+  // Isi field search
+  const searchInput = document.querySelector('.bar-pencarian-produk input[type="text"]');
+  if (searchInput) {
+    searchInput.value = barcode;
+  }
+  showToast('Barcode terdeteksi: ' + barcode, 'success');
+  // Cari produk berdasarkan barcode
+  const storeId = localStorage.getItem('store_id');
+  if (!storeId) return;
+  const listProdukEl = document.querySelector('.list-produk');
+  if (!listProdukEl) return;
+  listProdukEl.innerHTML = '<p>Mencari produk berdasarkan barcode...</p>';
+  try {
+    const res = await window.apiRequest(`/stores/${storeId}/products/search?query=${encodeURIComponent(barcode)}`);
+    const products = extractProductsFromResponse(res);
+    if (products.length > 0) {
+      // Render hasil pencarian (gunakan fungsi render produk yang sudah ada)
+      listProdukEl.innerHTML = '';
+      products.forEach(product => {
+        // ...gunakan kode render produk card seperti biasa...
+        const imageUrlRaw = product.image_url || product.imageUrl || '';
+        const imageUrl = imageUrlRaw
+          ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
+          : '';
+        const imgTag = imageUrl
+          ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee;"
+              onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:48px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+          : `<span class="material-symbols-outlined card-icon" style="font-size:48px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+
+        const productCard = `
+          <div class="card-produk">
+            ${imgTag}
+            <div class="info-produk">
+              <div class="nama-produk-stok-wrapper">
+                <h4>${product.name}</h4>
+                <h4>Stok: ${product.stock}</h4>
+              </div>
+              <div class="kode-harga-button-wrapper">
+                <div class="kode-harga-wrapper">
+                  <p class="kode-produk">SKU: ${product.sku}</p>
+                  <p class="harga-produk">Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</p>
+                </div>
+                <div class="button-produk-wrapper">
+                  <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
+                  <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        listProdukEl.innerHTML += productCard;
+      });
+    } else {
+      // Produk tidak ditemukan, tampilkan modal notifikasi
+      showProductNotFoundModal(barcode);
+    }
+  } catch (err) {
+    listProdukEl.innerHTML = '<p style="color:red;">Gagal mencari produk.</p>';
+  }
+};
+
+// Modal produk tidak ditemukan
+function showProductNotFoundModal(barcode) {
+  // Buat modal sederhana jika belum ada
+  let modal = document.getElementById('modal-notfound');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-notfound';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.6)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '99999';
+    modal.innerHTML = `
+      <div style="background:#fff; padding:32px 24px; border-radius:12px; max-width:340px; text-align:center;">
+        <span class="material-symbols-outlined" style="font-size:48px;color:#e43636;">warning</span>
+        <h3 style="margin:16px 0 8px 0;">Produk belum ditambahkan</h3>
+        <p style="color:#64748b;font-size:14px;">Barcode: <b>${barcode}</b></p>
+        <div style="margin-top:24px; display:flex; gap:12px; justify-content:center;">
+          <button id="btn-notfound-cancel" style="padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;">Batal</button>
+          <button id="btn-notfound-add" style="padding:8px 18px;border-radius:8px;background:#10b981;color:#fff;border:none;">Tambah Produk</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    modal.querySelector('p').innerHTML = `Barcode: <b>${barcode}</b>`;
+    modal.style.display = 'flex';
+  }
+  // Event
+  modal.querySelector('#btn-notfound-cancel').onclick = () => { modal.style.display = 'none'; };
+  modal.querySelector('#btn-notfound-add').onclick = () => {
+    window.location.href = `tambah-produk.html?barcode=${encodeURIComponent(barcode)}`;
+  };
+}

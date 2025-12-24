@@ -169,6 +169,7 @@ window.tambahProduk = async function tambahProduk() {
   const storeId = localStorage.getItem('store_id');
   if (!storeId) { alert('Store ID tidak ditemukan. Silakan login ulang.'); return; }
 
+  // Ambil semua field dari form
   const namaProduk = (document.getElementById('nama-produk').value || '').trim();
   const barcode = (document.getElementById('product-barcode').value || '').trim();
   const hargaModal = Number(document.getElementById('harga-modal').value || 0);
@@ -182,10 +183,9 @@ window.tambahProduk = async function tambahProduk() {
     return;
   }
   const deskripsi = (document.getElementById('deskripsi').value || '').trim();
-  const imageUrl = (document.getElementById('image-url').value || '').trim();
   const promoType = document.getElementById('promo-type').value || "";
 
-  // Mapping promo sesuai backend
+  // Promo/diskon mapping
   let jenis_diskon = null;
   let nilai_diskon = null;
   let diskon_bundle_min_qty = null;
@@ -209,43 +209,45 @@ window.tambahProduk = async function tambahProduk() {
     diskon_bundle_value = Number(document.getElementById('bundle-total-price').value || 0);
   }
 
-  const produkBaru = {
-    name: namaProduk,
-    sku: sku,
-    barcode: barcode,
-    price: hargaJual,
-    cost_price: hargaModal,
-    stock: stok,
-    category: kategori,
-    description: deskripsi,
-    image_url: imageUrl,
-    jenis_diskon,
-    nilai_diskon,
-    diskon_bundle_min_qty,
-    diskon_bundle_value,
-    buy_qty,
-    free_qty
-  };
+  // Ambil file gambar
+  const imageInput = document.getElementById('product-image');
+  const fileToUpload = imageInput && imageInput.files ? imageInput.files[0] : null;
 
-  // Hapus field null
-  Object.keys(produkBaru).forEach(key => {
-    if (produkBaru[key] === null) delete produkBaru[key];
-  });
+  // Siapkan form-data
+  const formData = new FormData();
+  formData.append('name', namaProduk);
+  formData.append('sku', sku);
+  formData.append('barcode', barcode);
+  formData.append('price', hargaJual);
+  formData.append('cost_price', hargaModal);
+  formData.append('stock', stok);
+  formData.append('category', kategori);
+  formData.append('description', deskripsi);
+  if (fileToUpload) formData.append('image', fileToUpload);
 
-  console.log('Payload:', produkBaru);
+  // Promo/diskon
+  if (jenis_diskon) formData.append('jenis_diskon', jenis_diskon);
+  if (nilai_diskon !== null) formData.append('nilai_diskon', nilai_diskon);
+  if (diskon_bundle_min_qty !== null) formData.append('diskon_bundle_min_qty', diskon_bundle_min_qty);
+  if (diskon_bundle_value !== null) formData.append('diskon_bundle_value', diskon_bundle_value);
+  if (buy_qty !== null) formData.append('buy_qty', buy_qty);
+  if (free_qty !== null) formData.append('free_qty', free_qty);
 
   try {
-    const res = await window.apiRequest(`/stores/${storeId}/products`, {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${BASE_URL}/stores/${storeId}/products`, {
       method: 'POST',
-      body: produkBaru,
+      headers: {
+        Authorization: `Bearer ${token}`
+        // Jangan set Content-Type, biarkan browser yang atur boundary
+      },
+      body: formData
     });
-
-    const productId = res?.data?.id || res?.id;
-    if (productId) await uploadGambarProduk(productId);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Gagal menambahkan produk');
 
     if (window.showToast) showToast('Produk berhasil ditambahkan!', 'success');
     else alert('Produk berhasil ditambahkan!');
-    // Setelah sukses tambah/edit produk:
     window.location.href = 'index.html#produk';
   } catch (err) {
     console.error('Gagal menambahkan produk:', err);
@@ -342,33 +344,24 @@ async function hapusProduk(productId) {
 
 // ...existing code...
 
-async function uploadGambarProduk(productId, file) {
-  // jika file tidak diberikan, ambil dari input page saat ini
-  let fileToUpload = file;
-  if (!fileToUpload) {
-    const imageInput = document.getElementById('product-image');
-    fileToUpload = imageInput && imageInput.files ? imageInput.files[0] : null;
-  }
-
-  if (!fileToUpload) return; // tidak ada file, tidak perlu upload
-
+async function uploadGambarProduk(storeId, file) {
+  if (!file) return null;
   const formData = new FormData();
-  formData.append('image', fileToUpload);
-  formData.append('product_id', productId);
+  formData.append('image', file);
 
   try {
     const token = localStorage.getItem('token');
-    const res = await fetch(`${BASE_URL}/products/upload-image`, {
+    const res = await fetch(`${BASE_URL}/stores/${storeId}/upload-image`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`
-        // Jangan set Content-Type, biarkan browser atur boundary
+        // Jangan set Content-Type, biarkan browser yang atur boundary
       },
       body: formData
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Gagal upload gambar produk');
-    return data;
+    return data.image_url || null;
   } catch (err) {
     console.error('Gagal upload gambar produk:', err);
     throw err;
@@ -531,8 +524,13 @@ async function cariProduk(q, category = '') {
 
   listProdukEl.innerHTML = '<p>Mencari produk...</p>';
   try {
-    const categoryQuery = category ? `&category=${encodeURIComponent(category)}` : '';
-    const res = await window.apiRequest(`/stores/${storeId}/products/search?query=${encodeURIComponent(q)}${categoryQuery}`);
+    // Jika q kosong, gunakan '*' atau jangan kirim query sama sekali (sesuaikan dengan backend)
+    const queryParam = q ? `query=${encodeURIComponent(q)}` : '';
+    const categoryParam = category ? `category=${encodeURIComponent(category)}` : '';
+    // Gabungkan param dengan benar
+    const params = [queryParam, categoryParam].filter(Boolean).join('&');
+    const url = `/stores/${storeId}/products/search${params ? '?' + params : ''}`;
+    const res = await window.apiRequest(url);
     const products = extractProductsFromResponse(res);
     listProdukEl.innerHTML = '';
 
@@ -612,17 +610,20 @@ function inisialisasiPencarianProduk() {
         if (toggle) toggle.checked = false;
         // jika ada text di search, jalankan cari dengan category, else render ulang products dengan category filter
         const q = (document.querySelector('.bar-pencarian-produk input[type="text"]') || {}).value || '';
-        if (q.trim().length > 0) {
-          cariProduk(q.trim(), selectedCategory);
-        } else {
-          // ambil ulang daftar produk utama lalu filter client-side berdasarkan category
-          if (window.renderProdukPage) window.renderProdukPage();
-        }
+        cariProduk(q.trim(), selectedCategory); // Selalu panggil cariProduk dengan q dan kategori
       });
       btn.dataset.bound = '1';
     });
   }
 }
+const KATEGORI_LIST = [
+  "Kesehatan & Kecantikan",
+  "Rumah Tangga & Gaya Hidup",
+  "Fashion & Aksesoris",
+  "Elektronik",
+  "Bayi & Anak",
+  "Makanan & Minuman"
+];
 
 function populateCategoryDropdown(categories = []) {
   const menu = document.querySelector('.dropdown-menu');
@@ -636,9 +637,8 @@ function populateCategoryDropdown(categories = []) {
   btnAll.textContent = 'Semua Kategori';
   menu.appendChild(btnAll);
 
-  // Tombol kategori unik (urutkan agar konsisten)
-  Array.from(new Set(categories)).sort().forEach(cat => {
-    if (!cat) return;
+  // Tombol kategori tetap
+  KATEGORI_LIST.forEach(cat => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.category = cat;
@@ -647,7 +647,68 @@ function populateCategoryDropdown(categories = []) {
   });
 }
 
-// ...existing code...
+// --- Integrasi scan barcode dari barcode.js ---
+// Aktifkan scan barcode wired saat tombol WP2DW ditekan
+document.addEventListener('DOMContentLoaded', () => {
+  const btnWoya = document.getElementById('btn-wp2dw');
+  if (btnWoya) {
+    btnWoya.addEventListener('click', () => {
+      const scannerInput = document.getElementById('scanner-input');
+      if (scannerInput) {
+        scannerInput.focus();
+        if (window.showToast) showToast('Mode scan barcode aktif. Silakan scan barcode produk.', 'info');
+      }
+    });
+  }
+
+  // Aktifkan scan kamera saat tombol Scan Kamera ditekan
+  const btnCamera = document.getElementById('btn-scan-camera');
+  if (btnCamera) {
+    btnCamera.addEventListener('click', () => {
+      if (window.toggleCamera) window.toggleCamera();
+    });
+  }
+
+  const btnCloseCamera = document.getElementById('btn-close-camera');
+  if (btnCloseCamera) {
+    btnCloseCamera.addEventListener('click', () => {
+      if (window.stopCamera) window.stopCamera();
+    });
+  }
+});
+
+function setupScanButtonsProduk() {
+  const btnWoya = document.getElementById('btn-wp2dw');
+  if (btnWoya && !btnWoya.dataset.bound) {
+    btnWoya.addEventListener('click', () => {
+      const scannerInput = document.getElementById('scanner-input');
+      if (scannerInput) {
+        scannerInput.focus();
+        if (window.showToast) showToast('Mode scan barcode aktif. Silakan scan barcode produk.', 'info');
+      }
+    });
+    btnWoya.dataset.bound = "1";
+  }
+
+  const btnCamera = document.getElementById('btn-scan-camera');
+  if (btnCamera && !btnCamera.dataset.bound) {
+    btnCamera.addEventListener('click', () => {
+      if (window.toggleCamera) window.toggleCamera();
+    });
+    btnCamera.dataset.bound = "1";
+  }
+}
+
+// Panggil setupScanButtonsProduk setiap kali halaman produk di-render
+document.addEventListener('DOMContentLoaded', setupScanButtonsProduk);
+// Jika pakai SPA/router, panggil juga di renderProdukPage
+if (window.renderProdukPage) {
+  const oldRenderProdukPage = window.renderProdukPage;
+  window.renderProdukPage = async function() {
+    await oldRenderProdukPage.apply(this, arguments);
+    setupScanButtonsProduk();
+  };
+}
 
 // global handler dipanggil dari barcode.js saat scan sukses
 window.onBarcodeScanned = async function(barcode) {
@@ -678,7 +739,7 @@ window.onBarcodeScanned = async function(barcode) {
           window.loadPage('tambahProduk', { barcode });
         } else {
           // fallback: buka halaman langsung dengan query param
-          window.location.href = `../pages/tambah-produk.html?barcode=${encodeURIComponent(barcode)}`;
+          window.location.href = `index.html#tambah-produk?barcode=${encodeURIComponent(barcode)}`;
         }
       } else {
         // batalkan: render pesan kosong atau restore produk list
@@ -717,4 +778,39 @@ window.onBarcodeScanned = async function(barcode) {
   }
 };
 
-// ...existing code...
+document.addEventListener('DOMContentLoaded', function() {
+  // Deteksi jika sedang di halaman tambah produk (SPA atau multi-page)
+  const isTambahProdukPage =
+    window.location.hash.includes('tambah-produk') ||
+    window.location.pathname.endsWith('tambah-produk.html');
+
+  if (!isTambahProdukPage) return;
+
+  // Ambil barcode dari query string (hash atau search)
+  let barcodeParam = '';
+  if (window.location.hash && window.location.hash.includes('barcode=')) {
+    const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
+    barcodeParam = hashParams.get('barcode') || '';
+  } else {
+    const urlParams = new URLSearchParams(window.location.search);
+    barcodeParam = urlParams.get('barcode') || '';
+  }
+
+  if (barcodeParam) {
+    // Isi ke input barcode utama (pastikan id input sesuai)
+    const barcodeValueInput = document.getElementById('barcode-value');
+    const productBarcodeInput = document.getElementById('product-barcode');
+    if (barcodeValueInput) barcodeValueInput.value = barcodeParam;
+    if (productBarcodeInput) productBarcodeInput.value = barcodeParam;
+
+    // Jika ada fungsi generate preview barcode, panggil
+    if (typeof generateBarcodeFromValue === 'function') {
+      generateBarcodeFromValue(barcodeParam);
+    } else if (typeof generateBarcode === 'function') {
+      generateBarcode();
+    }
+
+    // Tampilkan toast jika ada
+    if (window.showToast) showToast('Barcode dari scan: ' + barcodeParam, 'info');
+  }
+});
