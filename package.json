@@ -15,7 +15,14 @@
     }
   },
   "devDependencies": {
+<<<<<<< HEAD
     "electron": "^30.0.0",
     "electron-builder": "^26.0.12"
+=======
+    "electron": "^30.0.0"
+  },
+  "dependencies": {
+    "node-thermal-printer": "^4.5.0"
+>>>>>>> fddb7b5 (beberapa pembaruan tampilan)
   }
 }

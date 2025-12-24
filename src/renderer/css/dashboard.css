@@ -26,29 +26,6 @@ header.header-dashboard p {
 }
 /* Akhir Header */
 
-/* Awal Wrapper Theme */
-.wrapper-theme {
-  background-color: var(--card-color);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.wrapper-theme button {
-  flex: 1;
-  border-radius: 8px;
-  border: none;
-  padding: 5px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 7px;
-  cursor: pointer;
-}
-/* Akhir Wrapper Theme */
-
-
 /* Awal Card Langganan */
 .card-langganan-dashboard {
   background-color: var(--card-color);
