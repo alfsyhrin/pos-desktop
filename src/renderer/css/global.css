@@ -73,6 +73,33 @@ body {
   width: 100%;
 }
 
+/* Awal Wrapper Theme */
+.wrapper-theme {
+  /* background-color: var(--foreground-color);
+  border-radius: 10px; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.wrapper-theme button {
+  flex: 1;
+  border-radius: 8px;
+  border: none;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  background-color: var(--card-color);
+  border: 1px solid var(--primary-color);
+  color: var(--foreground-color);
+}
+/* Akhir Wrapper Theme */
+
 .sidebar-bawah {
   display: flex;
   flex-direction: column;
