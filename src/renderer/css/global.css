@@ -98,7 +98,19 @@ body {
   border: 1px solid var(--primary-color);
   color: var(--foreground-color);
 }
+
+.wrapper-theme button.active {
+  background-color: var(--primary-color);
+}
 /* Akhir Wrapper Theme */
+
+/* Awal Nav Wrapper */
+.nav-wrapper {
+  overflow-y: auto;
+  height: 70vh;
+  padding: 5px;
+}
+/* Akhir Nav Wrapper */
 
 .sidebar-bawah {
   display: flex;

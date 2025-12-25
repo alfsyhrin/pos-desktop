@@ -118,6 +118,7 @@ header p {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 15px 10px;
+  color: var(--foreground-color);
 }
 
 .wrap-input-karyawan label {
@@ -137,8 +138,77 @@ header p {
   font-size: 14px;
   fon-weight: var(--weight-bold);
   margin-bottom: 16px;
+  cursor: pointer;
 }
 /* Akhir Generate Password */
+
+.dropdown {
+  position: relative;
+  width: 100%;
+}
+
+/* Tombol dropdown */
+.dropdown-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--background-color);
+  border: 1px solid #333;
+  color: var(--foreground-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* Menu dropdown */
+.dropdown-menu {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+
+  /* AWAL: tersembunyi */
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: 0.3s ease;
+}
+
+/* Item */
+.dropdown-menu button {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.dropdown-menu button:hover {
+  background: #333;
+}
+
+/* SAAT DI KLIK */
+#dropdown-toggle:checked ~ .dropdown-menu {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Panah berputar */
+#dropdown-toggle:checked + .dropdown-btn .arrow {
+  transform: rotate(180deg);
+}
+
+.arrow {
+  transition: transform 0.3s ease;
+}
 
 
 /* Awal Container Role button */

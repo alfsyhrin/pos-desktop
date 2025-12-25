@@ -82,8 +82,8 @@ header.header-produk p {
 
 .tools-button-produk button {
   flex: 1;
-  background-color: #000;
-  color: #fff;
+  background-color: var(--background-color);
+  color: var(--foreground-color);
   border-radius: 8px;
   border: 1px solid #333;
   flex-wrap: nowrap;
@@ -93,6 +93,7 @@ header.header-produk p {
 button.btn-active {
   background-color: #e4363638;
   border: 1px solid var(--primary-color);
+  color: var(--foreground-color);
 }
 
 .dropdown {
@@ -106,9 +107,9 @@ button.btn-active {
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  background: #000;
+  background: var(--background-color);
   border: 1px solid #333;
-  color: white;
+  color: var(--foreground-color);
   border-radius: 8px;
   cursor: pointer;
   font-size: 15px;
@@ -228,7 +229,7 @@ button.btn-active {
 }
 
 .detail-produk-info p {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 18px;
   font-weight: var(--weight-bold);
 }
@@ -237,7 +238,7 @@ button.btn-active {
   font-size: 25px;
   color: var(--primary-color);
   padding: 8px;
-  background-color: #fff;
+  background-color: var(--foreground-color);
   border-radius: 50%;
 }
 /* Akhir Card Detail Produk */
@@ -270,14 +271,14 @@ button.btn-active {
 }
 
 .list-produk-container h3 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 18px;
   margin-bottom: 16px;
   font-weight: var(--weight-black);
 }
 
 .card-produk {
-  background-color: #151010ff;
+  background-color: var(--background-color);
   border: 1px solid #333;
   border-radius: 8px;
   padding: 12px;
@@ -291,11 +292,11 @@ button.btn-active {
 }
 
 .card-produk .material-symbols-outlined.card-icon {
-  font-size: 25px;
+  font-size: 5px;
   color: var(--primary-color);
   padding: 8px;
   background-color: #e4363638;
-  border-radius: 50%;
+  border-radius: 8px;
 }
 
 .info-produk {
@@ -306,7 +307,7 @@ button.btn-active {
 }
 
 .nama-produk-stok-wrapper h4 {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 14px;
   font-weight: var(--weight-bold);
 }
@@ -317,7 +318,7 @@ button.btn-active {
 }
 
 .info-produk .harga-produk {
-  color: #fff;
+  color: var(--foreground-color);
   font-size: 14px;
   font-weight: var(--weight-bold);
 }
@@ -389,5 +390,5 @@ button.btn-active {
   height: 48px;
   object-fit: cover;
   border-radius: 8px;
-  background: #eee;
+  background: var(--foreground-color);
 }

@@ -157,7 +157,7 @@ main {
   color: #fff;
   font-weight: var(--weight-bold);
   text-decoration: none;
-  padding: 15px 5px;
+  padding: 13px 5px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -331,7 +331,7 @@ main {
 } */
 
 .keranjang-item {
-  background-color: #000;
+  background-color: var(--background-color);
   border: 1px solid #333;
   padding: 12px;
   border-radius: 8px;
@@ -341,7 +341,7 @@ main {
 
 .keranjang-item h4 {
   font-size: 16px;
-  color: #fff;
+  color: var(--foreground-color);
 }
 
 .keranjang-item p {

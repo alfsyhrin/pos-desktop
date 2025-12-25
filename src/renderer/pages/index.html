@@ -36,17 +36,19 @@
         <div class="wrapper-theme">
           <button id="btn-dark"><span class="material-symbols-outlined">dark_mode</span>Dark</button>
           <button id="btn-light"><span class="material-symbols-outlined">light_mode</span>Light</button>
-          <button onclick="cetak()">Cetak Struk</button>
         </div>
-        <a href="#" data-page="dashboard" class="sidebar-item active"><span class="material-symbols-outlined fill">home</span>Beranda</a>
-        <a href="#" data-page="kasir" class="sidebar-item"><span class="material-symbols-outlined fill">local_grocery_store</span>Kasir</a>
-        <a href="#" data-page="produk" class="sidebar-item"><span class="material-symbols-outlined fill">view_in_ar</span>Produk</a>
-        <a href="#" data-page="transaksi" class="sidebar-item"><span class="material-symbols-outlined fill">receipt_long</span>Transaksi</a>
-        <a href="#" data-page="karyawan" class="sidebar-item"><span class="material-symbols-outlined fill">people_alt</span>Karyawan</a>
-        <a href="#" data-page="laporan" class="sidebar-item"><span class="material-symbols-outlined fill">analytics</span>Laporan</a>
-        <a href="#" data-page="pengaturan" class="sidebar-item"><span class="material-symbols-outlined fill">settings</span>Pengaturan</a>
-        <a href="#" data-page="aktivitas" class="sidebar-item"><span class="material-symbols-outlined fill">list_alt</span>Log Aktivitas</a>
-        <a href="#" class="sidebar-item logout"><span class="material-symbols-outlined fill">logout</span>Logout</a>
+        <div class="nav-wrapper">
+
+          <a href="#" data-page="dashboard" class="sidebar-item active"><span class="material-symbols-outlined fill">home</span>Beranda</a>
+          <a href="#" data-page="kasir" class="sidebar-item"><span class="material-symbols-outlined fill">local_grocery_store</span>Kasir</a>
+          <a href="#" data-page="produk" class="sidebar-item"><span class="material-symbols-outlined fill">view_in_ar</span>Produk</a>
+          <a href="#" data-page="transaksi" class="sidebar-item"><span class="material-symbols-outlined fill">receipt_long</span>Transaksi</a>
+          <a href="#" data-page="karyawan" class="sidebar-item"><span class="material-symbols-outlined fill">people_alt</span>Karyawan</a>
+          <a href="#" data-page="laporan" class="sidebar-item"><span class="material-symbols-outlined fill">analytics</span>Laporan</a>
+          <a href="#" data-page="pengaturan" class="sidebar-item"><span class="material-symbols-outlined fill">settings</span>Pengaturan</a>
+          <a href="#" data-page="aktivitas" class="sidebar-item"><span class="material-symbols-outlined fill">list_alt</span>Log Aktivitas</a>
+          <a href="#" class="sidebar-item logout"><span class="material-symbols-outlined fill">logout</span>Logout</a>
+        </div>
         
       </nav>
     </div>
@@ -88,5 +90,32 @@
 <script src="../js/edit-produk.js"></script>
 <script src="../js/edit-toko.js"></script>
 <script src="../js/theme.js"></script>
+<script>
+    // Ambil elemen tombol
+    const btnDark = document.getElementById('btn-dark');
+    const btnLight = document.getElementById('btn-light');
+
+    // Fungsi untuk mengaktifkan tema gelap
+    btnDark.addEventListener('click', () => {
+      // Ganti tema
+      document.body.classList.remove('light-mode');
+      document.body.classList.add('dark-mode');
+      
+      // Mengaktifkan tombol gelap dan menonaktifkan tombol terang
+      btnDark.classList.add('active');
+      btnLight.classList.remove('active');
+    });
+
+    // Fungsi untuk mengaktifkan tema terang
+    btnLight.addEventListener('click', () => {
+      // Ganti tema
+      document.body.classList.remove('dark-mode');
+      document.body.classList.add('light-mode');
+      
+      // Mengaktifkan tombol terang dan menonaktifkan tombol gelap
+      btnLight.classList.add('active');
+      btnDark.classList.remove('active');
+    });
+  </script>
 </body>
 </html>
