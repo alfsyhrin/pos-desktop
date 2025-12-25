@@ -848,35 +848,104 @@
   <div class="toast" id="toast">
     <span id="toast-message"></span>
   </div>
-
-  
+  <script src="../../main/main.js"></script>
   <script>
-    document.getElementById("btn-print").addEventListener("click", () => {
-  console.log("🟢 Tombol cetak diklik");
-
-  if (!window.printer || !window.printer.printReceipt) {
-    alert("Printer API tidak tersedia");
-    return;
+  function parseRupiah(str) {
+    if (!str) return 0;
+    return Number(String(str).replace(/[^\d]/g, "")) || 0;
   }
 
-  window.printer.printReceipt()
-    .then(res => {
-      console.log("🧾 RESPONSE DARI MAIN:", res);
+  async function handlePrint() {
+    console.log("printerAPI in handler:", window.printerAPI); // debug
 
-      if (!res.success) {
-        alert("Error cetak: " + res.error);
+    if (!window.printerAPI || !window.printerAPI.printReceipt) {
+      alert("printerAPI belum tersedia di window");
+      return;
+    }
+
+    const txId = document.getElementById("tx-id").innerText.trim();
+    const txDate = document.getElementById("tx-date").innerText.trim();
+    const method = document.getElementById("tx-method").innerText.trim();
+
+    const itemName = document.querySelector(".item-pembelian-transaksi p:nth-of-type(1)").innerText.trim();
+    const qtyPriceText = document.querySelector(".item-pembelian-transaksi p:nth-of-type(2)").innerText.trim();
+    const skuText = document.querySelector(".item-pembelian-transaksi .sku")?.innerText.trim() || "";
+
+    const matchQty = qtyPriceText.match(/([\d\.]+)\s*x\s*(\d+)/i);
+    let price = 0, qty = 1;
+    if (matchQty) {
+      price = parseRupiah(matchQty[1]);
+      qty = Number(matchQty[2]);
+    }
+
+    const subTotal = parseRupiah(
+      document.querySelector(".harga-transaksi .wrap-info-harga:nth-of-type(1) h4:nth-of-type(2)").innerText
+    );
+    const discount = parseRupiah(
+      document.querySelector(".harga-transaksi .wrap-info-harga:nth-of-type(2) h4:nth-of-type(2)").innerText
+    );
+    const tax = parseRupiah(
+      document.querySelector(".harga-transaksi .wrap-info-harga:nth-of-type(3) h4:nth-of-type(2)").innerText
+    );
+    const grandTotal = parseRupiah(
+      document.querySelector(".harga-transaksi .grand-total h4:nth-of-type(2)").innerText
+    );
+    const cash = parseRupiah(
+      document.querySelector(".wrap-tunai .wrap-info-harga:nth-of-type(1) h4:nth-of-type(2)").innerText
+    );
+    const change = parseRupiah(
+      document.querySelector(".wrap-tunai .wrap-info-harga:nth-of-type(2) h4:nth-of-type(2)").innerText
+    );
+
+    const store = {
+      name: document.getElementById("store-name")?.value || "TOKO SAYA",
+      address: document.getElementById("store-address")?.value || "",
+      phone: document.getElementById("store-phone")?.value || "",
+    };
+
+    const payload = {
+      txId,
+      txDate,
+      method,
+      items: [{
+        name: itemName,
+        qty,
+        price,
+        sku: skuText.replace("SKU:", "").trim()
+      }],
+      subTotal,
+      discount,
+      tax,
+      grandTotal,
+      cash,
+      change,
+      store,
+    };
+
+    const btn = document.getElementById("btn-print");
+    const oldText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined">print</span> Mencetak...';
+
+    try {
+      const result = await window.printerAPI.printReceipt(payload);
+      console.log("print result:", result);
+      if (!result.success) {
+        alert("Gagal mencetak: " + (result.error || "Unknown error"));
       }
-    })
-    .catch(err => {
-      console.error("❌ RENDERER ERROR:", err);
-      alert("Error cetak (renderer)");
-    });
-});
+    } catch (e) {
+      alert("Error IPC: " + e.message);
+      console.error(e);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = oldText;
+    }
+  }
 
-  </script>
-  <script src="../../main/main.js"></script>
-  <script src="../../main/renderer.js"></script>
-  <!-- <script src="../../main/printService.js"></script> -->
-  <script src="../../main/preload.js"></script>
+  document.getElementById("btn-print").addEventListener("click", handlePrint);
+</script>
+
+
+
 </body>
 </html>

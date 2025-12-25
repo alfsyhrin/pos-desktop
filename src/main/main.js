@@ -1,99 +1,143 @@
+// main.js
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+
+// ==== ESC/POS untuk thermal printer (WOYA WP58D) ====
+const { Printer } = require("@node-escpos/core");
+const USB = require("@node-escpos/usb-adapter");
+
+// ===== GLOBAL WINDOW =====
+let mainWindow = null;
 
 /* ==============================
    WINDOW UTAMA APLIKASI
 ================================ */
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   });
 
-  win.loadFile(
+  mainWindow.loadFile(
     path.join(__dirname, "../renderer/pages/login.html")
   );
 
-  win.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 }
 
 /* ==============================
-   IPC CETAK STRUK
+   HELPER FORMAT RUPIAH
 ================================ */
-ipcMain.handle("print-receipt", async () => {
+function formatRupiah(num) {
+  if (typeof num !== "number") num = Number(num || 0);
+  return "Rp " + num.toLocaleString("id-ID");
+}
+
+/* ==============================
+   IPC CETAK STRUK (ESC/POS)
+   payload dikirim dari renderer:
+   {
+     txId, txDate, method,
+     items: [{ name, qty, price, sku }],
+     subTotal, discount, tax, grandTotal,
+     cash, change,
+     store: { name, address, phone }
+   }
+================================ */
+ipcMain.handle("print-receipt", async (event, payload) => {
   try {
-    const printWin = new BrowserWindow({
-      show: false
+    // 1. Buka device USB (WOYA WP58D).
+    // Jika perlu, bisa isi vendorId/productId: new USB(0xXXXX, 0xYYYY)
+    const device = new USB();
+
+    await new Promise((resolve, reject) => {
+      device.open((err) => (err ? reject(err) : resolve()));
     });
 
-    const receiptHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body {
-            width: 58mm;
-            font-family: monospace;
-            margin: 0;
-            padding: 5px;
-          }
-          .center { text-align: center; }
-          .line { border-top: 1px dashed #000; margin: 6px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="center">
-          <strong>PI POS</strong><br/>
-          ==================
-        </div>
+    const printer = new Printer(device, {
+      encoding: "CP437", // sesuaikan jika butuh charset lain
+    });
 
-        <div class="line"></div>
+    const {
+      txId,
+      txDate,
+      method,
+      items = [],
+      subTotal = 0,
+      discount = 0,
+      tax = 0,
+      grandTotal = 0,
+      cash = 0,
+      change = 0,
+      store = {},
+    } = payload || {};
 
-        <div>
-          Tanggal:<br/>
-          ${new Date().toLocaleString()}
-        </div>
+    // 2. Tulis struk ke buffer ESC/POS
+    printer
+      .align("ct")
+      .style("b")
+      .size(1, 1)
+      .text(store.name || "TOKO SAYA")
+      .style("normal")
+      .size(0, 0);
 
-        <div class="line"></div>
+    if (store.address) printer.text(store.address);
+    if (store.phone) printer.text(store.phone);
 
-        <div>Test cetak berhasil</div>
+    printer.drawLine();
 
-        <div class="center">
-          <br/>Terima kasih
-        </div>
-      </body>
-      </html>
-    `;
+    printer
+      .align("lt")
+      .text(`No   : ${txId || "-"}`)
+      .text(`Tgl  : ${txDate || "-"}`)
+      .text(`Metode: ${method || "-"}`)
+      .drawLine();
 
-    await printWin.loadURL(
-      "data:text/html;charset=utf-8," +
-      encodeURIComponent(receiptHTML)
-    );
+    // Items
+    items.forEach((it) => {
+      const qty = Number(it.qty || 0);
+      const price = Number(it.price || 0);
+      const total = qty * price;
 
-    return await new Promise((resolve) => {
-      printWin.webContents.print(
-        {
-          silent: false,          // GANTI true jika sudah siap produksi
-          printBackground: true
-        },
-        (success, errorType) => {
-          printWin.close();
-
-          if (!success) {
-            resolve({ success: false, error: errorType });
-          } else {
-            resolve({ success: true });
-          }
-        }
+      printer.text(it.name || "-");
+      printer.text(
+        `${qty} x ${formatRupiah(price)} = ${formatRupiah(total)}`
       );
+      if (it.sku) {
+        printer.text(`SKU: ${it.sku}`);
+      }
+      printer.text(""); // spasi antar item
     });
 
+    printer.drawLine();
+    printer.text(`Sub Total : ${formatRupiah(subTotal)}`);
+    printer.text(`Diskon    : -${formatRupiah(discount)}`);
+    printer.text(`PPN       : ${formatRupiah(tax)}`);
+    printer.drawLine();
+    printer
+      .size(1, 1)
+      .text(`GRAND : ${formatRupiah(grandTotal)}`)
+      .size(0, 0);
+    printer.text(`Tunai     : ${formatRupiah(cash)}`);
+    printer.text(`Kembalian : ${formatRupiah(change)}`);
+    printer.drawLine();
+
+    printer
+      .align("ct")
+      .text("Terima kasih")
+      .text(" ");
+
+    printer.feed(4);
+    printer.cut();
+
+    await printer.close();
+
+    return { success: true };
   } catch (err) {
     console.error("PRINT ERROR:", err);
     return { success: false, error: err.message };

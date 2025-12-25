@@ -6,16 +6,20 @@
     "start": "electron .",
     "build": "electron-builder"
   },
-  "build":{
+  "build": {
     "appId": "com.pipos.myapp",
-    "productName" : "PiPos",
-    "win":{
-      "target":"nsis",
+    "productName": "PiPos",
+    "win": {
+      "target": "nsis",
       "icon": "build/Logo-PIPOS.ico"
     }
   },
   "devDependencies": {
     "electron": "^30.0.0",
     "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "@node-escpos/core": "^0.6.0",
+    "@node-escpos/usb-adapter": "^0.3.1"
   }
 }
