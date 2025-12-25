@@ -128,9 +128,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         : '';
       // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
       const imgTag = imageUrl
-        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee;"
-            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:48px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
-        : `<span class="material-symbols-outlined card-icon" style="font-size:48px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
+            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+        : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
 
       const productCard = `
         <div class="card-produk">
@@ -457,9 +457,9 @@ window.renderProdukPage = async function renderProdukPage() {
         : '';
       // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
       const imgTag = imageUrl
-        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee;"
-            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:48px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
-        : `<span class="material-symbols-outlined card-icon" style="font-size:48px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
+            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+        : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
 
       const productCard = `
         <div class="card-produk">
@@ -546,9 +546,9 @@ async function cariProduk(q, category = '') {
         : '';
       // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
       const imgTag = imageUrl
-        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eee;"
-            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:48px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
-        : `<span class="material-symbols-outlined card-icon" style="font-size:48px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
+            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+        : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
 
       const productCard = `
         <div class="card-produk">
