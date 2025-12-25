@@ -195,13 +195,22 @@ ipcMain.handle("detect-bluetooth-printers", async () => {
 ================================ */
 ipcMain.handle("print-receipt", async (event, payload) => {
   try {
-    // 1. Buka device USB (WOYA WP58D).
-    // Jika perlu, bisa isi vendorId/productId: new USB(0xXXXX, 0xYYYY)
-    const device = new USB();
+    const { printType = 'usb', bluetoothAddress } = payload;
 
-    await new Promise((resolve, reject) => {
-      device.open((err) => (err ? reject(err) : resolve()));
-    });
+    let device;
+    let printer;
+
+    if (printType === 'bluetooth') {
+      // Bluetooth printing
+      if (!bluetoothAddress) {
+        throw new Error("Bluetooth address is required for Bluetooth printing");
+      }
+
+      device = new Bluetooth(bluetoothAddress);
+
+      await new Promise((resolve, reject) => {
+        device.open((err) => (err ? reject(err) : resolve()));
+      });
 
       printer = new Printer(device, {
         encoding: "CP437",
