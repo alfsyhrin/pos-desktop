@@ -67,12 +67,18 @@
           </select>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" >
           <label>Nilai Barcode</label>
           <div class="input-with-btn">
             <input type="text" id="barcode-value" placeholder="Masukkan atau scan barcode...">
             <button class="btn btn-outline" onclick="generateBarcode()">
               <span class="material-symbols-outlined">refresh</span>
+            </button>
+          </div>
+          <label style="margin-top: 10px;">Cetak Barcode</label>
+          <div class="input-with-btn">
+            <button class="btn btn-outline" onclick="cetakBarcode()">
+              <span class="material-symbols-outlined">print</span>
             </button>
           </div>
         </div>

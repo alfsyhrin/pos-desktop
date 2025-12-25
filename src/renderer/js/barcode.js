@@ -489,3 +489,27 @@ function showProductNotFoundModal(barcode) {
     window.location.href = `tambah-produk.html?barcode=${encodeURIComponent(barcode)}`;
   };
 }
+
+// Pastikan preload sudah expose window.electronAPI.sendBarcodeToPrint
+
+async function cetakBarcode() {
+  const type = document.getElementById("barcode-type").value; // boleh tetap
+  const value = document.getElementById("barcode-value").value.trim();
+
+  if (!value) {
+    showToast("Isi atau scan barcode dulu sebelum cetak.");
+    return;
+  }
+
+  try {
+    const res = await window.electronAPI.printBarcode({ type, value });
+    if (!res.success) {
+      showToast("Gagal cetak: " + res.error);
+    } else {
+      showToast("Barcode dikirim ke printer.");
+    }
+  } catch (err) {
+    showToast("Error: " + err.message);
+  }
+}
+

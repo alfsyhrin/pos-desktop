@@ -767,6 +767,7 @@
       </div>
     </div>
 
+
     <div class="wrap-button-proses-transaksi">
       <button class="btn-print-struk" id="btn-print">
         <span class="material-symbols-outlined">print</span> Print Struk
@@ -943,6 +944,52 @@
   }
 
   document.getElementById("btn-print").addEventListener("click", handlePrint);
+
+  async function updatePrinterStatus() {
+  const indicator = document.getElementById("status-indicator");
+  const statusText = document.getElementById("status-text");
+  const nameText = document.getElementById("printer-name-text");
+
+  // default loading
+  indicator.className = "status-indicator";
+  statusText.textContent = "Memeriksa printer...";
+  nameText.textContent = "Mendeteksi printer yang tersedia";
+
+  try {
+    if (!window.printerAPI || !window.printerAPI.checkStatus) {
+      statusText.textContent = "API printer tidak tersedia";
+      nameText.textContent = "Periksa preload.js";
+      return;
+    }
+
+    const res = await window.printerAPI.checkStatus();
+
+    indicator.className = "status-indicator";
+    if (res.ok && res.status === "connected") {
+      indicator.classList.add("ready");
+      statusText.textContent = "Terhubung";
+      nameText.textContent = res.message || "WOYA WP58D siap mencetak";
+    } else {
+      indicator.classList.add("error");
+      statusText.textContent = "Tidak terhubung";
+      nameText.textContent = res.message || "Periksa kabel / driver printer";
+    }
+  } catch (e) {
+    indicator.className = "status-indicator error";
+    statusText.textContent = "Error";
+    nameText.textContent = e.message || "Gagal memeriksa status printer";
+    console.error(e);
+  }
+}
+
+// panggil saat halaman load
+updatePrinterStatus();
+
+// tombol refresh
+document.getElementById("btn-refresh").addEventListener("click", () => {
+  updatePrinterStatus();
+});
+
 </script>
 
 
