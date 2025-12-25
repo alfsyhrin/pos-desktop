@@ -31,7 +31,7 @@ async function fetchStoresForOwner() {
       // fallback
       const token = getToken();
       if (!token) return [];
-      const r = await fetch('http://103.126.116.119:5000/api/stores', { headers: { Authorization: `Bearer ${token}` }});
+      const r = await fetch('http://103.126.116.119:8001/api/stores', { headers: { Authorization: `Bearer ${token}` }});
       const d = await r.json();
       return d.data?.stores || d.data || [];
     }
@@ -99,7 +99,7 @@ async function fetchProdukKasir(query = '') {
     } else {
       // fallback direct fetch
       const token = getToken();
-      const url = `http://103.126.116.119:5000/api/stores/${storeId}/products${query ? `?q=${encodeURIComponent(query)}` : ''}`;
+      const url = `http://103.126.116.119:8001/api/stores/${storeId}/products${query ? `?q=${encodeURIComponent(query)}` : ''}`;
       const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` }});
       const d = await r.json();
       return extractProductsFromResponse(d);
@@ -188,6 +188,113 @@ function escapeHtml(str = '') {
   })[s]);
 }
 
+// ===== Barcode Scan Handler: Add to Cart Otomatis =====
+window.onBarcodeScannedKasir = async function(barcode) {
+  const produkList = document.getElementById('produk-list-kasir');
+  const storeId = getStoreId();
+  if (!storeId) {
+    alert('Pilih toko terlebih dahulu!');
+    return;
+  }
+  if (produkList) produkList.innerHTML = '<p>Mencari produk berdasarkan barcode...</p>';
+  try {
+    let res;
+    if (typeof window.apiRequest === 'function') {
+      res = await window.apiRequest(`/stores/${storeId}/products/barcode/${encodeURIComponent(barcode)}`);
+    } else {
+      const token = getToken();
+      const url = `http://103.126.116.119:8001/api/stores/${storeId}/products/barcode/${encodeURIComponent(barcode)}`;
+      const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` }});
+      res = await r.json();
+    }
+    const product = res?.data || res;
+    if (!product || (product.success === false && !product.data)) {
+      showProductNotFoundModalKasir(barcode);
+      return;
+    }
+    const p = product?.data || product;
+    // Pastikan id valid
+    const id = p.id ?? p.product_id ?? null;
+    if (!id) {
+      showToastKasir('Produk hasil scan tidak memiliki id!', 'error');
+      return;
+    }
+    // PANGGIL addToCartFrontend SAMA SEPERTI KLIK TOMBOL
+    if (typeof addToCartFrontend === 'function') {
+      addToCartFrontend({
+        id: Number(id),
+        name: p.name,
+        price: Number(p.sellPrice || p.price),
+        sku: p.sku,
+        stock: Number(p.stock),
+        discount_type: p.discount_type || p.jenis_diskon || '',
+        discount_value: Number(p.discount_value || p.nilai_diskon || 0),
+        buy_qty: Number(p.buy_qty || 0),
+        free_qty: Number(p.free_qty || 0),
+        bundle_qty: Number(p.diskon_bundle_min_qty || p.bundle_min_qty || 0),
+        bundle_value: Number(p.diskon_bundle_value || p.bundle_total_price || 0)
+      });
+      showToastKasir('Produk berhasil ditambahkan ke keranjang!', 'success');
+    } else {
+      showToastKasir('Produk ditemukan, tapi gagal menambah ke keranjang!', 'error');
+    }
+  } catch (err) {
+    if (produkList) produkList.innerHTML = '<p style="color:red;">Gagal mencari produk.</p>';
+    showToastKasir('Gagal mencari produk: ' + (err.message || err), 'error');
+  }
+};
+
+function showProductNotFoundModalKasir(barcode) {
+  let modal = document.getElementById('modal-notfound-kasir');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-notfound-kasir';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.6)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '99999';
+    modal.innerHTML = `
+      <div style="background:#fff; padding:32px 24px; border-radius:12px; max-width:340px; text-align:center;">
+        <span class="material-symbols-outlined" style="font-size:48px;color:#e43636;">warning</span>
+        <h3 style="margin:16px 0 8px 0;">Produk belum ditambahkan</h3>
+        <p style="color:#64748b;font-size:14px;">Barcode: <b>${barcode}</b></p>
+        <div style="margin-top:24px; display:flex; gap:12px; justify-content:center;">
+          <button id="btn-notfound-cancel-kasir" style="padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;">Batal</button>
+          <button id="btn-notfound-add-kasir" style="padding:8px 18px;border-radius:8px;background:#10b981;color:#fff;border:none;">Tambah Produk</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    modal.querySelector('p').innerHTML = `Barcode: <b>${barcode}</b>`;
+    modal.style.display = 'flex';
+  }
+  modal.querySelector('#btn-notfound-cancel-kasir').onclick = () => { modal.style.display = 'none'; };
+  modal.querySelector('#btn-notfound-add-kasir').onclick = () => {
+    window.location.href = `../pages/tambah-produk.html?barcode=${encodeURIComponent(barcode)}`;
+  };
+}
+
+function showToastKasir(msg, type = 'info') {
+  let toast = document.getElementById('toast-kasir');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-kasir';
+    toast.className = 'toast';
+    toast.style.position = 'fixed';
+    toast.style.right = '16px';
+    toast.style.bottom = '16px';
+    toast.style.zIndex = '99999';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.className = 'toast ' + type + ' show';
+  if (toast._hideTimeout) clearTimeout(toast._hideTimeout);
+  toast._hideTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+}
 // ===== Keranjang =====
 // Hapus semua implementasi fetchCart, addToCartAPI, _localCart, getProductIdBySKU dan renderCart yang memanggil API.
 // Ganti dengan wrapper yang menggunakan cart frontend (produk-ke-keranjang.js)
@@ -215,19 +322,43 @@ function renderCart(items = null) {
 // ===== Proses Pembayaran =====
 // Hapus/replace definisi fungsi duplikat/keliru dan gunakan mapping body yang sesuai backend
 
-// Proses Pembayaran (ambil cart dari frontend)
+// Proses Pembayaran (simpan cart lokal dan redirect ke proses-pembayaran.html)
 async function completeTransaction() {
   const storeId = getStoreId();
   const token = getToken();
   const userId = getUserId() || localStorage.getItem('user_id') || 1;
-  const cart = (typeof window.getKasirCart === 'function') ? window.getKasirCart() : [];
+  const cart = (typeof window.getKasirCart === 'function') ? window.getKasirCart() : JSON.parse(localStorage.getItem('pos_cart') || '[]');
   if (!storeId || !token || !cart.length) {
     alert('Data tidak lengkap atau keranjang kosong!');
     return;
   }
 
+  // Validasi stock sebelum transaksi
+  for (const item of cart) {
+    try {
+      let productRes;
+      if (typeof window.apiRequest === 'function') {
+        productRes = await window.apiRequest(`/stores/${storeId}/products/${item.id}`);
+      } else {
+        const url = `http://103.126.116.119:8001/api/stores/${storeId}/products/${item.id}`;
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` }});
+        productRes = await r.json();
+      }
+      const product = productRes?.data || productRes;
+      const availableStock = Number(product?.stock ?? product?.stok ?? 0);
+      if (item.quantity > availableStock) {
+        alert(`Stok tidak cukup untuk produk "${item.name}". Tersedia: ${availableStock}, diminta: ${item.quantity}`);
+        return;
+      }
+    } catch (err) {
+      console.error('Error checking stock for product', item.id, err);
+      alert(`Gagal memeriksa stok untuk produk "${item.name}". Silakan coba lagi.`);
+      return;
+    }
+  }
+
+  // Hitung total_cost dari cart
   const total_cost = cart.reduce((sum, item) => {
-    // gunakan harga setelah diskon preview (frontend) untuk total_cost
     let harga = Number(item.price || 0);
     if (item.discount_type && item.discount_value) {
       if (item.discount_type === 'percentage') harga = Math.round(harga * (1 - item.discount_value / 100));
@@ -236,53 +367,19 @@ async function completeTransaction() {
     return sum + harga * Number(item.quantity || 0);
   }, 0);
 
-  const items = cart.map(item => ({
-    product_id: item.id,
-    quantity: item.quantity,
-    price: item.price,
-    discount_type: item.discount_type || null,
-    discount_value: item.discount_value || 0,
-    notes: item.notes || ""
-  }));
-
-  const body = {
-    user_id: Number(userId),
-    total_cost,
-    payment_type: "tunai",
-    payment_method: "cash",
-    received_amount: total_cost,
-    change_amount: 0,
-    items
+  // Simpan data cart ke localStorage untuk proses-pembayaran.html
+  const cartData = {
+    storeId,
+    userId,
+    cart,
+    total_cost
   };
+  localStorage.setItem('pending_transaction', JSON.stringify(cartData));
 
-  // debug: log payload (hapus di production)
-  console.info('[kasir] transaksi payload', body);
+  // Redirect ke proses-pembayaran.html tanpa transaction_id
+  window.location.href = `../pages/proses-pembayaran.html`;
 
-  try {
-    const res = await fetch(`http://103.126.116.119:5000/api/stores/${storeId}/transactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body)
-    });
-
-    // baca response text dulu (jika bukan JSON akan tetap terbaca)
-    const text = await res.text();
-    let data = null;
-    try { data = JSON.parse(text); } catch(e) { data = { raw: text }; }
-
-    console.info('[kasir] transaksi response', res.status, data);
-    if (res.ok && data && data.success) {
-      alert('Transaksi berhasil!');
-      if (typeof window.getKasirCart === 'function') window.getKasirCart().length = 0;
-      if (typeof window.updateKeranjangView === 'function') window.updateKeranjangView();
-      else if (typeof updateKeranjangView === 'function') updateKeranjangView();
-    } else {
-      alert('Gagal transaksi: ' + (data?.message || res.status || JSON.stringify(data)));
-    }
-  } catch (err) {
-    console.error('[kasir] transaksi fetch error', err);
-    alert('Gagal transaksi: ' + (err.message || err));
-  }
+  // Jangan clear cart di sini, biarkan sampai transaksi berhasil
 }
 
 // Pencarian produk di kasir
@@ -377,6 +474,9 @@ async function initKasirPage() {
   console.log('[kasir] initKasirPage done');
 }
 
+// Set barcode handler for kasir
+window.onBarcodeScanned = window.onBarcodeScannedKasir;
+
 // Try init immediately (in case kasir page already present)
 initKasirPage().catch(e => console.error('[kasir] init immediate error', e));
 
@@ -402,3 +502,4 @@ const _pollInterval = setInterval(() => {
   initKasirPage().catch(()=>{});
   if (_pollCount > 20) clearInterval(_pollInterval); // stop after ~10s
 }, 500);
+

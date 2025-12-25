@@ -1,3 +1,33 @@
+// Fetch transaction data by ID from API
+async function fetchTransactionById(transactionId) {
+  const storeId = localStorage.getItem('store_id');
+  const token = localStorage.getItem('token');
+  if (!storeId || !token || !transactionId) {
+    console.error('Missing storeId, token, or transactionId');
+    return null;
+  }
+
+  try {
+    const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}/transactions/${transactionId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      return data.data;
+    } else {
+      console.error('Failed to fetch transaction:', data.message);
+      return null;
+    }
+  } catch (err) {
+    console.error('Error fetching transaction:', err);
+    return null;
+  }
+}
+
 function renderDetailTransaksi() {
   const trx = JSON.parse(localStorage.getItem('last_transaction') || '{}');
   if (!trx || !trx.items) return;
@@ -33,4 +63,42 @@ function renderDetailTransaksi() {
   if (tunaiDivs[1]) tunaiDivs[1].querySelector('h4:nth-child(2)').textContent = `Rp. ${Number(trx.change).toLocaleString('id-ID')}`;
 }
 
-document.addEventListener('DOMContentLoaded', renderDetailTransaksi);
+// Print receipt functionality
+function printReceipt() {
+  window.print();
+}
+
+// Initialize print button
+function initPrintButton() {
+  const printBtn = document.querySelector('.btn-print-transaksi') || document.querySelector('button[onclick*="print"]');
+  if (printBtn) {
+    printBtn.addEventListener('click', printReceipt);
+  } else {
+    // Add print button if not exists
+    const container = document.querySelector('.container-detail-transaksi') || document.body;
+    const printButton = document.createElement('button');
+    printButton.className = 'btn-print-transaksi';
+    printButton.textContent = 'Print Struk';
+    printButton.style.cssText = 'padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0;';
+    printButton.addEventListener('click', printReceipt);
+    container.appendChild(printButton);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Get transaction ID from localStorage
+  const trx = JSON.parse(localStorage.getItem('last_transaction') || '{}');
+  const transactionId = trx.idShort || trx.id;
+
+  if (transactionId) {
+    // Fetch fresh transaction data from API
+    const freshTrx = await fetchTransactionById(transactionId);
+    if (freshTrx) {
+      // Update localStorage with fresh data
+      localStorage.setItem('last_transaction', JSON.stringify(freshTrx));
+    }
+  }
+
+  renderDetailTransaksi();
+  initPrintButton();
+});

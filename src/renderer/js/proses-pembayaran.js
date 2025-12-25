@@ -1,141 +1,156 @@
-// Ambil data cart dari localStorage/frontend
-function getCartForPayment() {
-  return (typeof window.getKasirCart === 'function') ? window.getKasirCart() : [];
+// Load pending transaction data from localStorage
+function loadPendingTransaction() {
+  const pendingData = localStorage.getItem('pending_transaction');
+  if (!pendingData) {
+    console.error('No pending transaction data found');
+    return null;
+  }
+  try {
+    return JSON.parse(pendingData);
+  } catch (err) {
+    console.error('Error parsing pending transaction data:', err);
+    return null;
+  }
 }
 
-// Hitung total, diskon, dan grand total
-function hitungTotalPembayaran(cart) {
-  let subtotal = 0, totalDiskon = 0;
-  cart.forEach(item => {
-    let hargaSetelahDiskon = item.price;
-    let diskonItem = 0;
-    if (item.discount_type && item.discount_value) {
-      if (item.discount_type === 'percentage') {
-        diskonItem = Math.round(item.price * item.discount_value / 100);
-        hargaSetelahDiskon = item.price - diskonItem;
-      } else if (item.discount_type === 'amount' || item.discount_type === 'nominal') {
-        diskonItem = item.discount_value;
-        hargaSetelahDiskon = Math.max(0, item.price - diskonItem);
-      }
-    }
-    // Bundle/buyxgety: diskon dihitung manual jika ingin, atau biarkan backend
-    subtotal += hargaSetelahDiskon * item.quantity;
-    totalDiskon += diskonItem * item.quantity;
-  });
-  return { subtotal, totalDiskon, grandTotal: subtotal };
-}
+// Render pending transaction info in proses-pembayaran.html
+function renderPendingTransaction(pendingData) {
+  if (!pendingData) return;
 
-// Render info pembayaran di proses-pembayaran.html
-function renderInfoPembayaran() {
-  const cart = getCartForPayment();
-  const { subtotal, totalDiskon, grandTotal } = hitungTotalPembayaran(cart);
-
-  // Update tampilan total, diskon, grand total
+  // Update total
   const totalEl = document.querySelector('.card-total-pembayaran h4:nth-child(2)');
-  if (totalEl) totalEl.textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+  if (totalEl) totalEl.textContent = `Rp ${Number(pendingData.total_cost || 0).toLocaleString('id-ID')}`;
 
-  // Kembalian default
+  // Set initial kembalian to 0
   const kembalianEl = document.querySelectorAll('.card-total-pembayaran h4')[3];
   if (kembalianEl) kembalianEl.textContent = `Rp 0`;
-}
 
-// Event input uang diterima
-function inisialisasiInputTunai() {
+  // Set uang diterima input to total_cost initially
   const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
-  if (!inputTunai) return;
-  inputTunai.addEventListener('input', function () {
-    const cart = getCartForPayment();
-    const { grandTotal } = hitungTotalPembayaran(cart);
-    const uangDiterima = Number(this.value || 0);
-    const kembalian = uangDiterima - grandTotal;
-    const kembalianEl = document.querySelectorAll('.card-total-pembayaran h4')[3];
-    if (kembalianEl) kembalianEl.textContent = `Rp ${Math.max(0, kembalian).toLocaleString('id-ID')}`;
-  });
+  if (inputTunai) {
+    inputTunai.value = pendingData.total_cost || 0;
+    inputTunai.disabled = false; // Enable input for user to change
+  }
 }
 
-// Event tombol Bayar
-function inisialisasiBayar() {
+// Event input uang diterima - calculate kembalian
+function inisialisasiInputTunai(pendingData) {
+  const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
+  const kembalianEl = document.querySelectorAll('.card-total-pembayaran h4')[3];
+  const total = pendingData.total_cost || 0;
+
+  if (inputTunai && kembalianEl) {
+    inputTunai.addEventListener('input', function() {
+      const received = Number(this.value) || 0;
+      const change = Math.max(0, received - total);
+      kembalianEl.textContent = `Rp ${change.toLocaleString('id-ID')}`;
+    });
+  }
+}
+
+// Create transaction via API
+async function createTransaction(pendingData, receivedAmount, changeAmount) {
+  const storeId = pendingData.storeId;
+  const token = localStorage.getItem('token');
+  if (!storeId || !token) {
+    throw new Error('Missing storeId or token');
+  }
+
+  const items = pendingData.cart.map(item => ({
+    product_id: item.id,
+    quantity: item.quantity,
+    price: item.price,
+    discount_type: item.discount_type || null,
+    discount_value: item.discount_value || 0,
+    notes: item.notes || ""
+  }));
+
+  const body = {
+    user_id: Number(pendingData.userId),
+    total_cost: pendingData.total_cost,
+    payment_type: "tunai",
+    payment_method: "cash",
+    received_amount: receivedAmount,
+    change_amount: changeAmount,
+    items
+  };
+
+  console.info('[proses-pembayaran] create transaction payload', body);
+
+  const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}/transactions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body)
+  });
+
+  const text = await res.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch(e) { data = { raw: text }; }
+
+  console.info('[proses-pembayaran] create transaction response', res.status, data);
+
+  if (res.ok && data && data.success) {
+    return data.data;
+  } else {
+    throw new Error(data?.message || res.status || 'Gagal membuat transaksi');
+  }
+}
+
+// Event tombol Bayar - create transaction and redirect to detail-transaksi.html
+function inisialisasiBayar(pendingData) {
   const bayarBtn = document.querySelector('.wrap-button-proses-pembayaran a');
   if (!bayarBtn) return;
+
   bayarBtn.addEventListener('click', async function (e) {
     e.preventDefault();
-    const cart = getCartForPayment();
-    const { grandTotal } = hitungTotalPembayaran(cart);
+
     const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
-    const uangDiterima = Number(inputTunai?.value || 0);
-    const kembalian = uangDiterima - grandTotal;
+    const receivedAmount = Number(inputTunai?.value) || 0;
+    const total = pendingData.total_cost || 0;
+    const changeAmount = Math.max(0, receivedAmount - total);
 
-    // Validasi
-    if (!cart.length) {
-      if (window.showToast) showToast('Keranjang kosong!', 'warn');
-      else alert('Keranjang kosong!');
-      return;
-    }
-    if (uangDiterima < grandTotal) {
-      if (window.showToast) showToast('Uang diterima kurang dari total belanja!', 'warn');
-      else alert('Uang diterima kurang dari total belanja!');
+    if (receivedAmount < total) {
+      alert('Uang diterima kurang dari total pembayaran!');
       return;
     }
 
-    // Siapkan payload transaksi
-    const storeId = localStorage.getItem('store_id');
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('user_id') || 1;
-    const items = cart.map(item => ({
-      product_id: item.id,
-      quantity: item.quantity,
-      price: item.price,
-      discount_type: item.discount_type || null,
-      discount_value: item.discount_value || 0,
-      buy_qty: item.buy_qty || 0,
-      free_qty: item.free_qty || 0,
-      bundle_qty: item.bundle_qty || 0,
-      bundle_value: item.bundle_value || 0
-    }));
-
-    const body = {
-      user_id: userId,
-      total_cost: grandTotal,
-      payment_type: "tunai",
-      payment_method: "cash",
-      received_amount: uangDiterima,
-      change_amount: kembalian,
-      items
-    };
-
-    // Kirim transaksi ke backend
     try {
-      const res = await fetch(`http://103.126.116.119:5000/api/stores/${storeId}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        if (window.showToast) showToast('Transaksi berhasil!', 'success');
-        // Simpan data transaksi ke localStorage untuk detail-transaksi.html
-        localStorage.setItem('last_transaction', JSON.stringify(data.data));
-        // Kosongkan cart
-        if (typeof window.getKasirCart === 'function') window.getKasirCart().length = 0;
-        localStorage.removeItem('pos_cart');
-        // Redirect ke detail transaksi
-        window.location.href = 'detail-transaksi.html';
-      } else {
-        if (window.showToast) showToast('Gagal transaksi: ' + (data.message || res.status), 'error');
-        else alert('Gagal transaksi: ' + (data.message || res.status));
-      }
+      const transaction = await createTransaction(pendingData, receivedAmount, changeAmount);
+
+      // Save to localStorage for detail-transaksi.js
+      localStorage.setItem('last_transaction', JSON.stringify(transaction));
+
+      // Clear pending transaction
+      localStorage.removeItem('pending_transaction');
+
+      // Clear cart
+      if (typeof window.getKasirCart === 'function') window.getKasirCart().length = 0;
+      if (typeof window.updateKeranjangView === 'function') window.updateKeranjangView();
+      else if (typeof updateKeranjangView === 'function') updateKeranjangView();
+
+      // Redirect to detail-transaksi.html
+      window.location.href = '../pages/detail-transaksi.html';
     } catch (err) {
-      alert('Gagal transaksi: ' + (err.message || err));
+      console.error('Error creating transaction:', err);
+      alert('Gagal membuat transaksi: ' + (err.message || err));
     }
   });
 }
 
 // Inisialisasi saat halaman proses-pembayaran dibuka
-document.addEventListener('DOMContentLoaded', () => {
-  renderInfoPembayaran();
-  inisialisasiInputTunai();
-  inisialisasiBayar();
+document.addEventListener('DOMContentLoaded', async () => {
+  const pendingData = loadPendingTransaction();
+
+  if (pendingData) {
+    // Render pending transaction info
+    renderPendingTransaction(pendingData);
+
+    // Initialize input and bayar events
+    inisialisasiInputTunai(pendingData);
+    inisialisasiBayar(pendingData);
+  } else {
+    alert('Data transaksi pending tidak ditemukan!');
+    // Redirect back to kasir
+    window.location.href = '../pages/kasir.html';
+  }
 });

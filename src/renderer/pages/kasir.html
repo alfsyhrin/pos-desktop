@@ -20,17 +20,23 @@
       <input type="text" id="search-produk-kasir" placeholder="Cari produk...">
     </div>
 
-    <div class="filter-produk-kasir">
-      <button class="active">Kesehatan & Kecantikan</button>
-      <button class="">Rumah Tangga & Gaya Hidup</button>
-      <button class="">Fashion & Aksesoris</button>
-      <button class="">Rumah Tangga & Gaya Hidup</button>
-      <button class="">Elektronik</button>
-      <button class="">Bayi & Anak</button>
-      <button class="">Makanan & Minuman</button>
-      <!-- <div class="container-button-filter">
-      </div> -->
+  <div class="tools-produk">
+    <div class="tools-button-produk">
+      <button class="btn-active"  id="btn-wp2dw">WP2DW</button>
+      <button id="btn-scan-camera">Scan Kamera</button>
     </div>
+    <div class="dropdown">
+      <input type="checkbox" id="dropdown-toggle" hidden>
+  
+      <label for="dropdown-toggle" class="dropdown-btn">
+        Pilih Kategori
+        <span class="arrow">▾</span>
+      </label>
+  
+      <div class="dropdown-menu">
+      </div>
+    </div>
+  </div>
 
     <div class="container-wrapper-produk">
 
@@ -130,4 +136,16 @@
       </div>
     </div>
   </aside>
+    <input type="text" id="scanner-input" style="position:absolute;left:-9999px;" autocomplete="off">
+  <div id="toast" class="toast"></div>
+  <div class="camera-container" id="camera-container" style="display:none;">
+    <div id="camera-reader"></div>
+    <div class="camera-controls" style="text-align:center;margin-top:10px;">
+      <button class="btn btn-outline" id="btn-close-camera" type="button">
+        <span class="material-symbols-outlined">close</span> Tutup Kamera
+      </button>
+    </div>
+  </div>
 </main>
+<script src="../js/api.js"></script>
+<script src="../js/produk.js"></script>
