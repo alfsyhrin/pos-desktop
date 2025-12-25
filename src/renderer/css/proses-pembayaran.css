@@ -134,6 +134,7 @@ header p {
   background-color: var(--background-color);
   padding: 10px;
   margin-bottom: 6px;
+  color: var(--foreground-color);
 }
 
 .card-tunai-diterima-pembayaran p {

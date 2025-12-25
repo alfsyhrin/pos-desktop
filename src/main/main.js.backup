@@ -5,7 +5,6 @@ const path = require("path");
 // ==== ESC/POS untuk thermal printer (WOYA WP58D) ====
 const { Printer } = require("@node-escpos/core");
 const USB = require("@node-escpos/usb-adapter");
-console.log("USB printing enabled");
 
 // ===== GLOBAL WINDOW =====
 let mainWindow = null;
@@ -39,8 +38,6 @@ function formatRupiah(num) {
   return "Rp " + num.toLocaleString("id-ID");
 }
 
-
-
 /* ==============================
    IPC CETAK STRUK (ESC/POS)
    payload dikirim dari renderer:
@@ -54,14 +51,16 @@ function formatRupiah(num) {
 ================================ */
 ipcMain.handle("print-receipt", async (event, payload) => {
   try {
-    // USB printing only
+    // 1. Buka device USB (WOYA WP58D).
+    // Jika perlu, bisa isi vendorId/productId: new USB(0xXXXX, 0xYYYY)
     const device = new USB();
+
     await new Promise((resolve, reject) => {
       device.open((err) => (err ? reject(err) : resolve()));
     });
 
     const printer = new Printer(device, {
-      encoding: "CP437",
+      encoding: "CP437", // sesuaikan jika butuh charset lain
     });
 
     const {
@@ -78,7 +77,7 @@ ipcMain.handle("print-receipt", async (event, payload) => {
       store = {},
     } = payload || {};
 
-    // Tulis struk ke buffer ESC/POS
+    // 2. Tulis struk ke buffer ESC/POS
     printer
       .align("ct")
       .style("b")
@@ -145,16 +144,10 @@ ipcMain.handle("print-receipt", async (event, payload) => {
   }
 });
 
-
-
 /* ==============================
    APP LIFECYCLE
 ================================ */
-console.log("App starting...");
-app.whenReady().then(() => {
-  console.log("App ready, creating window...");
-  createWindow();
-});
+app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

@@ -697,51 +697,48 @@
   <div class="main-container">
     <div class="jenis-pembayaran-transaksi">
       <h4>No. Transaksi</h4>
-      <p id="tx-id">TX251219YG035P</p>
+      <p>-</p>
     </div>
 
     <div class="jenis-pembayaran-transaksi">
       <h4>Tanggal & Waktu</h4>
-      <p id="tx-date">19 Des 2025, 10:51</p>
+      <p>-</p>
     </div>
 
     <div class="jenis-pembayaran-transaksi">
       <h4>Metode Pembayaran</h4>
-      <p id="tx-method">Tunai</p>
+      <p>-</p>
     </div>
 
     <div class="item-pembelian-transaksi">
       <h4>Item pembelian</h4>
-      <p>Sunscreen SPF 50</p>
-      <p>Rp. 45.000 x 1</p>
-      <p class="sku">SKU: SKU-002</p>
     </div>
 
     <div class="harga-transaksi">
       <div class="wrap-info-harga">
         <h4 class="label">Sub Total:</h4>
-        <h4>Rp. 45.000</h4>
+        <h4>Rp. 0</h4>
       </div>
       <div class="wrap-info-harga">
         <h4 class="label">Total Diskon</h4>
-        <h4>-Rp. 4.500</h4>
+        <h4>Rp. 0</h4>
       </div>
       <div class="wrap-info-harga border-bottom">
         <h4 class="label">PPN (10.0%)</h4>
-        <h4>Rp. 4.500</h4>
+        <h4>Rp. 0</h4>
       </div>
       <div class="wrap-info-harga grand-total">
         <h4>GRAND TOTAL</h4>
-        <h4>Rp. 49.000</h4>
+        <h4>Rp. 0</h4>
       </div>
       <div class="wrap-tunai">
         <div class="wrap-info-harga">
           <h4>Tunai Diterima</h4>
-          <h4>Rp. 150.000</h4>
+          <h4>Rp. 0</h4>
         </div>
         <div class="wrap-info-harga">
           <h4>Kembalian</h4>
-          <h4>Rp. 105.000</h4>
+          <h4>Rp. 0</h4>
         </div>
       </div>
     </div>
@@ -768,8 +765,11 @@
     </div>
 
     <div class="wrap-button-proses-transaksi">
-      <button class="btn-print-struk" id="btn-print">
-        <span class="material-symbols-outlined">print</span> Print Struk
+      <button class="btn-print-struk" id="btn-print-usb">
+        <span class="material-symbols-outlined">print</span> Print USB
+      </button>
+      <button class="btn-print-struk" id="btn-print-bluetooth">
+        <span class="material-symbols-outlined">bluetooth</span> Print Bluetooth
       </button>
       <button class="btn-print-pdf" id="btn-pdf">
         <span class="material-symbols-outlined">picture_as_pdf</span> Print PDF
@@ -848,102 +848,37 @@
   <div class="toast" id="toast">
     <span id="toast-message"></span>
   </div>
+
+  <!-- Bluetooth Printer Selection Modal -->
+  <div class="modal-overlay" id="modal-bluetooth-selection">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Pilih Printer Bluetooth</h3>
+        <button class="modal-close" id="btn-cancel-bluetooth">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Printer Bluetooth Tersedia</label>
+        <div class="printer-list" id="bluetooth-printer-list">
+          <div class="printer-item" style="color: var(--paragraph-color);">
+            <span class="material-symbols-outlined">search</span>
+            Mencari printer Bluetooth...
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-save" id="btn-select-bluetooth">
+        <span class="material-symbols-outlined">bluetooth_connected</span>
+        Pilih Printer
+      </button>
+    </div>
+  </div>
+
+
   <script src="../../main/main.js"></script>
-  <script>
-  function parseRupiah(str) {
-    if (!str) return 0;
-    return Number(String(str).replace(/[^\d]/g, "")) || 0;
-  }
-
-  async function handlePrint() {
-    console.log("printerAPI in handler:", window.printerAPI); // debug
-
-    if (!window.printerAPI || !window.printerAPI.printReceipt) {
-      alert("printerAPI belum tersedia di window");
-      return;
-    }
-
-    const txId = document.getElementById("tx-id").innerText.trim();
-    const txDate = document.getElementById("tx-date").innerText.trim();
-    const method = document.getElementById("tx-method").innerText.trim();
-
-    const itemName = document.querySelector(".item-pembelian-transaksi p:nth-of-type(1)").innerText.trim();
-    const qtyPriceText = document.querySelector(".item-pembelian-transaksi p:nth-of-type(2)").innerText.trim();
-    const skuText = document.querySelector(".item-pembelian-transaksi .sku")?.innerText.trim() || "";
-
-    const matchQty = qtyPriceText.match(/([\d\.]+)\s*x\s*(\d+)/i);
-    let price = 0, qty = 1;
-    if (matchQty) {
-      price = parseRupiah(matchQty[1]);
-      qty = Number(matchQty[2]);
-    }
-
-    const subTotal = parseRupiah(
-      document.querySelector(".harga-transaksi .wrap-info-harga:nth-of-type(1) h4:nth-of-type(2)").innerText
-    );
-    const discount = parseRupiah(
-      document.querySelector(".harga-transaksi .wrap-info-harga:nth-of-type(2) h4:nth-of-type(2)").innerText
-    );
-    const tax = parseRupiah(
-      document.querySelector(".harga-transaksi .wrap-info-harga:nth-of-type(3) h4:nth-of-type(2)").innerText
-    );
-    const grandTotal = parseRupiah(
-      document.querySelector(".harga-transaksi .grand-total h4:nth-of-type(2)").innerText
-    );
-    const cash = parseRupiah(
-      document.querySelector(".wrap-tunai .wrap-info-harga:nth-of-type(1) h4:nth-of-type(2)").innerText
-    );
-    const change = parseRupiah(
-      document.querySelector(".wrap-tunai .wrap-info-harga:nth-of-type(2) h4:nth-of-type(2)").innerText
-    );
-
-    const store = {
-      name: document.getElementById("store-name")?.value || "TOKO SAYA",
-      address: document.getElementById("store-address")?.value || "",
-      phone: document.getElementById("store-phone")?.value || "",
-    };
-
-    const payload = {
-      txId,
-      txDate,
-      method,
-      items: [{
-        name: itemName,
-        qty,
-        price,
-        sku: skuText.replace("SKU:", "").trim()
-      }],
-      subTotal,
-      discount,
-      tax,
-      grandTotal,
-      cash,
-      change,
-      store,
-    };
-
-    const btn = document.getElementById("btn-print");
-    const oldText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="material-symbols-outlined">print</span> Mencetak...';
-
-    try {
-      const result = await window.printerAPI.printReceipt(payload);
-      console.log("print result:", result);
-      if (!result.success) {
-        alert("Gagal mencetak: " + (result.error || "Unknown error"));
-      }
-    } catch (e) {
-      alert("Error IPC: " + e.message);
-      console.error(e);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = oldText;
-    }
-  }
-
-  document.getElementById("btn-print").addEventListener("click", handlePrint);
-</script>
+  <script src="../js/detail-transaksi.js"></script>
 
 
 
