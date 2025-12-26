@@ -1,0 +1,280 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --background-color: #160808;
+  --primary-color: #E43636;
+  --secondary-color: #d53333ff;
+  --paragraph-color: #818386ff;
+  --card-color: #1D1616;
+  --radius: 18px;
+  --transition: all 0.3s ease;
+  --weight-bold: 500;
+  --weight-black: bold;
+  --hijau: #328E6E;
+  --background-hijau: #1C352D;
+  --input-bg: #2a2020;
+  --border-color: #3a2a2a;
+}
+
+body {
+  margin: 0;
+  font-family: 'Asap', sans-serif;
+  background: var(--background-color);
+  min-height: 100vh;
+  color: var(--foreground-color);
+}
+
+header {
+  width: 100%;
+  background-color: var(--card-color);
+  border-bottom: 2px solid var(--primary-color);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  gap: 5px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-button {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 1;
+  /* border: 1px solid white; */
+}
+
+.back-button a {
+  text-decoration: none;
+  color: var(--foreground-color);
+  font-weight: var(--weight-bold);
+  margin-left: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.back-button a:hover {
+  transform: translateX(-3px);
+}
+
+.back-button a .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.judul-header {
+  flex: 1.35;
+  /* border: 1px solid white; */
+}
+
+header h3 {
+  color: var(--foreground-color);
+  font-size: 28px;
+  font-weight: var(--weight-black);
+}
+
+header p {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
+.main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Awal Card Tambah Karyawan */
+.card-tambah-karyawan {
+  background: var(--card-color);
+  border-radius: 10px;
+  border: 1px solid #333;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.wrap-input-karyawan {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: flex-start;
+}
+
+.wrap-input-karyawan input{
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px 10px;
+  color: var(--foreground-color);
+}
+
+.wrap-input-karyawan label {
+  font-size: 15px;
+  color: var(--foreground-color);
+}
+/* Akhir Card Tambah Karyawan */
+
+/* Awal Generate Password */
+.generate-password {
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  padding: 15px;
+  color: #fff;
+  font-size: 14px;
+  fon-weight: var(--weight-bold);
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+/* Akhir Generate Password */
+
+.dropdown {
+  position: relative;
+  width: 100%;
+}
+
+/* Tombol dropdown */
+.dropdown-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--background-color);
+  border: 1px solid #333;
+  color: var(--foreground-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* Menu dropdown */
+.dropdown-menu {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+
+  /* AWAL: tersembunyi */
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: 0.3s ease;
+}
+
+/* Item */
+.dropdown-menu button {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.dropdown-menu button:hover {
+  background: #333;
+}
+
+/* SAAT DI KLIK */
+#dropdown-toggle:checked ~ .dropdown-menu {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Panah berputar */
+#dropdown-toggle:checked + .dropdown-btn .arrow {
+  transform: rotate(180deg);
+}
+
+.arrow {
+  transition: transform 0.3s ease;
+}
+
+
+/* Awal Container Role button */
+.container-button-role {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.kasir-tambah-karyawan {
+  background-color: #10b98135;
+  border: 1px solid #10B981FF;
+  border-radius: 8px;
+  width: 100%;
+  padding: 15px;
+  color: #10B981FF;
+  font-size: 14px;
+  fon-weight: var(--weight-bold);
+  margin-bottom: 16px;
+}
+
+.admin-tambah-karyawan {
+  background-color: #ff803636;
+  border: 1px solid #ff8036;
+  border-radius: 8px;
+  width: 100%;
+  padding: 15px;
+  color: #ff8036;
+  font-size: 14px;
+  fon-weight: var(--weight-bold);
+  margin-bottom: 16px;
+}
+/* Akhir Container Role button */
+
+/* Awal Container Batal Simpan Role */
+.container-simpan-batal {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.batal-role {
+  background-color: var(--card-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  width: 100%;
+  padding: 15px;
+  color: var(--primary-color);
+  font-size: 14px;
+  fon-weight: var(--weight-bold);
+  margin-bottom: 16px;
+}
+
+.simpan-role {
+  background-color: var(--primary-color);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  width: 100%;
+  padding: 15px;
+  color: #fff;
+  font-size: 14px;
+  fon-weight: var(--weight-bold);
+  margin-bottom: 16px;
+}
+/* Akhir Container Batal Simpan Role */

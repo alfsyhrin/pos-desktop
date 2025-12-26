@@ -11,26 +11,47 @@
 }
 /* Akhir CSS Reset */
 
-/* Awal Variabel */
-:root {
-  --background-color: #160808;
-  --primary-color: #E43636;
-  --secondary-color: #d53333ff;
-  --paragraph-color: #818386ff;
-  --radius: 18px;
-  --transition:all 0.3s ease;
-}
-/* Akhir Variabel */
-
 body {
   font-family: Arial, sans-serif;
   /* background-color: var(--background-color); */
-  background-color: #000;
+  background-color: var(--background-color);
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
 }
+
+/* Awal Wrapper Theme */
+.wrapper-theme {
+  /* background-color: var(--foreground-color);
+  border-radius: 10px; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.wrapper-theme button {
+  flex: 1;
+  border-radius: 8px;
+  border: none;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  background-color: var(--card-color);
+  border: 1px solid var(--primary-color);
+  color: var(--foreground-color);
+}
+
+.wrapper-theme button.active {
+  background-color: var(--primary-color);
+}
+/* Akhir Wrapper Theme */
 
 /* Awal Container Login */
 .container-login {
@@ -44,7 +65,10 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   border-top-left-radius: var(--radius);
   border-bottom-left-radius: var(--radius);
-  border: 1px solid var(--primary-color);
+  border-left: 2px solid var(--primary-color);
+  border-right: 1px solid var(--primary-color);
+  border-top: 2px solid var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -54,7 +78,7 @@ body {
 .judul-box h1 {
   font-family: 'Science Gothic', sans-serif;
   font-weight: 500;
-  color: white;
+  color: var(--foreground-color);
   font-size: 40px;
 }
 
@@ -68,19 +92,22 @@ body {
 .login-box {
   width: 400px;
   padding: 25px;
-  background-color: #1D1616;
+  background-color: var(--background-color);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   border-top-right-radius: var(--radius);
   border-bottom-right-radius: var(--radius);
-  border: 1px solid var(--primary-color);
+  border-top: 2px solid var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  border-right: 2px solid var(--primary-color);
+  border-left: 1px solid var(--primary-color);
 }
 
 .login-box h2 {
   text-align: center;
-  color: white;
+  color: var(--foreground-color);
 }
 
 .login-box p {
@@ -103,7 +130,7 @@ body {
   font-weight: 500;
   text-align: center;
   font-size: 30px;
-  color: white;
+  color: var(--foreground-color);
 }
 
 .login-box .deskripsi-aplikasi {
@@ -130,12 +157,12 @@ body {
   border: 1px solid var(--paragraph-color);
   border-radius: 8px;
   background-color: var(--background-color);
-  color: white;
+  color: var(--foreground-color);
   font-size: 14px;
 }
 
 .login-box label {
-  color: #ffffff;
+  color: var(--foreground-color);
   margin-bottom: 6px;
   text-align: left;
   font-size: 14px;
@@ -153,7 +180,7 @@ body {
   width: 100%;
   padding: 18px;
   background: var(--primary-color);
-  color: white;
+  color: var(--foreground-color);
   border: none;
   border-radius: 8px;
   cursor: pointer;
