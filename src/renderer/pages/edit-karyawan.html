@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <link rel="stylesheet" href="../css/tambah-karyawan.css">
+  <link rel="stylesheet" href="../css/edit-karyawan.css">
+  <link rel="stylesheet" href="../css/global.css">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 </head>
 <body>
@@ -40,21 +41,46 @@
         <label for="nama-karyawan">Masukkan password</label>
         <input type="text" placeholder="password">
       </div>
+      <div class="wrap-input-karyawan">
+        <input type="text" placeholder="konfirmasi password">
+      </div>
+      <div class="dropdown">
+      <input type="checkbox" id="dropdown-toggle" hidden>
+  
+      <label for="dropdown-toggle" class="dropdown-btn">
+        Pilih Role
+        <span class="arrow">▾</span>
+      </label>
+  
+      <div class="dropdown-menu">
+        <button type="button" data-category="Admin" data-bound="1">Admin</button>
+        <button type="button" data-category="Kasir" data-bound="1">Kasir</button>
+      </div>
     </div>
-    <button class="generate-password">Generate Password</button>
-    <div class="container-button-role">
-      <button class="kasir-tambah-karyawan">Kasir</button>
-      <button class="admin-tambah-karyawan">Admin</button>
     </div>
+    <button class="generate-password" id="password">Generate Password</button>
 
     <div class="container-simpan-batal">
       <button class="batal-role">Batal</button>
       <button class="simpan-role">Simpan</button>
     </div>
   </div>
-
-  <!-- script untuk edit karyawan -->
   <script src="../js/notifications.js"></script>
-  <script src="../js/edit-karyawan.js"></script>
+  <script src="../js/tambah-karyawan.js"></script>
+  <script src="../js/theme.js"></script>
+  <script>
+function generateSecurePassword(length = 12) {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]<>?";
+  const randomValues = new Uint32Array(length);
+  crypto.getRandomValues(randomValues);
+
+  return Array.from(randomValues, x => chars[x % chars.length]).join("");
+}
+
+document.getElementById("btn-generate").onclick = () => {
+  document.getElementById("password").value = generateSecurePassword(12);
+};
+</script>
+
 </body>
 </html>

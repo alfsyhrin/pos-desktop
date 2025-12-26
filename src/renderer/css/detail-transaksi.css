@@ -6,6 +6,7 @@
 
 :root {
   --background-color: #160808;
+  --foreground-color: #ffffff;
   --primary-color: #E43636;
   --secondary-color: #d53333ff;
   --paragraph-color: #818386ff;
@@ -18,6 +19,7 @@
   --background-hijau: #1C352D;
   --input-bg: #2a2020;
   --border-color: #3a2a2a;
+  --orange: #ff8036;
 }
 
 body {
@@ -26,6 +28,7 @@ body {
   background: var(--background-color);
   min-height: 100vh;
   color: var(--foreground-color);
+  padding-bottom: 20px;
 }
 
 header {
@@ -71,7 +74,7 @@ header {
 }
 
 .judul-header {
-  flex: 1.40;
+  flex: 1.49;
   /* border: 1px solid white; */
 }
 
@@ -92,7 +95,6 @@ header p {
   padding: 20px;
 }
 
-/* Awal Container Jenis Pembayaran */
 .jenis-pembayaran-transaksi {
   background-color: var(--card-color);
   border-radius: 10px;
@@ -106,19 +108,18 @@ header p {
   margin-bottom: 16px;
 }
 
-.jenis-pembayaran-transaksi h4{
+.jenis-pembayaran-transaksi h4 {
   color: var(--paragraph-color);
   font-weight: var(--weight-bold);
   font-size: 14px;
 }
 
 .jenis-pembayaran-transaksi p {
+  color: var(--foreground-color);
   font-weight: var(--weight-bold);
   font-size: 18px;
 }
-/* Akhir Container Jenis Pembayaran */
 
-/* Awal Container Item Pembelian */
 .item-pembelian-transaksi {
   background-color: var(--card-color);
   border-radius: 10px;
@@ -139,14 +140,18 @@ header p {
 }
 
 .item-pembelian-transaksi p {
+  color: var(--foreground-color);
   font-weight: var(--weight-bold);
   font-size: 16px;
 }
-/* Akhir Container Item Pembelian */
 
-/* Awal Container Harga Transaksi */
+.item-pembelian-transaksi .sku {
+  color: var(--paragraph-color);
+  font-size: 14px;
+}
+
 .harga-transaksi {
-    background-color: var(--card-color);
+  background-color: var(--card-color);
   border-radius: 10px;
   border: 1px solid #333;
   padding: 16px;
@@ -164,6 +169,26 @@ header p {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  padding: 4px 0;
+}
+
+.wrap-info-harga h4 {
+  font-weight: var(--weight-bold);
+  font-size: 16px;
+  color: var(--foreground-color);
+}
+
+.wrap-info-harga h4.label {
+  color: var(--paragraph-color);
+}
+
+.wrap-info-harga.border-bottom {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--primary-color);
+}
+
+.wrap-info-harga.grand-total {
+  margin-bottom: 10px;
 }
 
 .wrap-tunai {
@@ -174,15 +199,9 @@ header p {
   background-color: #e4363638;
   border: 1px solid var(--primary-color);
   border-radius: 8px;
+  gap: 5px;
 }
 
-.wrap-info-harga h4{
-  font-weight: var(--weight-bold);
-  font-size: 16px;
-}
-/* Akhir Container Harga Transaksi */
-
-/* Awal Container Button Transaksi */
 .wrap-button-proses-transaksi {
   background-color: var(--card-color);
   border: 1px solid #333;
@@ -192,10 +211,12 @@ header p {
   justify-content: center;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-.wrap-button-proses-transaksi button{
+.wrap-button-proses-transaksi button {
   flex: 1;
+  min-width: 120px;
   padding: 15px;
   border-radius: 8px;
   border: none;
@@ -203,6 +224,22 @@ header p {
   justify-content: center;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  font-family: 'Asap', sans-serif;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  transition: var(--transition);
+}
+
+.wrap-button-proses-transaksi button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.wrap-button-proses-transaksi button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .wrap-button-proses-transaksi button .material-symbols-outlined {
@@ -210,7 +247,7 @@ header p {
 }
 
 button.btn-print-struk {
-  background-color: #10B981FF;
+  background-color: #10B981;
   color: #fff;
 }
 
@@ -218,10 +255,425 @@ button.btn-print-pdf {
   background-color: #ff8036;
   color: #fff;
 }
+
 button.btn-hapus {
   background-color: var(--primary-color);
   color: #fff;
 }
 
+.printer-status-section {
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px solid #333;
+  padding: 16px;
+  margin-bottom: 16px;
+}
 
-/* Akhir Container Button Transaksi */
+.printer-status-section h4 {
+  color: var(--paragraph-color);
+  font-weight: var(--weight-bold);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.printer-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.printer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator.ready {
+  background: #10B981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.not-ready {
+  background: var(--orange);
+  box-shadow: 0 0 10px rgba(255, 128, 54, 0.5);
+}
+
+.status-indicator.error {
+  background: var(--primary-color);
+  box-shadow: 0 0 10px rgba(228, 54, 54, 0.5);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-text-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-text {
+  color: var(--foreground-color);
+  font-weight: var(--weight-bold);
+  font-size: 16px;
+}
+
+.printer-name-text {
+  color: var(--paragraph-color);
+  font-size: 13px;
+}
+
+.printer-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-icon:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon.secondary {
+  background-color: var(--input-bg);
+  color: var(--foreground-color);
+  border: 1px solid #333;
+}
+
+.btn-icon.refresh {
+  background-color: var(--hijau);
+  color: var(--foreground-color);
+}
+
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  max-width: 90%;
+  text-align: center;
+  font-family: 'Asap', sans-serif;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.toast.success {
+  background: #10B981;
+  color: white;
+}
+
+.toast.error {
+  background: var(--primary-color);
+  color: white;
+}
+
+.toast.warning {
+  background: var(--orange);
+  color: white;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: var(--card-color);
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.show .modal {
+  transform: scale(1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: var(--weight-black);
+  color: var(--foreground-color);
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--input-bg);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground-color);
+  transition: var(--transition);
+}
+
+.modal-close:hover {
+  background: var(--border-color);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  color: var(--paragraph-color);
+  margin-bottom: 8px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Asap', sans-serif;
+  transition: var(--transition);
+  background: var(--input-bg);
+  color: var(--foreground-color);
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.form-select option {
+  background: var(--card-color);
+  color: var(--foreground-color);
+}
+
+.printer-list {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: var(--input-bg);
+}
+
+.printer-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.printer-item:last-child {
+  border-bottom: none;
+}
+
+.printer-item:hover {
+  background: var(--border-color);
+}
+
+.printer-item.selected {
+  background: var(--primary-color);
+  color: white;
+}
+
+.printer-item .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.receipt-preview {
+  background: #fff;
+  color: #000;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.receipt-preview .center {
+  text-align: center;
+}
+
+.receipt-preview .bold {
+  font-weight: bold;
+}
+
+.receipt-preview .large {
+  font-size: 13px;
+}
+
+.receipt-preview .divider {
+  border-top: 1px dashed #999;
+  margin: 6px 0;
+}
+
+.btn-save {
+  width: 100%;
+  padding: 14px;
+  background: #10B981;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  font-family: 'Asap', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.btn-save:hover {
+  opacity: 0.9;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .wrap-button-proses-transaksi {
+    flex-direction: column;
+  }
+
+  .wrap-button-proses-transaksi button {
+    width: 100%;
+  }
+
+  .printer-status-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .printer-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* ==========================================
+    PRINT STYLES - Untuk Thermal Printer
+    ========================================== */
+
+#print-receipt-container {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #print-receipt-container,
+  #print-receipt-container * {
+    visibility: visible;
+  }
+
+  #print-receipt-container {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm;
+    padding: 2mm;
+    margin: 0;
+    background: white;
+    color: black;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
+}
