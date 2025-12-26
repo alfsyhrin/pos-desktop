@@ -24,7 +24,7 @@ async function fetchTransactions() {
     const data = await res.json();
     console.log('Response data:', data);
     if (res.ok && data.success) {
-      return data.data || [];
+      return data.data.items || [];
     } else {
       console.error('Failed to fetch transactions:', data.message);
       return [];
@@ -68,39 +68,40 @@ function renderTransactions(transactions) {
     return;
   }
 
-  // Show latest transaction in the original card design
-  const latestTrx = transactions[0]; // Show the most recent transaction
-  const card = document.createElement('div');
-  card.className = 'card-transaksi';
-  card.onclick = () => viewTransactionDetail(latestTrx.id);
+  // Show all transactions in cards
+  transactions.forEach(trx => {
+    const card = document.createElement('div');
+    card.className = 'card-transaksi';
+    card.onclick = () => viewTransactionDetail(trx.id);
 
-  const createdAt = latestTrx.createdAt ? new Date(latestTrx.createdAt).toLocaleString('id-ID') : '-';
-  const total = Number(latestTrx.total || 0);
-  const method = latestTrx.method || 'Tunai';
-  const itemCount = latestTrx.items ? latestTrx.items.length : 0;
-  const idShort = latestTrx.idShort || latestTrx.idFull || latestTrx.id || '-';
+    const createdAt = trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-';
+    const total = Number(trx.total || 0);
+    const method = trx.method || 'Tunai';
+    const itemCount = trx.items ? trx.items.length : 0;
+    const idShort = trx.idShort || trx.idFull || trx.id || '-';
 
-  card.innerHTML = `
-    <span class="material-symbols-outlined transaksi">receipt_long</span>
-    <div class="info-transaksi">
-      <div class="no-harga-wrapper">
-        <p class="no-transaksi">#${idShort}</p>
-        <p class="harga-transaksi">Rp ${total.toLocaleString('id-ID')}</p>
+    card.innerHTML = `
+      <span class="material-symbols-outlined transaksi">receipt_long</span>
+      <div class="info-transaksi">
+        <div class="no-harga-wrapper">
+          <p class="no-transaksi">#${idShort}</p>
+          <p class="harga-transaksi">Rp ${total.toLocaleString('id-ID')}</p>
+        </div>
+        <p class="tanggal-transaksi">${createdAt}</p>
+        <div class="jenis-totalitem-wrapper">
+          <p class="jenis-transaksi"><span class="material-symbols-outlined">local_atm</span>${method}</p>
+          <p class="total-item-transaksi">${itemCount} item</p>
+        </div>
       </div>
-      <p class="tanggal-transaksi">${createdAt}</p>
-      <div class="jenis-totalitem-wrapper">
-        <p class="jenis-transaksi"><span class="material-symbols-outlined">local_atm</span>${method}</p>
-        <p class="total-item-transaksi">${itemCount} item</p>
+      <div class="button-hapus-transaksi">
+        <button class="btn-hapus-transaksi" onclick="event.stopPropagation(); deleteTransaction(${trx.id})">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
       </div>
-    </div>
-    <div class="button-hapus-transaksi">
-      <button class="btn-hapus-transaksi" onclick="event.stopPropagation(); deleteTransaction(${latestTrx.id})">
-        <span class="material-symbols-outlined">delete</span>
-      </button>
-    </div>
-  `;
+    `;
 
-  wrapper.appendChild(card);
+    wrapper.appendChild(card);
+  });
 }
 
 // View transaction detail
