@@ -52,7 +52,7 @@ function renderTransactions(transactions) {
       <div class="info-transaksi">
         <div class="no-harga-wrapper">
           <p class="no-transaksi">Belum ada transaksi</p>
-          <p class="harga-transaksi">-</p>
+          <p class="harga-transaksi-utama">-</p>
         </div>
         <p class="tanggal-transaksi">-</p>
         <div class="jenis-totalitem-wrapper">
@@ -85,7 +85,7 @@ function renderTransactions(transactions) {
       <div class="info-transaksi">
         <div class="no-harga-wrapper">
           <p class="no-transaksi">#${idShort}</p>
-          <p class="harga-transaksi">Rp ${total.toLocaleString('id-ID')}</p>
+          <p class="harga-transaksi-utama">Rp ${total.toLocaleString('id-ID')}</p>
         </div>
         <p class="tanggal-transaksi">${createdAt}</p>
         <div class="jenis-totalitem-wrapper">

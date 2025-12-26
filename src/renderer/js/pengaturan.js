@@ -27,7 +27,6 @@ async function loadStoreInfo() {
 }
 
 function renderStoreInfo(store) {
-  // ID
   document.querySelectorAll('.detail-toko-judul').forEach((el, i) => {
     const next = el.nextElementSibling;
     if (!next) return;

@@ -84,9 +84,6 @@
           <button class="btn-icon refresh" id="btn-refresh" title="Refresh Printer">
             <span class="material-symbols-outlined">refresh</span>
           </button>
-          <button class="btn-icon secondary" id="btn-settings" title="Pengaturan">
-            <span class="material-symbols-outlined">settings</span>
-          </button>
         </div>
       </div>
     </div>
@@ -95,12 +92,7 @@
       <button class="btn-print-struk" id="btn-print-usb">
         <span class="material-symbols-outlined">print</span> Print USB
       </button>
-      <button class="btn-print-struk" id="btn-print-bluetooth">
-        <span class="material-symbols-outlined">bluetooth</span> Print Bluetooth
-      </button>
-      <button class="btn-print-pdf" id="btn-pdf">
-        <span class="material-symbols-outlined">picture_as_pdf</span> Print PDF
-      </button>
+      
       <button class="btn-hapus" id="btn-delete">
         <span class="material-symbols-outlined">delete</span> Hapus
       </button>
@@ -110,109 +102,9 @@
   <!-- Print Receipt Container -->
   <div id="print-receipt-container"></div>
 
-  <!-- Settings Modal -->
-  <div class="modal-overlay" id="modal-settings">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Pengaturan Printer</h3>
-        <button class="modal-close" id="btn-close-modal">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Pilih Printer</label>
-        <div class="printer-list" id="printer-list">
-          <div class="printer-item" style="color: var(--paragraph-color);">
-            <span class="material-symbols-outlined">search</span>
-            Mencari printer...
-          </div>
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Nama Toko</label>
-        <input type="text" class="form-input" id="store-name" value="TOKO SAYA" placeholder="Nama Toko">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Alamat Toko</label>
-        <input type="text" class="form-input" id="store-address" value="Jl. Contoh No. 123" placeholder="Alamat Toko">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Telepon Toko</label>
-        <input type="text" class="form-input" id="store-phone" value="021-12345678" placeholder="Nomor Telepon">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Ukuran Kertas</label>
-        <select class="form-select" id="paper-width">
-          <option value="58" selected>58mm (Standard Thermal)</option>
-          <option value="72">72mm</option>
-          <option value="80">80mm</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Persentase PPN (%)</label>
-        <input type="number" class="form-input" id="tax-percentage" value="10" min="0" max="100" step="0.1">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Preview Struk</label>
-        <div class="receipt-preview" id="receipt-preview"></div>
-      </div>
-      
-      <button class="btn-save" id="btn-save-settings">
-        <span class="material-symbols-outlined">save</span>
-        Simpan Pengaturan
-      </button>
-    </div>
-  </div>
-
   <!-- Toast -->
   <div class="toast" id="toast">
     <span id="toast-message"></span>
-  </div>
-
-  <!-- Bluetooth Address Modal -->
-  <div class="modal-overlay" id="bluetooth-modal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 class="modal-title">Pilih Printer Bluetooth</h3>
-        <button class="modal-close" id="btn-close-bluetooth-modal">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Deteksi Printer Bluetooth</label>
-        <div class="printer-list" id="bluetooth-printer-list">
-          <div class="printer-item" style="color: var(--paragraph-color);">
-            <span class="material-symbols-outlined">search</span>
-            Klik "Deteksi Printer" untuk mencari perangkat Bluetooth
-          </div>
-        </div>
-        <button class="btn-save" id="btn-detect-bluetooth" style="width: 100%; margin-top: 10px; background: var(--hijau);">
-          <span class="material-symbols-outlined">bluetooth_searching</span>
-          Deteksi Printer
-        </button>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Atau Masukkan Alamat Bluetooth Manual</label>
-        <input type="text" class="form-input" id="bluetooth-address" placeholder="XX:XX:XX:XX:XX:XX" maxlength="17">
-        <small style="color: var(--paragraph-color); font-size: 12px;">Format: XX:XX:XX:XX:XX:XX (contoh: AA:BB:CC:DD:EE:FF)</small>
-      </div>
-
-      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-        <button class="btn-save" id="btn-confirm-bluetooth" style="flex: 1;">
-          <span class="material-symbols-outlined">bluetooth</span>
-          Connect & Print
-        </button>
-      </div>
-    </div>
   </div>
   <script src="../../main/main.js"></script>
   <script src="../js/detail-transaksi.js"></script>
@@ -304,93 +196,6 @@
     document.getElementById('bluetooth-address').value = '';
   }
 
-  async function detectBluetoothPrinters() {
-    const btn = document.getElementById('btn-detect-bluetooth');
-    const list = document.getElementById('bluetooth-printer-list');
-    const oldText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Mencari...';
-
-    try {
-      const result = await window.printerAPI.detectBluetoothPrinters();
-      console.log("Bluetooth detection result:", result);
-
-      if (result.success && result.devices.length > 0) {
-        list.innerHTML = '';
-
-        // Show message if available
-        if (result.message) {
-          const messageDiv = document.createElement('div');
-          messageDiv.className = 'printer-item';
-          messageDiv.style.cssText = 'background: var(--background-hijau); border: 1px solid var(--hijau); margin-bottom: 10px;';
-          messageDiv.innerHTML = `
-            <span class="material-symbols-outlined" style="color: var(--hijau);">info</span>
-            <div>
-              <div style="color: var(--hijau); font-weight: bold;">${result.message}</div>
-            </div>
-          `;
-          list.appendChild(messageDiv);
-        }
-
-        result.devices.forEach(device => {
-          const item = document.createElement('div');
-          item.className = 'printer-item';
-          const isAvailable = device.status === 'available';
-          const isUSB = device.type === 'usb';
-          const icon = isUSB ? 'usb' : (isAvailable ? 'bluetooth_connected' : 'bluetooth');
-          const statusColor = isAvailable ? 'var(--hijau)' : 'var(--paragraph-color)';
-          const statusText = isAvailable ? ' (Tersedia)' : '';
-          const connectionType = isUSB ? 'USB' : 'Bluetooth';
-
-          item.innerHTML = `
-            <span class="material-symbols-outlined" style="color: ${statusColor};">${icon}</span>
-            <div>
-              <div>${device.name}${statusText}</div>
-              <small style="color: var(--paragraph-color);">${connectionType}: ${device.address}</small>
-            </div>
-          `;
-          item.addEventListener('click', () => {
-            // Remove selected class from all items
-            document.querySelectorAll('.printer-item').forEach(i => i.classList.remove('selected'));
-            // Add selected class to clicked item
-            item.classList.add('selected');
-            // Set the address in the input field
-            document.getElementById('bluetooth-address').value = device.address;
-
-            // Update print type based on device type
-            if (isUSB) {
-              // For USB devices, suggest using USB printing
-              const usbBtn = document.getElementById('btn-print-usb');
-              if (usbBtn) {
-                usbBtn.style.backgroundColor = 'var(--hijau)';
-                usbBtn.innerHTML = '<span class="material-symbols-outlined">usb</span> Print USB (Direkomendasikan)';
-              }
-            }
-          });
-          list.appendChild(item);
-        });
-      } else {
-        list.innerHTML = `
-          <div class="printer-item" style="color: var(--paragraph-color);">
-            <span class="material-symbols-outlined">bluetooth_disabled</span>
-            Tidak ada printer yang ditemukan. Pastikan printer WOYA Anda terhubung via USB atau Bluetooth.
-          </div>
-        `;
-      }
-    } catch (e) {
-      console.error("Error detecting Bluetooth printers:", e);
-      list.innerHTML = `
-        <div class="printer-item" style="color: var(--primary-color);">
-          <span class="material-symbols-outlined">error</span>
-          Gagal mendeteksi printer Bluetooth
-        </div>
-      `;
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = oldText;
-    }
-  }
-
   async function confirmBluetoothPrint() {
     const bluetoothAddress = document.getElementById('bluetooth-address').value.trim();
     if (!bluetoothAddress) {
@@ -431,6 +236,46 @@
       confirmBluetoothPrint();
     }
   });
+  const statusIndicator = document.getElementById("status-indicator");
+const statusText = document.getElementById("status-text");
+const printerNameText = document.getElementById("printer-name-text");
+const btnRefresh = document.getElementById("btn-refresh");
+
+async function updatePrinterStatus() {
+  statusIndicator.className = "status-indicator checking";
+  statusText.textContent = "Memeriksa printer...";
+  printerNameText.textContent = "Mendeteksi printer yang tersedia";
+
+  try {
+    const res = await window.printerAPI.checkStatus();
+
+    if (!res.success) {
+      statusIndicator.className = "status-indicator offline";
+      statusText.textContent = "Gagal memeriksa printer";
+      printerNameText.textContent = res.detail || res.message || "-";
+      return;
+    }
+
+    if (res.connected) {
+      statusIndicator.className = "status-indicator online";
+      statusText.textContent = "Printer terhubung";
+      printerNameText.textContent = res.message || "WOYA via USB";
+    } else {
+      statusIndicator.className = "status-indicator offline";
+      statusText.textContent = "Printer tidak terhubung";
+      printerNameText.textContent =
+        res.hint || res.detail || res.message || "Periksa kabel / driver printer";
+    }
+  } catch (e) {
+    statusIndicator.className = "status-indicator offline";
+    statusText.textContent = "Error saat memeriksa";
+    printerNameText.textContent = e.message || String(e);
+  }
+}
+
+btnRefresh.addEventListener("click", updatePrinterStatus);
+window.addEventListener("DOMContentLoaded", updatePrinterStatus);
+
 </script>
   <script src="../js/theme.js"></script>
 

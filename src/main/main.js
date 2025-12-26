@@ -321,3 +321,64 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+/* ==============================
+   IPC CEK STATUS PRINTER
+   - Cek USB WOYA
+   - Opsional: info Bluetooth terakhir
+================================ */
+ipcMain.handle("check-printer-status", async () => {
+  try {
+    // 1. Cek printer USB WOYA
+    try {
+      const usbDevice = new USB();
+
+      await new Promise((resolve, reject) => {
+        usbDevice.open((err) => {
+          if (err) return reject(err);
+          // berhasil klaim device
+          // langsung tutup lagi supaya tidak ganggu proses cetak
+          usbDevice.close && usbDevice.close();
+          resolve();
+        });
+      });
+
+      return {
+        success: true,
+        connected: true,
+        type: "usb",
+        message: "Printer WOYA terhubung via USB.",
+        detail: "Device USB berhasil dibuka dan ditutup."
+      };
+    } catch (usbErr) {
+      // USB gagal dibuka (kabel lepas / driver / dll.)
+      const msg = usbErr && usbErr.message ? usbErr.message : String(usbErr);
+
+      // Deteksi pola error umum dari libusb di Windows.[web:24][web:29]
+      let hint = "";
+      if (msg.includes("LIBUSB_ERROR_NOT_SUPPORTED")) {
+        hint = "Pasang driver WinUSB dengan Zadig untuk printer WOYA.";
+      } else if (msg.includes("LIBUSB_ERROR_ACCESS")) {
+        hint = "Coba jalankan aplikasi sebagai Administrator atau periksa izin USB.";
+      }
+
+      return {
+        success: true,
+        connected: false,
+        type: "usb",
+        message: "Printer WOYA tidak terhubung via USB.",
+        detail: msg,
+        hint
+      };
+    }
+  } catch (err) {
+    // Error tak terduga
+    return {
+      success: false,
+      connected: false,
+      type: null,
+      message: "Gagal memeriksa status printer.",
+      detail: err && err.message ? err.message : String(err)
+    };
+  }
+});

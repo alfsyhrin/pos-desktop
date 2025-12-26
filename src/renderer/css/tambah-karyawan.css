@@ -4,22 +4,6 @@
   box-sizing: border-box;
 }
 
-:root {
-  --background-color: #160808;
-  --primary-color: #E43636;
-  --secondary-color: #d53333ff;
-  --paragraph-color: #818386ff;
-  --card-color: #1D1616;
-  --radius: 18px;
-  --transition: all 0.3s ease;
-  --weight-bold: 500;
-  --weight-black: bold;
-  --hijau: #328E6E;
-  --background-hijau: #1C352D;
-  --input-bg: #2a2020;
-  --border-color: #3a2a2a;
-}
-
 body {
   margin: 0;
   font-family: 'Asap', sans-serif;

@@ -9,10 +9,17 @@ contextBridge.exposeInMainWorld("printerAPI", {
     console.log(">> Invoking print-receipt from preload");
     return ipcRenderer.invoke("print-receipt", payload);
   },
+
   detectBluetoothPrinters: () => {
     console.log(">> Invoking detect-bluetooth-printers from preload");
     return ipcRenderer.invoke("detect-bluetooth-printers");
   },
+
+  // 🔹 tambahan: cek status printer (USB WOYA)
+  checkStatus: () => {
+    console.log(">> Invoking check-printer-status from preload");
+    return ipcRenderer.invoke("check-printer-status");
+  }
 });
 
 console.log(">> printerAPI exposed successfully");

@@ -13,6 +13,10 @@ header.header-dashboard {
   padding: 16px 16px 20px 16px;
   border-bottom: 2px solid var(--primary-color);
   margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 header.header-dashboard h2 {
@@ -21,8 +25,9 @@ header.header-dashboard h2 {
 }
 
 header.header-dashboard p {
-  margin-top: 5px;
   color: var(--paragraph-color);
+  font-size: 20px;
+  font-weight: 500;
 }
 /* Akhir Header */
 

@@ -1,28 +1,13 @@
-/* ===== CSS VARIABLES ===== */
-:root {
-    --background-color: #0a0a0a;
-    --primary-color: #E43636;
-    --secondary-color: #d53333;
-    --paragraph-color: #818386;
-    --card-color: #1a1a1a;
-    --foreground-color: #f2f2f2;
-    --radius: 10px;
-    --transition: all 0.3s ease;
-    --weight-bold: 600;
-    --weight-black: 700;
-    --hijau: #328E6E;
-    --background-hijau: #1C352D;
-    --input-bg: #2a2020;
-    --border-color: #2a2a2a;
-    --muted-color: #1a1a1a;
-}
-
+/* Awal Header */
 header.header-laporan {
   background-color: var(--card-color);
   padding: 16px 16px 20px 16px;
   border-bottom: 2px solid var(--primary-color);
-  /* margin-bottom: 24px; */
-  flex-shrink: 0;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 header.header-laporan h2 {
@@ -31,9 +16,11 @@ header.header-laporan h2 {
 }
 
 header.header-laporan p {
-  margin-top: 5px;
   color: var(--paragraph-color);
+  font-size: 20px;
+  font-weight: 500;
 }
+/* Akhir Header */
 
 /* ===== RESET & BASE ===== */
 * {
