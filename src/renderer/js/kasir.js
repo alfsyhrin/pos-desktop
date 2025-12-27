@@ -145,30 +145,42 @@ async function renderProdukKasir(q = '', category = '') {
   }
 
   products.forEach(p => {
-    const price = Number(p.sellPrice ?? p.price ?? 0);
-    const stock = p.stock ?? p.stok ?? 0;
-    const name = p.name ?? p.nama ?? '-';
-    const sku = p.sku ?? '';
-    const id = p.id ?? p.product_id ?? '';
+    // Ambil info diskon
+    let promoLabel = '';
+    if (p.promoType === 'percentage' && p.promoPercent > 0) {
+      promoLabel = `<span class="badge-diskon diskon-persentase">${p.promoPercent}% OFF</span>`;
+    } else if (p.promoType === 'buyxgety' && p.buyQty && p.freeQty) {
+      promoLabel = `<span class="badge-diskon diskon-bxgy">Beli ${p.buyQty} Gratis ${p.freeQty}</span>`;
+    } else if (p.promoType === 'amount' && p.promoAmount > 0) {
+      promoLabel = `<span class="badge-diskon diskon-nominal">Potongan Rp ${Number(p.promoAmount).toLocaleString('id-ID')}</span>`;
+    } else {
+      promoLabel = '';
+    }
 
     const card = document.createElement('div');
     card.className = 'card-produk-kasir';
     card.innerHTML = `
       <div class="judul-stok-produk">
-        <div class="overflow-judul-produk" data-sku="${sku}" data-stock="${stock}">
-          <h3>${escapeHtml(name)}</h3>
+        <div class="overflow-judul-produk" data-sku="${p.sku}" data-stock="${p.stock}">
+          <h3>${escapeHtml(p.name)}</h3>
         </div>
-        <p>${stock}</p>
+        <p>${p.stock}</p>
       </div>
-      <h3>Rp ${price.toLocaleString('id-ID')}</h3>
-      <p>SKU: ${sku}</p>
+      <h3>Rp ${Number(p.sellPrice ?? p.price ?? 0).toLocaleString('id-ID')}</h3>
+      ${promoLabel ? `<div class="keterangan-diskon">${promoLabel}</div>` : ''}
       <p>Kategori: ${p.category ?? '-'}</p>
       <button class="btn-add-cart"
-        data-id="${id}"
-        data-name="${escapeHtml(name)}"
-        data-price="${price}"
-        data-sku="${sku}"
-        data-stock="${stock}">
+        data-id="${p.id ?? p.product_id ?? ''}"
+        data-name="${escapeHtml(p.name)}"
+        data-price="${Number(p.sellPrice ?? p.price ?? 0)}"
+        data-sku="${p.sku ?? ''}"
+        data-stock="${p.stock ?? p.stok ?? 0}"
+        data-discount-type="${p.promoType || ''}"
+        data-discount-value="${p.promoPercent || p.promoAmount || 0}"
+        data-buy-qty="${p.buyQty || 0}"
+        data-free-qty="${p.freeQty || 0}"
+        data-bundle-qty="${p.bundleQty || 0}"
+        data-bundle-value="${p.bundleTotalPrice || 0}">
         Tambah Ke Keranjang
       </button>
     `;

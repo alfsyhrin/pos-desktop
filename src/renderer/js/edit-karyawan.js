@@ -93,13 +93,13 @@ if (window._editKaryawanInitialized) {
             });
             const data = await res.json();
             if (res.ok && (data.success === true || data.success === undefined)) {
-              alert('Karyawan dinonaktifkan');
-              window.location.href = '../pages/karyawan.html';
+              showToast('Karyawan dinonaktifkan', 'success');
+              setTimeout(() => window.location.href = '../pages/index.html', 1200);
             } else {
-              alert('Gagal nonaktifkan: ' + (data.message || JSON.stringify(data)));
+              showToast('Gagal nonaktifkan: ' + (data.message || JSON.stringify(data)), 'error');
             }
           } catch (err) {
-            alert('Gagal nonaktifkan: ' + err.message);
+            showToast('Gagal nonaktifkan: ' + err.message, 'error');
           } finally {
             nonaktifBtn.disabled = false;
             nonaktifBtn.textContent = 'Nonaktifkan';
@@ -125,13 +125,13 @@ if (window._editKaryawanInitialized) {
             });
             const data = await res.json();
             if (res.ok && (data.success === true || data.success === undefined)) {
-              alert('Karyawan diaktifkan kembali');
-              window.location.href = '../pages/karyawan.html';
+              showToast('Karyawan diaktifkan kembali', 'success');
+              setTimeout(() => window.location.href = '../pages/index.html', 1200);
             } else {
-              alert('Gagal aktifkan: ' + (data.message || JSON.stringify(data)));
+              showToast('Gagal aktifkan: ' + (data.message || JSON.stringify(data)), 'error');
             }
           } catch (err) {
-            alert('Gagal aktifkan: ' + err.message);
+            showToast('Gagal aktifkan: ' + err.message, 'error');
           } finally {
             aktifkanBtn.disabled = false;
             aktifkanBtn.textContent = 'Aktifkan';
@@ -155,7 +155,7 @@ if (window._editKaryawanInitialized) {
             const data = await res.json();
             if (res.ok && (data.success === true || data.success === undefined)) {
               alert('Karyawan berhasil dihapus permanen');
-              window.location.href = '../pages/karyawan.html';
+              window.location.href = '../pages/index.html';
             } else {
               alert('Gagal hapus: ' + (data.message || JSON.stringify(data)));
             }
@@ -198,11 +198,11 @@ if (window._editKaryawanInitialized) {
         const role = roleInput.value || 'cashier';
 
         if (!name || !username) {
-          alert('Nama dan username wajib diisi!');
+          showToast('Nama dan username wajib diisi!', 'warn');
           return;
         }
         if (password && password !== confirmPassword) {
-          alert('Password dan konfirmasi password tidak sama!');
+          showToast('Password dan konfirmasi password tidak sama!', 'warn');
           return;
         }
 
@@ -225,13 +225,13 @@ if (window._editKaryawanInitialized) {
           });
           const data = await res.json();
           if (res.ok && (data.success === true || data.success === undefined)) {
-            alert('Data karyawan berhasil diupdate');
-            window.location.href = '../pages/karyawan.html';
+            showToast('Data karyawan berhasil diupdate', 'success');
+            setTimeout(() => window.location.href = '../pages/index.html', 1200);
           } else {
-            alert('Gagal update: ' + (data.message || JSON.stringify(data)));
+            showToast('Gagal update: ' + (data.message || JSON.stringify(data)), 'error');
           }
         } catch (err) {
-          alert('Gagal update: ' + err.message);
+          showToast('Gagal update: ' + err.message, 'error');
         } finally {
           simpanBtn.disabled = false;
           simpanBtn.textContent = 'Simpan';
