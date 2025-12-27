@@ -192,3 +192,56 @@ body {
   background: var(--secondary-color);
 }
 /* Akhir Container Login */
+
+.password-wrapper {
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding: 18px;
+  padding-right: 45px; /* ruang untuk icon */
+  border: 1px solid var(--paragraph-color);
+  border-radius: 8px;
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  font-size: 14px;
+}
+
+.password-wrapper .material-symbols-outlined {
+  position: absolute;
+  right: 12px;
+  top: 15px;
+  cursor: pointer;
+  color: var(--paragraph-color);
+  font-size: 23px;
+}
+
+.username-wrapper {
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.username-wrapper input {
+  width: 100%;
+  padding: 18px;
+  padding-right: 45px; /* ruang untuk icon */
+  border: 1px solid var(--paragraph-color);
+  border-radius: 8px;
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  font-size: 14px;
+}
+
+.username-wrapper .material-symbols-outlined {
+  position: absolute;
+  right: 12px;
+  top: 15px;
+  color: var(--paragraph-color);
+  font-size: 23px;
+}
