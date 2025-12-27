@@ -159,7 +159,7 @@ async function renderProdukKasir(q = '', category = '') {
     // Fallback ke ikon jika gagal
     const imgTag = imageUrl
       ? `<img src="${imageUrl}" alt="Gambar Produk" class="gambar-produk-kasir"
-          style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
+          style="width:100%;height:150px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
           onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
       : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
 
@@ -412,6 +412,7 @@ async function cariProdukKasir(q, category = '') {
     if (typeof window.apiRequest === 'function') {
       const res = await window.apiRequest(url);
       const products = extractProductsFromResponse(res);
+      
       produkList.innerHTML = '';
       if (!products || products.length === 0) { produkList.innerHTML = '<p>Tidak ada produk ditemukan.</p>'; return; }
 products.forEach(product => {
