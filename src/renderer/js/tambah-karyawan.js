@@ -43,6 +43,26 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'index.html';
   });
 
+  // Dropdown role logic
+  const roleInput = document.getElementById('selected-role');
+  const roleLabel = document.getElementById('selected-role-label');
+  document.querySelectorAll('.role-option').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const role = this.getAttribute('data-role');
+      if (roleInput) roleInput.value = role;
+      if (roleLabel) roleLabel.textContent = role === 'admin' ? 'Admin' : 'Kasir';
+      // Tutup dropdown
+      const toggle = document.getElementById('dropdown-toggle');
+      if (toggle) toggle.checked = false;
+    });
+  });
+
+  // Set default role jika ingin
+  if (roleInput && !roleInput.value) {
+    roleInput.value = 'cashier';
+    if (roleLabel) roleLabel.textContent = 'Kasir';
+  }
+
   if (!simpanBtn) return;
 
   simpanBtn.addEventListener('click', async () => {
@@ -50,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const email = emailInput ? emailInput.value.trim() : '';
     const username = usernameInput ? usernameInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value.trim() : '';
-    const role = adminBtn && adminBtn.classList.contains('active') ? 'admin' : 'cashier';
+    // Ganti cara ambil role:
+    const role = roleInput ? roleInput.value : 'cashier';
     const storeId = localStorage.getItem('store_id');
     const token = localStorage.getItem('token');
 

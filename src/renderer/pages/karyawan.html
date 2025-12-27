@@ -1,6 +1,7 @@
 <div class="main-wrapper">
-  <header class="header-karyawan">
-    <h2>APLIKASI PIPOS</h2>
+
+  <header class="header-dashboard">
+    <h2 id="headerStoreName"></h2>
     <p>Karyawan</p>
   </header>
 
@@ -15,19 +16,19 @@
     <div class="card-data-karyawan">
       <!-- <span class="material-symbols-outlined semua-karyawan">account_box</span> -->
       <p>Semua User</p>
-      <p class="karyawan-detail">3</p>
+      <p class="karyawan-detail"></p>
     </div>
     <div class="card-data-karyawan">
       <!-- <span class="material-symbols-outlined semua-karyawan">account_box</span> -->
       <p>Admin</p>
       <p class="karyawan-detail"  style="
-      color: #10B981FF;">1</p>
+      color: #10B981FF;"></p>
     </div>
     <div class="card-data-karyawan">
       <!-- <span class="material-symbols-outlined semua-karyawan">account_box</span> -->
       <p>Kasir</p>
       <p class="karyawan-detail"  style="
-      color: #ff8036;">2</p>
+      color: #ff8036;"></p>
     </div>
   </div>
 
@@ -53,3 +54,7 @@
     });
   });
 </script>
+<!-- 
+<div class="status-karyawan {is_active ? 'status-aktif' : 'status-nonaktif'}">
+  {is_active ? 'Aktif' : 'Nonaktif'}
+</div> -->

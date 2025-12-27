@@ -1,18 +1,18 @@
 // Fetch transactions from API
-async function fetchTransactions() {
-  console.log('fetchTransactions called');
+async function fetchTransactions({ search = '', page = 1, limit = 20 } = {}) {
   const storeId = localStorage.getItem('store_id');
   const token = localStorage.getItem('token');
-  console.log('storeId:', storeId, 'token:', token ? 'present' : 'missing');
+  if (!storeId || !token) return [];
 
-  if (!storeId || !token) {
-    console.error('Missing storeId or token');
-    return [];
-  }
+  // Build query string
+  const params = [];
+  if (search) params.push(`search=${encodeURIComponent(search)}`);
+  params.push(`page=${page}`);
+  params.push(`limit=${limit}`);
+  const query = params.length ? `?${params.join('&')}` : '';
 
   try {
-    const url = `http://103.126.116.119:8001/api/stores/${storeId}/transactions`;
-    console.log('Fetching from URL:', url);
+    const url = `http://103.126.116.119:8001/api/stores/${storeId}/transactions${query}`;
     const res = await fetch(url, {
       method: 'GET',
       headers: {
@@ -20,17 +20,13 @@ async function fetchTransactions() {
         Authorization: `Bearer ${token}`
       }
     });
-    console.log('Response status:', res.status);
     const data = await res.json();
-    console.log('Response data:', data);
     if (res.ok && data.success) {
       return data.data.items || [];
     } else {
-      console.error('Failed to fetch transactions:', data.message);
       return [];
     }
   } catch (err) {
-    console.error('Error fetching transactions:', err);
     return [];
   }
 }
@@ -40,10 +36,8 @@ function renderTransactions(transactions) {
   const wrapper = document.querySelector('.card-transaksi-wrapper');
   if (!wrapper) return;
 
-  // Clear existing cards
   wrapper.innerHTML = '';
 
-  // If no transactions, show empty state
   if (transactions.length === 0) {
     const card = document.createElement('div');
     card.className = 'card-transaksi';
@@ -68,17 +62,16 @@ function renderTransactions(transactions) {
     return;
   }
 
-  // Show all transactions in cards
   transactions.forEach(trx => {
     const card = document.createElement('div');
     card.className = 'card-transaksi';
-    card.onclick = () => viewTransactionDetail(trx.id);
+    card.onclick = () => viewTransactionDetail(trx.transaction_id);
 
     const createdAt = trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-';
     const total = Number(trx.total || 0);
     const method = trx.method || 'Tunai';
     const itemCount = trx.items ? trx.items.length : 0;
-    const idShort = trx.idShort || trx.idFull || trx.id || '-';
+    const idShort = trx.idShort || trx.idFull || trx.transaction_id || '-';
 
     card.innerHTML = `
       <span class="material-symbols-outlined transaksi">receipt_long</span>
@@ -94,7 +87,7 @@ function renderTransactions(transactions) {
         </div>
       </div>
       <div class="button-hapus-transaksi">
-        <button class="btn-hapus-transaksi" onclick="event.stopPropagation(); deleteTransaction(${trx.id})">
+        <button class="btn-hapus-transaksi" onclick="event.stopPropagation(); deleteTransaction('${trx.transaction_id}')">
           <span class="material-symbols-outlined">delete</span>
         </button>
       </div>
@@ -106,16 +99,17 @@ function renderTransactions(transactions) {
 
 // View transaction detail
 function viewTransactionDetail(transactionId) {
-  // Store transaction ID and navigate to detail page
   localStorage.setItem('selected_transaction_id', transactionId);
   window.location.href = 'detail-transaksi.html';
 }
 
 // Delete transaction
 async function deleteTransaction(transactionId) {
-  if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+  if (!transactionId) {
+    alert('ID transaksi tidak valid!');
     return;
   }
+  if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) return;
 
   const storeId = localStorage.getItem('store_id');
   const token = localStorage.getItem('token');
@@ -135,7 +129,7 @@ async function deleteTransaction(transactionId) {
     const data = await res.json();
     if (res.ok && data.success) {
       alert('Transaksi berhasil dihapus');
-      loadTransactions(); // Reload the list
+      loadTransactions(transaksiFilters);
     } else {
       alert('Gagal menghapus transaksi: ' + (data.message || 'Unknown error'));
     }
@@ -146,15 +140,27 @@ async function deleteTransaction(transactionId) {
 }
 
 // Load and display transactions
-async function loadTransactions() {
-  console.log('loadTransactions called');
-  const transactions = await fetchTransactions();
-  console.log('Transactions fetched:', transactions.length);
+async function loadTransactions(filters) {
+  const transactions = await fetchTransactions(filters);
   renderTransactions(transactions);
 }
 
-// Initialize when page loads
+// Event listener untuk search
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Transaksi page loaded, initializing...');
-  loadTransactions();
+  loadTransactions(transaksiFilters);
+
+  const searchInput = document.getElementById('search-transaksi');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      transaksiFilters.search = searchInput.value;
+      transaksiFilters.page = 1;
+      loadTransactions(transaksiFilters);
+    });
+  }
 });
+
+const transaksiFilters = {
+  search: '',
+  page: 1,
+  limit: 20
+};

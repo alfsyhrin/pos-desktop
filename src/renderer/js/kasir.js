@@ -111,7 +111,7 @@ async function fetchProdukKasir(query = '') {
 }
 
 // ===== Render produk di halaman kasir (tetap menggunakan extractProductsFromResponse) =====
-async function renderProdukKasir(q = '') {
+async function renderProdukKasir(q = '', category = '') {
   const produkList = document.getElementById('produk-list-kasir');
   if (!produkList) return;
   produkList.innerHTML = '<p class="loading">Memuat produk...</p>';
@@ -128,7 +128,16 @@ async function renderProdukKasir(q = '') {
     return;
   }
 
-  const products = await fetchProdukKasir(q);
+  // Tambahkan parameter category jika ada
+  let products = [];
+  if (category) {
+    await cariProdukKasir(q, category);
+    // Jangan populate ulang kategori di sini, karena sudah di cariProdukKasir
+    return;
+  } else {
+    products = await fetchProdukKasir(q);
+  }
+
   produkList.innerHTML = '';
   if (!products || products.length === 0) {
     produkList.innerHTML = '<p>Tidak ada produk.</p>';
@@ -141,14 +150,6 @@ async function renderProdukKasir(q = '') {
     const name = p.name ?? p.nama ?? '-';
     const sku = p.sku ?? '';
     const id = p.id ?? p.product_id ?? '';
-
-    // Ambil diskon dari produk (support percentage, amount, buyxgety, bundle)
-    const discountType = p.discount_type || p.jenis_diskon || '';
-    const discountValue = p.discount_value || p.nilai_diskon || 0;
-    const buyQty = p.buy_qty || 0;
-    const freeQty = p.free_qty || 0;
-    const bundleQty = p.diskon_bundle_min_qty || p.bundle_min_qty || 0;
-    const bundleValue = p.diskon_bundle_value || p.bundle_total_price || 0;
 
     const card = document.createElement('div');
     card.className = 'card-produk-kasir';
@@ -167,18 +168,16 @@ async function renderProdukKasir(q = '') {
         data-name="${escapeHtml(name)}"
         data-price="${price}"
         data-sku="${sku}"
-        data-stock="${stock}"
-        data-discount-type="${discountType}"
-        data-discount-value="${discountValue}"
-        data-buy-qty="${buyQty}"
-        data-free-qty="${freeQty}"
-        data-bundle-qty="${bundleQty}"
-        data-bundle-value="${bundleValue}">
+        data-stock="${stock}">
         Tambah Ke Keranjang
       </button>
     `;
     produkList.appendChild(card);
   });
+
+  // PENTING: panggil ulang agar tombol kategori aktif
+  populateCategoryDropdownKasir();
+  inisialisasiKategoriKasir();
 }
 
 // ===== Simple escape helper =====
@@ -383,7 +382,7 @@ async function completeTransaction() {
 }
 
 // Pencarian produk di kasir
-async function cariProdukKasir(q) {
+async function cariProdukKasir(q, category = '') {
   const produkList = document.getElementById('produk-list-kasir');
   if (!produkList) return;
   produkList.innerHTML = '<p>Mencari produk...</p>';
@@ -392,8 +391,13 @@ async function cariProdukKasir(q) {
   if (!storeId) { produkList.innerHTML = '<p>Pilih toko terlebih dahulu.</p>'; return; }
 
   try {
+    let url = `/stores/${storeId}/products/search?`;
+    const params = [];
+    if (q) params.push(`query=${encodeURIComponent(q)}`);
+    if (category) params.push(`category=${encodeURIComponent(category)}`);
+    url += params.join('&');
     if (typeof window.apiRequest === 'function') {
-      const res = await window.apiRequest(`/stores/${storeId}/products/search?query=${encodeURIComponent(q)}`);
+      const res = await window.apiRequest(url);
       const products = extractProductsFromResponse(res);
       produkList.innerHTML = '';
       if (!products || products.length === 0) { produkList.innerHTML = '<p>Tidak ada produk ditemukan.</p>'; return; }
@@ -428,6 +432,59 @@ async function cariProdukKasir(q) {
   }
 }
 
+// Kategori tetap untuk kasir
+const KATEGORI_LIST_KASIR = [
+  "Kesehatan & Kecantikan",
+  "Rumah Tangga & Gaya Hidup",
+  "Fashion & Aksesoris",
+  "Elektronik",
+  "Bayi & Anak",
+  "Makanan & Minuman"
+];
+
+let selectedCategoryKasir = '';
+
+function populateCategoryDropdownKasir(categories = []) {
+  const menu = document.getElementById('dropdown-menu-kasir');
+  if (!menu) return;
+  menu.innerHTML = '';
+
+  // Tombol Semua Kategori
+  const btnAll = document.createElement('button');
+  btnAll.type = 'button';
+  btnAll.dataset.category = '';
+  btnAll.textContent = 'Semua Kategori';
+  menu.appendChild(btnAll);
+
+  // Tombol kategori tetap
+  KATEGORI_LIST_KASIR.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.category = cat;
+    btn.textContent = cat;
+    menu.appendChild(btn);
+  });
+}
+
+function inisialisasiKategoriKasir() {
+  const categoryButtons = document.querySelectorAll('#dropdown-menu-kasir button[data-category]');
+  if (categoryButtons) {
+    categoryButtons.forEach(btn => {
+      btn.removeEventListener('click', btn._kasirClick); // Hapus event lama jika ada
+      btn._kasirClick = function () {
+        selectedCategoryKasir = btn.dataset.category || '';
+        // tutup dropdown (jika menggunakan checkbox toggle)
+        const toggle = document.getElementById('dropdown-toggle-kasir');
+        if (toggle) toggle.checked = false;
+        // jika ada text di search, jalankan cari dengan category, else render ulang products dengan category filter
+        const q = (document.getElementById('search-produk-kasir') || {}).value || '';
+        cariProdukKasir(q.trim(), selectedCategoryKasir);
+      };
+      btn.addEventListener('click', btn._kasirClick);
+    });
+  }
+}
+
 // Inisialisasi event pencarian
 function inisialisasiPencarianKasir() {
   const searchInput = document.getElementById('search-produk-kasir');
@@ -459,6 +516,8 @@ async function initKasirPage() {
 
   console.log('[kasir] initKasirPage start');
   await renderProdukKasir();
+  populateCategoryDropdownKasir();
+  inisialisasiKategoriKasir();
   inisialisasiPencarianKasir();
   // renderCart dari wrapper frontend
   try { renderCart(); } catch(e) { console.error('[kasir] renderCart error', e); }
@@ -500,8 +559,4 @@ const _pollInterval = setInterval(() => {
   if (_kasirInitialized) { clearInterval(_pollInterval); return; }
   _pollCount++;
   initKasirPage().catch(()=>{});
-  if (_pollCount > 20) clearInterval(_pollInterval); // stop after ~10s
 }, 500);
-
-
-

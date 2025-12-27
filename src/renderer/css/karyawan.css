@@ -267,4 +267,23 @@ header.header-karyawan p {
   font-weight: var(--weight-bold);
   color: var(--primary-color);
 }
+
+.status-karyawan {
+  font-size: 13px;
+  font-weight: bold;
+  border-radius: 5px;
+  padding: 3px 10px;
+  margin-top: 4px;
+  display: inline-block;
+}
+.status-aktif {
+  background: #10b98135;
+  color: #10B981FF;
+  border: 1px solid #10B981FF;
+}
+.status-nonaktif {
+  background: #e4363638;
+  color: #e43636;
+  border: 1px solid #e43636;
+}
 /* Akhir Data Karyawan */

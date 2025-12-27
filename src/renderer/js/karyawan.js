@@ -34,7 +34,7 @@ async function apiGet(path, opts = {}) {
     return window.apiRequest(path, opts);
   }
   const token = localStorage.getItem('token');
-  const res = await fetch(`http://103.126.116.119:5000/api${path}`, {
+  const res = await fetch(`http://103.126.116.119:8001/api${path}`, {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     ...opts
   });
@@ -112,13 +112,27 @@ async function initKaryawanPage(search = '') {
 }
 
 function renderList(container, users) {
-  // users may be array or object wrapper
   const list = Array.isArray(users) ? users : (users.data || users || []);
   if (!list || !list.length) {
     container.innerHTML = '<p>Hasil tidak ditemukan.</p>';
+    // Tetap update jumlah ke 0
+    updateUserCounts(0, 0, 0);
     return;
   }
   container.innerHTML = '';
+
+  // Hitung jumlah user, admin, kasir
+  let total = list.length;
+  let admin = 0;
+  let cashier = 0;
+  list.forEach(u => {
+    if (u.role === 'admin') admin++;
+    if (u.role === 'cashier') cashier++;
+  });
+
+  // Update ke elemen HTML
+  updateUserCounts(total, admin, cashier);
+
   list.forEach(u => {
     const card = document.createElement('div');
     card.className = 'card-karyawan';
@@ -129,11 +143,14 @@ function renderList(container, users) {
         <h3>${escapeHtml(u.name||u.username)}</h3>
         <p class="id-karyawan">ID: ${u.id}</p>
         <div class="role-nomor-karyawan">
-          <p class="role-user ${u.role==='cashier'?'role-oranye':''}">${u.role}</p>
+          <p class="role-user ${u.role==='cashier'?'role-oranye':'role-hijau'}">${u.role}</p>
           <p class="nomor-user">${u.phone||''}</p>
         </div>
       </div>
       <div class="button-card-karyawan">
+        <div class="status-karyawan ${u.is_active == 1 ? 'status-aktif' : 'status-nonaktif'}">
+          ${u.is_active == 1 ? 'Aktif' : 'Nonaktif'}
+        </div>
         <a href="../pages/edit-karyawan.html?id=${u.id}" class="edit-karyawan"><span class="material-symbols-outlined">edit</span></a>
         <button class="hapus-karyawan"><span class="material-symbols-outlined">delete</span></button>
       </div>
@@ -142,6 +159,15 @@ function renderList(container, users) {
     const btn = card.querySelector('.hapus-karyawan');
     if (btn) btn.addEventListener('click', () => confirmDelete(u.id, card));
   });
+}
+
+// Tambahkan fungsi ini di bawah renderList
+function updateUserCounts(total, admin, cashier) {
+  // Urutan: Semua User, Admin, Kasir
+  const countEls = document.querySelectorAll('.data-karyawan .karyawan-detail');
+  if (countEls[0]) countEls[0].textContent = total;
+  if (countEls[1]) countEls[1].textContent = admin;
+  if (countEls[2]) countEls[2].textContent = cashier;
 }
 
 function escapeHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -156,7 +182,7 @@ async function confirmDelete(id, cardEl) {
       return;
     }
     const token = localStorage.getItem('token');
-    const url = `http://103.126.116.119:5000/api/stores/${storeId}/users/${id}`;
+    const url = `http://103.126.116.119:8001/api/stores/${storeId}/users/${id}`;
     const res = await fetch(url, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }

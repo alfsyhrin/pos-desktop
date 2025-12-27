@@ -5,145 +5,238 @@ if (window._editKaryawanInitialized) {
 } else {
   window._editKaryawanInitialized = true;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    // hanya jalankan jika form edit karyawan ada di page
-    if (!window.location.pathname.includes('edit-karyawan.html') && !document.querySelector('.simpan-role')) return;
-    initEditKaryawan();
-  });
-}
-
-function q(sel){ return document.querySelector(sel); }
-
-async function fetchJson(url, opts = {}) {
-  const token = localStorage.getItem('token');
-  const headers = Object.assign({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, opts.headers || {});
-  const res = await fetch(url, Object.assign({ headers }, opts));
-  const text = await res.text().catch(()=>null);
-  try { return { ok: res.ok, status: res.status, data: JSON.parse(text) }; } catch(e) { return { ok: res.ok, status: res.status, raw: text }; }
-}
-
-async function initEditKaryawan() {
-  const params = new URLSearchParams(location.search);
-  const id = params.get('id');
-  if (!id) return; // silent return (guard handled earlier)
-
-  const nameInput = q('input[placeholder="Karyawan 1"]');
-  const emailInput = q('input[placeholder="contoh@gmail.com"]');
-  const usernameInput = q('input[placeholder="username"]');
-  const passwordInput = q('input[placeholder="password"]');
-  const kasirBtn = q('.kasir-tambah-karyawan');
-  const adminBtn = q('.admin-tambah-karyawan');
-  const generateBtn = q('.generate-password');
-  const batalBtn = q('.batal-role');
-  const simpanBtn = q('.simpan-role');
-
-  if (!simpanBtn) return;
-
-  const token = localStorage.getItem('token');
-  if (!token) return alert('Token tidak ditemukan. Silakan login ulang.');
-
-  // ---- REPLACED: only fetch from store users to avoid /api/users/:id 404 ----
-  let user = null;
-  try {
-    const storeId = localStorage.getItem('store_id');
-    if (!storeId) {
-      alert('Store belum dipilih. Silakan pilih store terlebih dahulu.');
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Ambil id dari query string
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (!id) {
+      alert('ID karyawan tidak ditemukan!');
       return;
     }
-    const r2 = await fetchJson(`http://103.126.116.119:5000/api/stores/${storeId}/users`, { method: 'GET' });
-    const list = (r2 && r2.data && Array.isArray(r2.data.data ? r2.data.data : r2.data)) ? (r2.data.data || r2.data) : [];
-    user = (list || []).find(u => String(u.id) === String(id));
-  } catch (e) {
-    console.error('Gagal mengambil data user dari store:', e);
-  }
-  // --------------------------------------------------------------------------
 
-  if (!user) {
-    alert('User tidak ditemukan');
-    return;
-  }
+    // Ambil elemen input
+    const nameInput = document.querySelector('input[placeholder="Karyawan 1"]');
+    const emailInput = document.querySelector('input[placeholder="contoh@gmail.com"]');
+    const usernameInput = document.querySelector('input[placeholder="username"]');
+    const passwordInput = document.querySelector('input[placeholder="password"]');
+    const confirmPasswordInput = document.querySelector('input[placeholder="konfirmasi password"]');
+    const roleInput = document.getElementById('selected-role');
+    const roleLabel = document.querySelector('.dropdown-btn');
+    const adminBtn = document.querySelector('button[data-category="Admin"]');
+    const cashierBtn = document.querySelector('button[data-category="Kasir"]');
 
-  if (nameInput) nameInput.value = user.name || '';
-  if (emailInput) emailInput.value = user.email || '';
-  if (usernameInput) usernameInput.value = user.username || '';
-  if (passwordInput) passwordInput.value = '';
+    // Fetch data karyawan dari API
+    const storeId = localStorage.getItem('store_id');
+    const token = localStorage.getItem('token');
+    if (!storeId || !token) {
+      alert('Store atau token tidak ditemukan!');
+      return;
+    }
 
-  if (kasirBtn && adminBtn) {
-    kasirBtn.classList.toggle('active', user.role === 'cashier');
-    kasirBtn.setAttribute('aria-pressed', user.role === 'cashier');
-    kasirBtn.style.pointerEvents = 'auto';
-    adminBtn.classList.toggle('active', user.role === 'admin');
-    adminBtn.setAttribute('aria-pressed', user.role === 'admin');
-    adminBtn.style.pointerEvents = 'auto';
-  }
+    try {
+      const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const user = (data.data || []).find(u => String(u.id) === String(id));
+      if (!user) {
+        alert('Karyawan tidak ditemukan!');
+        return;
+      }
 
-  if (generateBtn) generateBtn.addEventListener('click', () => {
-    if (passwordInput) passwordInput.value = Math.random().toString(36).slice(-8);
-  });
-  if (batalBtn) batalBtn.addEventListener('click', () => window.location.href = '../pages/karyawan.html');
+      // Isi form dengan data user
+      if (nameInput) nameInput.value = user.name || '';
+      if (emailInput) emailInput.value = user.email || '';
+      if (usernameInput) usernameInput.value = user.username || '';
+      if (passwordInput) passwordInput.value = '';
+      if (confirmPasswordInput) confirmPasswordInput.value = '';
+      if (roleInput) roleInput.value = user.role || '';
+      if (roleLabel) roleLabel.childNodes[0].textContent = user.role === 'admin' ? 'Admin' : 'Kasir';
 
-  // bind role buttons safely
-  if (kasirBtn && !kasirBtn.dataset.bound) {
-    kasirBtn.dataset.bound = '1';
-    kasirBtn.addEventListener('click',(e)=>{ e.preventDefault(); kasirBtn.classList.add('active'); adminBtn.classList.remove('active'); kasirBtn.setAttribute('aria-pressed','true'); adminBtn.setAttribute('aria-pressed','false'); });
-  }
-  if (adminBtn && !adminBtn.dataset.bound) {
-    adminBtn.dataset.bound = '1';
-    adminBtn.addEventListener('click',(e)=>{ e.preventDefault(); adminBtn.classList.add('active'); kasirBtn.classList.remove('active'); adminBtn.setAttribute('aria-pressed','true'); kasirBtn.setAttribute('aria-pressed','false'); });
-  }
+      // Highlight role di dropdown
+      if (adminBtn && cashierBtn) {
+        if (user.role === 'admin') {
+          adminBtn.classList.add('active');
+          cashierBtn.classList.remove('active');
+        } else {
+          cashierBtn.classList.add('active');
+          adminBtn.classList.remove('active');
+        }
+      }
 
-  if (simpanBtn && !simpanBtn.dataset.bound) {
-    simpanBtn.dataset.bound = '1';
-    simpanBtn.addEventListener('click', async () => {
-      // prevent double submit
-      if (simpanBtn.disabled) return;
-      const name = nameInput ? nameInput.value.trim() : '';
-      const email = emailInput ? emailInput.value.trim() : '';
-      const username = usernameInput ? usernameInput.value.trim() : '';
-      const password = passwordInput ? passwordInput.value.trim() : '';
-      const role = adminBtn && adminBtn.classList.contains('active') ? 'admin' : 'cashier';
+      // Tampilkan tombol aktif/nonaktif sesuai status user
+      const nonaktifBtn = document.querySelector('.nonaktifkan-role');
+      const aktifkanBtn = document.querySelector('.aktifkan-role');
+      if (user.is_active == 1) {
+        if (nonaktifBtn) nonaktifBtn.style.display = '';
+        if (aktifkanBtn) aktifkanBtn.style.display = 'none';
+      } else {
+        if (nonaktifBtn) nonaktifBtn.style.display = 'none';
+        if (aktifkanBtn) aktifkanBtn.style.display = '';
+      }
 
-      if (!name || !username) { if (window.showToast) showToast('Nama dan username wajib diisi','warn'); else alert('Nama dan username wajib diisi'); return; }
+      // Tombol Nonaktifkan (soft delete)
+      if (nonaktifBtn) {
+        nonaktifBtn.onclick = async function() {
+          if (!confirm('Nonaktifkan karyawan ini?')) return;
+          nonaktifBtn.disabled = true;
+          nonaktifBtn.textContent = 'Memproses...';
+          try {
+            const url = `http://103.126.116.119:8001/api/stores/${storeId}/users/${id}`;
+            const res = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ is_active: 0 })
+            });
+            const data = await res.json();
+            if (res.ok && (data.success === true || data.success === undefined)) {
+              alert('Karyawan dinonaktifkan');
+              window.location.href = '../pages/karyawan.html';
+            } else {
+              alert('Gagal nonaktifkan: ' + (data.message || JSON.stringify(data)));
+            }
+          } catch (err) {
+            alert('Gagal nonaktifkan: ' + err.message);
+          } finally {
+            nonaktifBtn.disabled = false;
+            nonaktifBtn.textContent = 'Nonaktifkan';
+          }
+        };
+      }
 
-      const body = { name, username, role };
-      if (email) body.email = email;
-      if (password) body.password = password;
+      // Tombol Aktifkan (jika user nonaktif)
+      if (aktifkanBtn) {
+        aktifkanBtn.onclick = async function() {
+          if (!confirm('Aktifkan kembali karyawan ini?')) return;
+          aktifkanBtn.disabled = true;
+          aktifkanBtn.textContent = 'Memproses...';
+          try {
+            const url = `http://103.126.116.119:8001/api/stores/${storeId}/users/${id}`;
+            const res = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ is_active: 1 })
+            });
+            const data = await res.json();
+            if (res.ok && (data.success === true || data.success === undefined)) {
+              alert('Karyawan diaktifkan kembali');
+              window.location.href = '../pages/karyawan.html';
+            } else {
+              alert('Gagal aktifkan: ' + (data.message || JSON.stringify(data)));
+            }
+          } catch (err) {
+            alert('Gagal aktifkan: ' + err.message);
+          } finally {
+            aktifkanBtn.disabled = false;
+            aktifkanBtn.textContent = 'Aktifkan';
+          }
+        };
+      }
 
-      simpanBtn.disabled = true;
-      const originalText = simpanBtn.textContent;
-      simpanBtn.textContent = 'Menyimpan...';
+      // Tombol Hapus Permanen (hard delete)
+      const hapusBtn = document.querySelector('.hapus-role');
+      if (hapusBtn) {
+        hapusBtn.onclick = async function() {
+          if (!confirm('Hapus permanen karyawan ini? Data tidak bisa dikembalikan!')) return;
+          hapusBtn.disabled = true;
+          hapusBtn.textContent = 'Menghapus...';
+          try {
+            const url = `http://103.126.116.119:8001/api/stores/${storeId}/users/${id}`;
+            const res = await fetch(url, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok && (data.success === true || data.success === undefined)) {
+              alert('Karyawan berhasil dihapus permanen');
+              window.location.href = '../pages/karyawan.html';
+            } else {
+              alert('Gagal hapus: ' + (data.message || JSON.stringify(data)));
+            }
+          } catch (err) {
+            alert('Gagal hapus: ' + err.message);
+          } finally {
+            hapusBtn.disabled = false;
+            hapusBtn.textContent = 'Hapus Permanen';
+          }
+        };
+      }
+    } catch (err) {
+      alert('Gagal mengambil data karyawan!');
+      console.error(err);
+    }
 
-      try {
-        const storeId = localStorage.getItem('store_id');
-        if (!storeId) {
-          if (window.showToast) showToast('Store belum dipilih. Tidak bisa update user.','error'); else alert('Store belum dipilih. Tidak bisa update user.');
+    // Dropdown role logic
+    document.querySelectorAll('.dropdown-menu button[data-category]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const role = this.getAttribute('data-category').toLowerCase() === 'admin' ? 'admin' : 'cashier';
+        if (roleInput) roleInput.value = role;
+        if (roleLabel) roleLabel.childNodes[0].textContent = role === 'admin' ? 'Admin' : 'Kasir';
+        adminBtn.classList.toggle('active', role === 'admin');
+        cashierBtn.classList.toggle('active', role === 'cashier');
+        // Tutup dropdown
+        const toggle = document.getElementById('dropdown-toggle');
+        if (toggle) toggle.checked = false;
+      });
+    });
+
+    // Simpan perubahan (PUT)
+    const simpanBtn = document.querySelector('.simpan-role');
+    if (simpanBtn) {
+      simpanBtn.onclick = async function() {
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+        const role = roleInput.value || 'cashier';
+
+        if (!name || !username) {
+          alert('Nama dan username wajib diisi!');
           return;
         }
-        const url = `http://103.126.116.119:5000/api/stores/${storeId}/users/${id}`;
-        const r = await fetchJson(url, {
-          method: 'PUT',
-          body: JSON.stringify(body)
-        });
-
-        if (r.ok && r.data && (r.data.success === true || r.data.success === undefined)) {
-          if (window.showToast) {
-            await showToast('Data karyawan berhasil diupdate','success');
-            window.location.href = 'index.html';
-          } else {
-            alert('Data karyawan berhasil diupdate');
-            window.location.href = 'index.html';
-          }
-        } else {
-          const msg = (r.data && (r.data.message || r.data.error || JSON.stringify(r.data))) || `HTTP ${r.status}`;
-          if (window.showToast) showToast('Gagal update: ' + msg, 'error'); else alert('Gagal update: ' + msg);
+        if (password && password !== confirmPassword) {
+          alert('Password dan konfirmasi password tidak sama!');
+          return;
         }
-      } catch (err) {
-        console.error(err);
-        if (window.showToast) showToast('Gagal update: ' + (err.message || err), 'error'); else alert('Gagal update: ' + (err.message || err));
-      } finally {
-        simpanBtn.disabled = false;
-        simpanBtn.textContent = originalText;
-      }
-    });
-  }
+
+        const body = { name, username, role };
+        if (email) body.email = email;
+        if (password) body.password = password;
+
+        simpanBtn.disabled = true;
+        simpanBtn.textContent = 'Menyimpan...';
+
+        try {
+          const url = `http://103.126.116.119:8001/api/stores/${storeId}/users/${id}`;
+          const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          });
+          const data = await res.json();
+          if (res.ok && (data.success === true || data.success === undefined)) {
+            alert('Data karyawan berhasil diupdate');
+            window.location.href = '../pages/karyawan.html';
+          } else {
+            alert('Gagal update: ' + (data.message || JSON.stringify(data)));
+          }
+        } catch (err) {
+          alert('Gagal update: ' + err.message);
+        } finally {
+          simpanBtn.disabled = false;
+          simpanBtn.textContent = 'Simpan';
+        }
+      };
+    }
+  });
 }

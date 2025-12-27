@@ -45,18 +45,17 @@
         <input type="text" placeholder="konfirmasi password">
       </div>
       <div class="dropdown">
-      <input type="checkbox" id="dropdown-toggle" hidden>
-  
-      <label for="dropdown-toggle" class="dropdown-btn">
-        Pilih Role
-        <span class="arrow">▾</span>
-      </label>
-  
-      <div class="dropdown-menu">
-        <button type="button" data-category="Admin" data-bound="1">Admin</button>
-        <button type="button" data-category="Kasir" data-bound="1">Kasir</button>
-      </div>
-    </div>
+  <input type="checkbox" id="dropdown-toggle" hidden>
+  <label for="dropdown-toggle" class="dropdown-btn">
+    <span id="selected-role-label">Pilih Role</span>
+    <span class="arrow">▾</span>
+  </label>
+  <div class="dropdown-menu">
+    <button type="button" class="role-option" data-role="admin">Admin</button>
+    <button type="button" class="role-option" data-role="cashier">Kasir</button>
+  </div>
+  <input type="hidden" id="selected-role" value="">
+</div>
     </div>
     <button class="generate-password" id="password">Generate Password</button>
 

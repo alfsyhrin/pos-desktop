@@ -39,10 +39,10 @@
 
       <div class="wrap-input-karyawan">
         <label for="nama-karyawan">Masukkan password</label>
-        <input type="text" placeholder="password">
+        <input type="password" placeholder="password">
       </div>
       <div class="wrap-input-karyawan">
-        <input type="text" placeholder="konfirmasi password">
+        <input type="password" placeholder="konfirmasi password">
       </div>
       <div class="dropdown">
       <input type="checkbox" id="dropdown-toggle" hidden>
@@ -57,6 +57,11 @@
         <button type="button" data-category="Kasir" data-bound="1">Kasir</button>
       </div>
     </div>
+    <input type="hidden" id="selected-role" value="">
+    <div class="aksi-karyawan-row">
+  <button class="nonaktifkan-role" style="background:#f59e42;color:#fff;width:100%;border:none;border-radius:8px;padding:13px 0;font-size:15px;font-weight:bold;display:none;margin-bottom:8px;">Nonaktifkan</button>
+  <button class="aktifkan-role" style="background:#10b981;color:#fff;width:100%;border:none;border-radius:8px;padding:13px 0;font-size:15px;font-weight:bold;display:none;margin-bottom:8px;">Aktifkan</button>
+</div>
     </div>
     <button class="generate-password" id="password">Generate Password</button>
 
@@ -66,7 +71,7 @@
     </div>
   </div>
   <script src="../js/notifications.js"></script>
-  <script src="../js/tambah-karyawan.js"></script>
+  <script src="../js/edit-karyawan.js"></script>
   <script src="../js/theme.js"></script>
   <script>
 function generateSecurePassword(length = 12) {

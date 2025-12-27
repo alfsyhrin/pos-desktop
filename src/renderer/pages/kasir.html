@@ -1,7 +1,8 @@
-<header class="header-kasir">
-  <h2>APLIKASI PIPOS</h2>
-  <p>Kasir</p>
-</header>
+
+  <header class="header-dashboard">
+    <h2 id="headerStoreName"></h2>
+    <p>Kasir</p>
+  </header>
 <main>
   <!-- Modal pemilihan toko untuk owner -->
 <div id="store-selector-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:9999;">
@@ -25,17 +26,17 @@
       <button class="btn-active"  id="btn-wp2dw">WP2DW</button>
       <button id="btn-scan-camera">Scan Kamera</button>
     </div> -->
-    <div class="dropdown">
-      <input type="checkbox" id="dropdown-toggle" hidden>
-  
-      <label for="dropdown-toggle" class="dropdown-btn">
-        Pilih Kategori
-        <span class="arrow">▾</span>
-      </label>
-  
-      <div class="dropdown-menu">
-      </div>
-    </div>
+<!-- ...existing code... -->
+<div class="dropdown">
+  <input type="checkbox" id="dropdown-toggle-kasir" hidden>
+  <label for="dropdown-toggle-kasir" class="dropdown-btn">
+    Pilih Kategori
+    <span class="arrow">▾</span>
+  </label>
+  <div class="dropdown-menu" id="dropdown-menu-kasir">
+  </div>
+</div>
+<!-- ...existing code... -->
   </div>
 
     <div class="container-wrapper-produk">

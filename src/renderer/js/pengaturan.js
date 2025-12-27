@@ -8,7 +8,7 @@ async function loadStoreInfo() {
     return;
   }
   try {
-    const res = await fetch(`http://103.126.116.119:5000/api/stores/${storeId}`, {
+    const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
