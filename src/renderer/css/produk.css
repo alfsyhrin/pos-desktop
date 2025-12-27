@@ -418,3 +418,71 @@ button.btn-active {
   border-radius: 8px;
   background: var(--foreground-color);
 }
+
+/* Overlay modal kamera (popup) */
+.camera-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  pointer-events: none;      /* supaya tidak ganggu klik saat kamera belum tampil */
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Saat kamera aktif (display!=none), overlay ikut aktif lewat selector CSS saja */
+.camera-container[style*="display: block"] {
+  /* ini hanya penanda; yang penting untuk overlay ada selector di bawah */
+}
+
+/* Trik: kalau container sudah block (diubah JS), buat overlay aktif */
+.camera-container[style*="display: block"]::backdrop {
+  /* placeholder, tidak terpakai, hanya untuk kejelasan */
+}
+
+/* Selector yang mengaktifkan overlay ketika camera-container sudah block */
+.camera-container[style*="display: block"] {
+  /* tidak diubah dari JS, hanya dipakai oleh selector saudara */
+}
+
+/* Gunakan sibling selector dengan sedikit trik: */
+.camera-container[style*="display: block"] {
+  /* kita tidak bisa ubah overlay via JS, jadi overlay selalu ada,
+     dan kita gunakan pointer-events/opacity global via class di body */
+}
+
+/* Cara yang lebih simpel: overlay selalu ON, tapi di-reset ketika camera-container hidden */
+.camera-modal-overlay {
+  /* default sudah di atas (opacity 0, pointer-events:none) */
+}
+
+/* Saat camera-container aktif, kita override lewat :has (browser modern) */
+.camera-modal-overlay:has(.camera-container[style*="display: block"]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Styling kamera di tengah popup */
+.camera-modal-overlay .camera-container {
+  background: var(--card-color);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  max-width: 480px;
+  width: 90%;
+}
+
+.btn-outline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--primary-color);
+  border: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: #fff;
+}

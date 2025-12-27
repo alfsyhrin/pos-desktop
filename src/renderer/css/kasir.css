@@ -42,7 +42,7 @@ main {
   width: 350px;
   border-radius: 15px;
   margin-right: 16px;
-  min-height: 81vh;
+  /* min-height: 81vh; */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -260,7 +260,7 @@ main {
 }
 
 .container-wrapper-produk::-webkit-scrollbar {
-  display: none; /* Chrome, Edge, Safari */
+  display: none;
 }
 
 .card-produk-kasir {
@@ -274,6 +274,12 @@ main {
   width: calc(33.333% - 9px);
   cursor: pointer;
   transition: transform 0.2s;
+  height: 300px;
+}
+
+.gambar-produk-kasir {
+  width: 100%;
+  margin-bottom: 5px;
 }
 
 .card-produk-kasir h3 {

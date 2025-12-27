@@ -154,6 +154,7 @@ async function renderProdukKasir(q = '', category = '') {
     const card = document.createElement('div');
     card.className = 'card-produk-kasir';
     card.innerHTML = `
+      <img src="../assets/img/coba.jpg" alt="gambar produk" class="gambar-produk-kasir">
       <div class="judul-stok-produk">
         <div class="overflow-judul-produk" data-sku="${sku}" data-stock="${stock}">
           <h3>${escapeHtml(name)}</h3>
@@ -405,6 +406,7 @@ async function cariProdukKasir(q, category = '') {
         const card = document.createElement('div');
         card.className = 'card-produk-kasir';
         card.innerHTML = `
+          <img src="../assets/img/coba.jpg" alt="gambar produk">
           <div class="judul-stok-produk">
             <div class="overflow-judul-produk" data-sku="${product.sku}" data-stock="${product.stock}">
               <h3>${product.name}</h3>

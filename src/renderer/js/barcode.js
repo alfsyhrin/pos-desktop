@@ -513,3 +513,26 @@ async function cetakBarcode() {
   }
 }
 
+// Event delegation: tombol Tutup Kamera (dinamis) selalu bisa memanggil stopCamera
+document.addEventListener('click', function (e) {
+  // Cek jika yang diklik adalah tombol dengan id="btn-close-camera"
+  const target = e.target;
+
+  // Jika langsung klik button-nya
+  if (target.id === 'btn-close-camera') {
+    e.preventDefault();
+    stopCamera();
+    const overlay = document.getElementById('camera-modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+    return;
+  }
+
+  // Jika yang diklik ikon <span> di dalam button
+  if (target.closest && target.closest('#btn-close-camera')) {
+    e.preventDefault();
+    stopCamera();
+    const overlay = document.getElementById('camera-modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+    return;
+  }
+});
