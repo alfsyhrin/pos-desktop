@@ -2,6 +2,10 @@ function renderDetailTransaksi() {
   const trx = JSON.parse(localStorage.getItem('last_transaction') || '{}');
   if (!trx || !trx.items) return;
 
+  // Tampilkan total, diskon, grand_total dari trx (response backend)
+  document.getElementById('total').textContent = `Rp ${Number(trx.total || 0).toLocaleString('id-ID')}`;
+  document.getElementById('grand_total').textContent = `Rp ${Number(trx.grand_total || trx.total || 0).toLocaleString('id-ID')}`;
+
   // Render nomor transaksi, tanggal, metode, dll
   document.querySelector('.jenis-pembayaran-transaksi h4 + p').textContent = trx.idFull || trx.idShort || '-';
   document.querySelectorAll('.jenis-pembayaran-transaksi')[1].querySelector('p').textContent =

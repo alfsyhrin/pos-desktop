@@ -414,28 +414,40 @@ async function cariProdukKasir(q, category = '') {
       const products = extractProductsFromResponse(res);
       produkList.innerHTML = '';
       if (!products || products.length === 0) { produkList.innerHTML = '<p>Tidak ada produk ditemukan.</p>'; return; }
-      products.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'card-produk-kasir';
-        card.innerHTML = `
-          <img src="../assets/img/coba.jpg" alt="gambar produk">
-          <div class="judul-stok-produk">
-            <div class="overflow-judul-produk" data-sku="${product.sku}" data-stock="${product.stock}">
-              <h3>${product.name}</h3>
-            </div>
-            <p>${product.stock}</p>
-          </div>
-          <h3>Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</h3>
-          <p>SKU: ${product.sku}</p>
-          <p>Kategori: ${product.category || '-'}</p>
-          <button class="btn-add-cart"
-            data-name="${product.name}"
-            data-price="${product.sellPrice || product.price}"
-            data-sku="${product.sku}"
-            data-stock="${product.stock}">Tambah Ke Keranjang</button>
-        `;
-        produkList.appendChild(card);
-      });
+products.forEach(product => {
+  // Ambil gambar produk dari database (image_url atau imageUrl)
+  const imageUrlRaw = product.image_url || product.imageUrl || '';
+  const imageUrl = imageUrlRaw
+    ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
+    : '';
+  // Fallback ke ikon jika gagal
+  const imgTag = imageUrl
+    ? `<img src="${imageUrl}" alt="Gambar Produk" class="gambar-produk-kasir"
+        style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
+        onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+    : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+
+  const card = document.createElement('div');
+  card.className = 'card-produk-kasir';
+  card.innerHTML = `
+    ${imgTag}
+    <div class="judul-stok-produk">
+      <div class="overflow-judul-produk" data-sku="${product.sku}" data-stock="${product.stock}">
+        <h3>${product.name}</h3>
+      </div>
+      <p>${product.stock}</p>
+    </div>
+    <h3>Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</h3>
+    <p>SKU: ${product.sku}</p>
+    <p>Kategori: ${product.category || '-'}</p>
+    <button class="btn-add-cart"
+      data-name="${product.name}"
+      data-price="${product.sellPrice || product.price}"
+      data-sku="${product.sku}"
+      data-stock="${product.stock}">Tambah Ke Keranjang</button>
+  `;
+  produkList.appendChild(card);
+});
     } else {
       // fallback to renderProdukKasir with q
       await renderProdukKasir(q);

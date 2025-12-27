@@ -59,7 +59,7 @@ async function createTransaction(pendingData, receivedAmount, changeAmount) {
   const items = pendingData.cart.map(item => ({
     product_id: item.id,
     quantity: item.quantity,
-    price: item.price,
+    // Jika ada diskon custom dari kasir, boleh kirim:
     discount_type: item.discount_type || null,
     discount_value: item.discount_value || 0,
     notes: item.notes || ""
@@ -67,8 +67,7 @@ async function createTransaction(pendingData, receivedAmount, changeAmount) {
 
   const body = {
     user_id: Number(pendingData.userId),
-    total_cost: pendingData.total_cost,
-    payment_type: "tunai",
+    payment_type: "cash",
     payment_method: "cash",
     received_amount: receivedAmount,
     change_amount: changeAmount,
