@@ -26,12 +26,23 @@
       <p>Masuk untuk melanjutkan ke dashboard</p>
       <div class="input-wrapper">
         <label for="email">Email atau username</label>
-        <input type="email" id="email" placeholder="Email">
+        <div class="username-wrapper">
+          <input type="email" id="email" placeholder="Email">
+          <span class="material-symbols-outlined">
+            person
+          </span>
+        </div>
       </div>
       <div class="input-wrapper">
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Password">
+        <div class="password-wrapper">
+          <input type="password" id="password" placeholder="Password">
+          <span id="togglePassword" class="material-symbols-outlined">
+            visibility_off
+          </span>
+        </div>
       </div>
+
       <a href="">Lupa Password?</a>
       <button onclick="login()">Masuk</button>
     </div>
@@ -67,5 +78,19 @@
       btnDark.classList.remove('active');
     });
   </script>
+  <script>
+    const passwordInput   = document.getElementById('password');
+    const togglePassword  = document.getElementById('togglePassword');
+
+    togglePassword.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+
+      // ganti icon: visibility_off <-> visibility
+      togglePassword.textContent = isPassword ? 'visibility' : 'visibility_off';
+    });
+  </script>
+
 </body>
 </html>
