@@ -33,6 +33,16 @@ function renderPendingTransaction(pendingData) {
   }
 }
 
+// Format number to Rupiah currency
+function formatRupiah(angka) {
+  return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Unformat Rupiah currency to number
+function unformatRupiah(str) {
+  return Number(str.replace(/\./g, ''));
+}
+
 // Event input uang diterima - calculate kembalian
 function inisialisasiInputTunai(pendingData) {
   const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
@@ -49,6 +59,36 @@ const totalFinal = subtotal + tax;
       const change = Math.max(0, received - totalFinal);
       kembalianEl.textContent = `Rp ${change.toLocaleString('id-ID')}`;
     });
+  }
+}
+
+// Format input tunai to Rupiah and calculate kembalian
+function inisialisasiInputTunaiFormat(pendingData) {
+  const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
+  // Ambil elemen kembalian yang labelnya "KEMBALIAN"
+  const kembalianCard = Array.from(document.querySelectorAll('.card-total-pembayaran'))
+    .find(card => card.textContent.toUpperCase().includes('KEMBALIAN'));
+  const kembalianEl = kembalianCard ? kembalianCard.querySelector('h4[style]') : null;
+  const total = pendingData.total_cost || 0;
+
+  if (inputTunai && kembalianEl) {
+    inputTunai.type = "text";
+    inputTunai.addEventListener('input', function(e) {
+      let val = this.value.replace(/\D/g, '');
+      if (!val) {
+        this.value = '';
+        kembalianEl.textContent = `Rp 0`;
+        return;
+      }
+      this.value = formatRupiah(val);
+      const received = unformatRupiah(this.value);
+      const change = Math.max(0, received - total);
+      kembalianEl.textContent = `Rp ${change.toLocaleString('id-ID')}`;
+    });
+    // Set default value
+    inputTunai.value = formatRupiah(total);
+    // Trigger event untuk update kembalian awal
+    inputTunai.dispatchEvent(new Event('input'));
   }
 }
 
@@ -114,13 +154,14 @@ function inisialisasiBayar(pendingData) {
   bayarBtn.addEventListener('click', async function (e) {
     e.preventDefault();
 
-    const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
-    const receivedAmount = Number(inputTunai?.value) || 0;
-    const total = Number(pendingData.total_cost) || 0;
+    // Ambil input sebagai string, lalu unformat
+    const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
+    const receivedAmount = unformatRupiah(inputTunai?.value) || 0;
+    const total = pendingData.total_cost || 0;
     const changeAmount = Math.max(0, receivedAmount - total);
 
     if (receivedAmount < total) {
-      alert('Uang diterima kurang dari total pembayaran');
+      showToast('Nominal pembayaran kurang. Silakan masukkan jumlah yang cukup.', 'warn');
       return;
     }
 
@@ -142,8 +183,30 @@ function inisialisasiBayar(pendingData) {
       window.location.href = '../pages/detail-transaksi.html';
     } catch (err) {
       console.error('Error creating transaction:', err);
-      alert('Gagal membuat transaksi: ' + (err.message || err));
+      showToast('Gagal membuat transaksi: ' + (err.message || err), 'error');
     }
+  });
+}
+
+// Event pecahan uang button - set input tunai value
+function inisialisasiPecahanUang(pendingData) {
+  const pecahanBtns = document.querySelectorAll('.wrapper-pecahan-uang-pembayaran button');
+  // Perbaikan: selector input type text
+  const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
+  const total = pendingData.total_cost || 0;
+
+  pecahanBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      let val = btn.textContent.replace(/\D/g, '');
+      if (btn.textContent.toLowerCase().includes('uang pas')) {
+        val = total;
+      }
+      if (inputTunai) {
+        // Perbaikan: format langsung ke input
+        inputTunai.value = val ? formatRupiah(val) : '';
+        inputTunai.dispatchEvent(new Event('input'));
+      }
+    });
   });
 }
 
@@ -156,8 +219,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderPendingTransaction(pendingData);
 
     // Initialize input and bayar events
-    inisialisasiInputTunai(pendingData);
+    inisialisasiInputTunaiFormat(pendingData); // Ganti
     inisialisasiBayar(pendingData);
+    inisialisasiPecahanUang(pendingData);
   } else {
     alert('Data transaksi pending tidak ditemukan!');
     // Redirect back to kasir
