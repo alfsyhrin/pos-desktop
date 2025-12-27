@@ -151,10 +151,22 @@ async function renderProdukKasir(q = '', category = '') {
     const sku = p.sku ?? '';
     const id = p.id ?? p.product_id ?? '';
 
+    // Ambil gambar produk seperti di produk.js
+    const imageUrlRaw = p.image_url || p.imageUrl || '';
+    const imageUrl = imageUrlRaw
+      ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
+      : '';
+    // Fallback ke ikon jika gagal
+    const imgTag = imageUrl
+      ? `<img src="${imageUrl}" alt="Gambar Produk" class="gambar-produk-kasir"
+          style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
+          onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+      : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+
     const card = document.createElement('div');
     card.className = 'card-produk-kasir';
     card.innerHTML = `
-      <img src="../assets/img/coba.jpg" alt="gambar produk" class="gambar-produk-kasir">
+      ${imgTag}
       <div class="judul-stok-produk">
         <div class="overflow-judul-produk" data-sku="${sku}" data-stock="${stock}">
           <h3>${escapeHtml(name)}</h3>
