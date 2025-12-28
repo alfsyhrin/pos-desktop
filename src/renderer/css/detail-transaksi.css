@@ -666,6 +666,24 @@ button.btn-hapus {
   border-radius: 50%;
 }
 
+/* Tambahkan di detail-transaksi.css */
+.btn-selesai {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-top: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-selesai:hover {
+  background: #059669;
+}
+
 /* warna ketika cek / online / offline */
 .status-indicator.checking { background-color: orange; }
 .status-indicator.online   { background-color: #28a745; }  /* hijau */

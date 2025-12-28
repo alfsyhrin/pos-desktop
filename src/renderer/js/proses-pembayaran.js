@@ -17,20 +17,76 @@ function loadPendingTransaction() {
 function renderPendingTransaction(pendingData) {
   if (!pendingData) return;
 
-  // Update total
-  const totalEl = document.querySelector('.card-total-pembayaran h4:nth-child(2)');
-  if (totalEl) totalEl.textContent = `Rp ${Number(pendingData.total_cost || 0).toLocaleString('id-ID')}`;
+  let grossSubtotal = 0, discountTotal = 0;
+  (pendingData.cart || []).forEach(item => {
+    let harga = Number(item.price || 0);
+    let qty = Number(item.quantity || 0); // qty = total keluar (dibayar + bonus) untuk buyxgety
+    let diskon = 0;
+
+    // Diskon Persentase
+    if (item.discount_type === 'percentage' && item.discount_value) {
+      const itemGross = harga * qty;
+      diskon = itemGross * (item.discount_value / 100);
+      grossSubtotal += itemGross;
+      discountTotal += diskon;
+    }
+    // Diskon Nominal
+    else if (item.discount_type === 'nominal' && item.discount_value) {
+      const itemGross = harga * qty;
+      diskon = Math.min(item.discount_value, itemGross);
+      grossSubtotal += itemGross;
+      discountTotal += diskon;
+    }
+    // Buy X Get Y
+    else if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
+      const itemGross = harga * qty;
+      const promoUnit = Number(item.buy_qty) + Number(item.free_qty);
+      const promoTimes = Math.floor(qty / promoUnit);
+      const freeItems = promoTimes * Number(item.free_qty);
+      diskon = freeItems * harga;
+      grossSubtotal += itemGross;
+      discountTotal += diskon;
+    }
+    // Tanpa Diskon
+    else {
+      const itemGross = harga * qty;
+      grossSubtotal += itemGross;
+      // diskon = 0;
+      // discountTotal += diskon;
+    }
+  });
+
+  const netSubtotal = grossSubtotal - discountTotal;
+  const pajakPersen = pendingData.tax_percentage || 10;
+  const tax = Math.round(netSubtotal * pajakPersen / 100);
+  const grandTotal = netSubtotal + tax;
+
+  // Update UI
+  document.getElementById('subtotal-pembayaran').textContent = `Rp ${grossSubtotal.toLocaleString('id-ID')}`;
+  document.getElementById('diskon-pembayaran').textContent = `Rp ${discountTotal.toLocaleString('id-ID')}`;
+  document.getElementById('pajak-pembayaran').textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+  document.getElementById('total-pembayaran').textContent = `Rp ${grandTotal.toLocaleString('id-ID')}`;
+
+  // Set uang diterima input to grandTotal initially
+  const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
+  if (inputTunai) {
+    inputTunai.value = grandTotal.toLocaleString('id-ID');
+    inputTunai.disabled = false;
+  }
 
   // Set initial kembalian to 0
   const kembalianEl = document.querySelectorAll('.card-total-pembayaran h4')[3];
   if (kembalianEl) kembalianEl.textContent = `Rp 0`;
 
-  // Set uang diterima input to total_cost initially
-  const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
-  if (inputTunai) {
-    inputTunai.value = pendingData.total_cost || 0;
-    inputTunai.disabled = false; // Enable input for user to change
-  }
+  // Simpan hasil kalkulasi ke pendingData untuk proses selanjutnya
+  pendingData._grossSubtotal = grossSubtotal;
+  pendingData._discountTotal = discountTotal;
+  pendingData._netSubtotal = netSubtotal;
+  pendingData._tax = tax;
+  pendingData._grandTotal = grandTotal;
+
+  // Tambahkan render list item
+  renderListItemPembayaran(pendingData.cart || []);
 }
 
 // Format number to Rupiah currency
@@ -40,7 +96,7 @@ function formatRupiah(angka) {
 
 // Unformat Rupiah currency to number
 function unformatRupiah(str) {
-  return Number(str.replace(/\./g, ''));
+  return Number(String(str).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
 }
 
 // Event input uang diterima - calculate kembalian
@@ -65,11 +121,10 @@ const totalFinal = subtotal + tax;
 // Format input tunai to Rupiah and calculate kembalian
 function inisialisasiInputTunaiFormat(pendingData) {
   const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
-  // Ambil elemen kembalian yang labelnya "KEMBALIAN"
   const kembalianCard = Array.from(document.querySelectorAll('.card-total-pembayaran'))
     .find(card => card.textContent.toUpperCase().includes('KEMBALIAN'));
   const kembalianEl = kembalianCard ? kembalianCard.querySelector('h4[style]') : null;
-  const total = pendingData.total_cost || 0;
+  const total = pendingData._grandTotal || 0;
 
   if (inputTunai && kembalianEl) {
     inputTunai.type = "text";
@@ -87,7 +142,6 @@ function inisialisasiInputTunaiFormat(pendingData) {
     });
     // Set default value
     inputTunai.value = formatRupiah(total);
-    // Trigger event untuk update kembalian awal
     inputTunai.dispatchEvent(new Event('input'));
   }
 }
@@ -100,13 +154,39 @@ async function createTransaction(pendingData, receivedAmount) {
     throw new Error('Missing storeId or token');
   }
 
-  const items = pendingData.cart.map(item => ({
-    product_id: item.id,
-    quantity: item.quantity,
-    discount_type: item.discount_type || null,
-    discount_value: item.discount_value || 0,
-    notes: item.notes || ""
-  }));
+  const items = pendingData.cart.map(item => {
+    let qty = Number(item.quantity || 0);
+    let obj = {
+      product_id: item.id,
+      notes: item.notes || ""
+    };
+
+    if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
+      // qty = qty dibayar (input user)
+      const qtyDibayar = Number(item.quantity || 0);
+      const buy_qty = Number(item.buy_qty);
+      const free_qty = Number(item.free_qty);
+      // Hitung bonus
+      const promoTimes = Math.floor(qtyDibayar / buy_qty);
+      const bonusQty = promoTimes * free_qty;
+      obj.quantity = qtyDibayar + bonusQty; // total keluar
+      obj.discount_type = 'buyxgety';
+      obj.buy_qty = buy_qty;
+      obj.free_qty = free_qty;
+    } else {
+      obj.quantity = Number(item.quantity || 0);
+      if (item.discount_type === 'percentage' && item.discount_value) {
+        obj.discount_type = 'percentage';
+        obj.discount_value = item.discount_value;
+      } else if (item.discount_type === 'nominal' && item.discount_value) {
+        obj.discount_type = 'nominal';
+        obj.discount_value = item.discount_value;
+      } else {
+        obj.discount_type = null;
+      }
+    }
+    return obj;
+  });
 
   const body = {
     // user_id: Number(pendingData.userId),
@@ -157,7 +237,7 @@ function inisialisasiBayar(pendingData) {
     // Ambil input sebagai string, lalu unformat
     const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
     const receivedAmount = unformatRupiah(inputTunai?.value) || 0;
-    const total = pendingData.total_cost || 0;
+    const total = pendingData._grandTotal || 0;
     const changeAmount = Math.max(0, receivedAmount - total);
 
     if (receivedAmount < total) {
@@ -191,9 +271,8 @@ function inisialisasiBayar(pendingData) {
 // Event pecahan uang button - set input tunai value
 function inisialisasiPecahanUang(pendingData) {
   const pecahanBtns = document.querySelectorAll('.wrapper-pecahan-uang-pembayaran button');
-  // Perbaikan: selector input type text
   const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
-  const total = pendingData.total_cost || 0;
+  const total = pendingData._grandTotal || 0;
 
   pecahanBtns.forEach(btn => {
     btn.addEventListener('click', function() {
@@ -202,11 +281,39 @@ function inisialisasiPecahanUang(pendingData) {
         val = total;
       }
       if (inputTunai) {
-        // Perbaikan: format langsung ke input
         inputTunai.value = val ? formatRupiah(val) : '';
         inputTunai.dispatchEvent(new Event('input'));
       }
     });
+  });
+}
+
+// Render list item pembayaran
+function renderListItemPembayaran(cart) {
+  const listEl = document.getElementById('list-item-pembayaran');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  cart.forEach(item => {
+    let harga = Number(item.price || 0);
+    let qtyDibayar = Number(item.quantity || 0);
+    let bonusQty = 0;
+    let buy_qty = Number(item.buy_qty || 0);
+    let free_qty = Number(item.free_qty || 0);
+
+    // Hitung bonus untuk buyxgety
+    if (item.discount_type === 'buyxgety' && buy_qty && free_qty) {
+      const promoTimes = Math.floor(qtyDibayar / buy_qty);
+      bonusQty = promoTimes * free_qty;
+    }
+
+    listEl.innerHTML += `
+      <div style="margin-bottom:10px;">
+        <div><b>${item.name || '-'}</b></div>
+        <div>${formatRupiah(harga)} x ${qtyDibayar}</div>
+        ${bonusQty > 0 ? `<div style="color:#10b981;">Bonus : ${bonusQty}</div>` : ''}
+        <div style="color:#aaa;font-size:13px;">SKU: ${item.sku || '-'}</div>
+      </div>
+    `;
   });
 }
 
@@ -217,6 +324,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (pendingData) {
     // Render pending transaction info
     renderPendingTransaction(pendingData);
+    renderListItemPembayaran(pendingData.cart); // Render list item pembayaran
 
     // Initialize input and bayar events
     inisialisasiInputTunaiFormat(pendingData); // Ganti
