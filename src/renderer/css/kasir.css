@@ -135,7 +135,7 @@ main {
 
 .wrap-total h3, p {
   font-weight: var(--weight-bold);
-  font-size: 20px;
+  font-size: 25px;
 }
 
 .wrap-total {
@@ -274,7 +274,7 @@ main {
   width: calc(33.333% - 9px);
   cursor: pointer;
   transition: transform 0.2s;
-  height: 350px;
+  /* height: 350px; */
 }
 
 .gambar-produk-kasir {
@@ -468,7 +468,7 @@ main {
   background: #e43636;
 }
 
-.diskon-info {
+p.diskon-info {
   display: inline-block;
   background: #10b981;
   color: #fff;

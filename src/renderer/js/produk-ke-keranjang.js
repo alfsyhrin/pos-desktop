@@ -52,7 +52,6 @@ function updateKeranjangView() {
     el.className = 'keranjang-item';
     el.innerHTML = `
       <h4>${item.name}</h4>
-      <p>SKU: ${item.sku}</p>
       <p>Harga: Rp ${Number(item.price).toLocaleString('id-ID')}</p>
       ${diskonLabel ? `<p class="diskon-info">${diskonLabel}</p>` : ''}
       <div class="actions">

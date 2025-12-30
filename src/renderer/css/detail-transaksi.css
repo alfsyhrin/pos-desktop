@@ -45,6 +45,7 @@ header {
   justify-content: center;
   align-items: center;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .back-button a:hover {
