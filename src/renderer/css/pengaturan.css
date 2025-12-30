@@ -1,3 +1,40 @@
+/* OVERRIDE MODAL - PRIORITAS TERTINGGI */
+#modalEditToko {
+  display: none !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 999999 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#modalEditToko.active {
+  display: flex !important;
+}
+
+#modalEditToko .modal-card {
+  background: var(--card-color, #1a1a1a) !important;
+  padding: 24px !important;
+  border-radius: 12px !important;
+  max-width: 400px !important;
+  width: 90% !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  position: relative !important;
+  z-index: 1000000 !important;
+  margin: auto !important;
+}
+
+
 .main-wrapper {
   display: flex;
   flex-direction: column;
@@ -298,15 +335,115 @@ button.edit-toko .material-symbols-outlined {
   cursor: pointer;
 }
 
+/* MODAL - CLEANER VERSION */
 #modalEditToko {
   display: none;
   position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.4);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
   justify-content: center;
   align-items: center;
+  z-index: 999999;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
+
+/* Hanya property display dan visibility pakai !important */
 #modalEditToko.active {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#modalEditToko .modal-card {
+  background: var(--card-color, #1a1a1a);
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 1000000;
+  margin: auto;
+}
+
+#modalEditToko .modal-card h3 {
+  color: var(--foreground-color);
+  margin-bottom: 15px;
+  font-size: 22px;
+  text-align: center;
+}
+
+#modalEditToko .modal-card label {
+  color: var(--paragraph-color);
+  font-size: 14px;
+  display: block;
+  margin-top: 10px;
+  font-weight: var(--weight-bold);
+}
+
+#modalEditToko .modal-card input,
+#modalEditToko .modal-card textarea {
+  width: 100%;
+  padding: 15px 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: var(--card-color);
+  color: var(--foreground-color);
+  box-sizing: border-box;
+}
+
+.modal-actions {
   display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-cancel {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 12px 14px;
+  border-radius: 6px;
+  width: 100px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex: 1;
+}
+
+.btn-save {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 12px 14px;
+  border-radius: 6px;
+  flex: 1;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.btn-cancel:hover {
+  opacity: 0.9;
+}
+
+.btn-save:hover {
+  opacity: 0.9;
+}
+
+.btn-cancel:active,
+.btn-save:active {
+  transform: scale(0.98);
 }

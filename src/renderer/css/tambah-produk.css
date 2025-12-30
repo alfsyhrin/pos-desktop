@@ -167,6 +167,7 @@ header p {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 .btn-outline:hover {
@@ -397,6 +398,7 @@ header p {
   50% { opacity: 0.4; }
 }
 
-.hidden {
+/* .hidden {
   display: none !important;
-}
+} */
+
