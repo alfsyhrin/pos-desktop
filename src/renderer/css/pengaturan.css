@@ -297,3 +297,16 @@ button.edit-toko .material-symbols-outlined {
   width: 100px;
   cursor: pointer;
 }
+
+#modalEditToko {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+}
+#modalEditToko.active {
+  display: flex;
+}

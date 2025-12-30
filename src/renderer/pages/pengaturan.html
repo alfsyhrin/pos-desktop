@@ -1,6 +1,6 @@
 <main class="main-wrapper">
-  <header class="header-pengaturan">
-    <h2>APLIKASI PIPOS</h2>
+  <header class="header-dashboard">
+    <h2 id="headerStoreName"></h2>
     <p>Pengaturan</p>
   </header>
   
@@ -13,7 +13,7 @@
           <h3>Informasi Toko</h3>
           <p>Data toko yang digunakan untuk identitas & nota</p>
         </div>
-        <button class="edit-toko" onclick="openModal()"><span class="material-symbols-outlined">edit</span>Edit</button>
+        <button class="edit-toko" data-permissions="owner, admin"><span class="material-symbols-outlined">edit</span>Edit</button>
       </div>
       <div class="detail-info-toko">
         <div class="detail-toko-wrapper">
@@ -28,17 +28,17 @@
   
         <div class="detail-toko-wrapper">
           <p class="detail-toko-judul">Nama</p>
-          <p class="detail-toko-deskripsi" data-field="nama">CV Betarak Indonesia</p>
+          <p id="namaToko" class="detail-toko-deskripsi" data-field="nama">CV Betarak Indonesia</p>
         </div>
-  
+
         <div class="detail-toko-wrapper">
           <p class="detail-toko-judul">Alamat</p>
-          <p class="detail-toko-deskripsi" data-field="alamat">Jl. North Sangaji, Kota Ternate Utara, Kota Ternate</p>
+          <p id="alamatToko" class="detail-toko-deskripsi" data-field="alamat">Jl. North Sangaji, Kota Ternate Utara, Kota Ternate</p>
         </div>
-  
+
         <div class="detail-toko-wrapper">
           <p class="detail-toko-judul">Telepon</p>
-          <p class="detail-toko-deskripsi" data-field="telepon">+62 812-3456-7890</p>
+          <p id="teleponToko" class="detail-toko-deskripsi" data-field="telepon">+62 812-3456-7890</p>
         </div>
   
         <div class="detail-toko-wrapper">
@@ -92,7 +92,7 @@
     <span class="material-symbols-outlined backup-data">cloud_upload</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
-      <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Simpan data ke file</p>
+      <p style="color: #10B981FF; font-size: 14px; font-weight: var(--weight-bold);">Simpan data ke file</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
@@ -101,7 +101,7 @@
     <span class="material-symbols-outlined copy-data">cloud_download</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
-      <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Simpan data ke file</p>
+      <p style="color: #10B981FF; font-size: 14px; font-weight: var(--weight-bold);">Simpan data ke file</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
@@ -110,7 +110,7 @@
     <span class="material-symbols-outlined hapus-data">delete</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Hapus Semua Data</p>
-      <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Reset aplikasi ke kondisi awal</p>
+      <p style="color: #10B981FF; font-size: 14px; font-weight: var(--weight-bold);">Reset aplikasi ke kondisi awal</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
@@ -120,7 +120,7 @@
     <span class="material-symbols-outlined hapus-data">info</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Tentang PIPos</p>
-      <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Aplikasi kasir untuk toko & minimarket</p>
+      <p style="color: #10B981FF; font-size: 14px; font-weight: var(--weight-bold);">Aplikasi kasir untuk toko & minimarket</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
@@ -128,7 +128,7 @@
     <span class="material-symbols-outlined hapus-data">headset_mic</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Bantuan & Dukungan</p>
-      <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Kami siap membantu anda</p>
+      <p style="color: #10B981FF; font-size: 14px; font-weight: var(--weight-bold);">Kami siap membantu anda</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
@@ -138,7 +138,7 @@
     <span class="material-symbols-outlined hapus-data">help_outline</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Bagaimana Cara Upgrade?</p>
-      <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Masuk ke Plan & Billing, lalu Pilih Paket</p>
+      <p style="color: #10B981FF; font-size: 14px; font-weight: var(--weight-bold);">Masuk ke Plan & Billing, lalu Pilih Paket</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
@@ -149,19 +149,99 @@
 <div class="modal-overlay" id="modalEditToko">
   <div class="modal-card">
     <h3>Edit Informasi Toko</h3>
-
     <label>Nama Toko</label>
     <input type="text" id="editNama" />
-
     <label>Alamat</label>
     <textarea id="editAlamat"></textarea>
-
     <label>No HP</label>
     <input type="text" id="editTelepon" />
-
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Batal</button>
-      <button class="btn-save" onclick="saveEdit()">Simpan</button>
+      <button class="btn-cancel modal-cancel">Batal</button>
+      <button class="btn-save modal-save">Simpan</button>
     </div>
   </div>
 </div>
+
+<!-- tambahkan include script di akhir file (pastikan path sesuai) -->
+<script src="../js/pengaturan.js"></script>
+<!-- <script>
+  function setupEditTokoModal() {
+  const editBtn = document.querySelector('.edit-toko');
+  const modal = document.getElementById('modalEditToko');
+
+  // Debugging untuk memastikan elemen ditemukan
+  if (!editBtn) {
+    console.error('Tombol Edit tidak ditemukan di DOM');
+  } else {
+    console.log('Tombol Edit ditemukan:', editBtn);
+  }
+
+  if (!modal) {
+    console.error('Modal Edit Toko tidak ditemukan di DOM');
+  } else {
+    console.log('Modal Edit Toko ditemukan:', modal);
+  }
+
+  const modalCard = modal?.querySelector('.modal-card');
+  const cancelBtn = modal?.querySelector('.modal-cancel');
+  const saveBtn = modal?.querySelector('.modal-save');
+
+  // Pastikan modal tersembunyi saat load awal
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }
+
+  // Buka modal saat tombol Edit ditekan
+  if (editBtn && modal) {
+    editBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Tombol Edit ditekan');
+      const namaEl = document.getElementById('namaToko');
+      const alamatEl = document.getElementById('alamatToko');
+      const teleponEl = document.getElementById('teleponToko');
+      const inputNama = document.getElementById('editNama');
+      const inputAlamat = document.getElementById('editAlamat');
+      const inputTelepon = document.getElementById('editTelepon');
+      if (inputNama && namaEl) inputNama.value = namaEl.textContent || '';
+      if (inputAlamat && alamatEl) inputAlamat.value = alamatEl.textContent || '';
+      if (inputTelepon && teleponEl) inputTelepon.value = teleponEl.textContent || '';
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+      if (inputNama) inputNama.focus();
+    });
+  } else {
+    console.error('Tombol Edit atau modal tidak ditemukan');
+  }
+
+  // Tutup modal saat klik Batal atau klik di luar modal-card
+  if (cancelBtn && modal) {
+    cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeModalEditToko();
+    });
+  }
+  if (modal && modalCard) {
+    modal.addEventListener('click', (e) => {
+      if (!modalCard.contains(e.target)) {
+        closeModalEditToko();
+      }
+    });
+  }
+
+  // ESC untuk tutup modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModalEditToko();
+    }
+  });
+
+  // Simpan perubahan
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await updateStoreInfo();
+    });
+  }
+}
+</script> -->

@@ -151,7 +151,7 @@ function renderList(container, users) {
         <div class="status-karyawan ${u.is_active == 1 ? 'status-aktif' : 'status-nonaktif'}">
           ${u.is_active == 1 ? 'Aktif' : 'Nonaktif'}
         </div>
-        <a href="../pages/edit-karyawan.html?id=${u.id}" class="edit-karyawan"><span class="material-symbols-outlined">edit</span></a>
+        <a data-permissions="owner, admin" href="../pages/edit-karyawan.html?id=${u.id}" class="edit-karyawan"><span class="material-symbols-outlined">edit</span></a>
         <button class="hapus-karyawan"><span class="material-symbols-outlined">delete</span></button>
       </div>
     `;

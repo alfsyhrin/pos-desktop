@@ -1,3 +1,14 @@
+// ===============================
+// NORMALISASI ELECTRON API
+// ===============================
+const barcodePrinterAPI = window.barcodeAPI || null;
+
+if (!barcodePrinterAPI?.printBarcode) {
+  console.warn("barcodeAPI tidak tersedia (cek preload.js)");
+}
+
+
+
 let html5QrCode = null;
     let cameraActive = false;
     let scannerBuffer = '';
@@ -55,7 +66,10 @@ let html5QrCode = null;
     }
 
     function focusScannerInput() {
-      document.getElementById('scanner-input').focus();
+      document.addEventListener('DOMContentLoaded', function() {
+        const scannerInput = document.getElementById('scanner-input');
+        if (scannerInput) scannerInput.focus();
+      });
       showToast('Scanner mode aktif - Arahkan scanner Woya ke barcode', 'info');
     }
 
@@ -196,6 +210,115 @@ function setInputValue(id, val) { const el = safeGet(id); if (el) el.value = val
         showToast('Error: ' + error.message, 'error');
       }
     }
+
+function generateBarcodeCanvas(value, type = "CODE128") {
+  // Format yang DIDUKUNG JsBarcode
+  const allowedFormats = ["CODE128", "EAN13", "EAN8"];
+
+  if (!allowedFormats.includes(type)) {
+    throw new Error("Format barcode tidak didukung: " + type);
+  }
+
+  // Validasi khusus EAN13
+  if (type === "EAN13") {
+    const clean = value.replace(/\D/g, "");
+    if (clean.length !== 12) {
+      throw new Error("EAN13 harus 12 digit angka");
+    }
+    value = clean;
+  }
+
+  const canvas = document.createElement("canvas");
+
+  JsBarcode(canvas, value, {
+    format: type,
+    width: 4,
+    height: 150,
+    displayValue: true,
+    fontSize: 18,
+    margin: 10
+  });
+
+  return canvas;
+}
+
+
+function normalizeProductName(name, maxLength = 24) {
+  if (!name) return "";
+  return name
+    .toString()
+    .trim()
+    .substring(0, maxLength)
+    .toUpperCase();
+}
+
+
+function generateBarcodeLabelImage(
+  barcodeValue,
+  productName = "",
+  type = "CODE128"
+) {
+  if (!barcodeValue) {
+    throw new Error("Barcode kosong saat generate image");
+  }
+
+  const dpi = 300;
+  const mmToPx = (mm) => Math.round((mm / 25.4) * dpi);
+
+  const canvas = document.createElement("canvas");
+  canvas.width  = mmToPx(100); // 100mm
+  canvas.height = mmToPx(150); // 150mm
+
+  const ctx = canvas.getContext("2d");
+
+  // Background putih
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cols = 2;
+  const rows = 4;
+
+  const cellW = canvas.width / cols;
+  const cellH = canvas.height / rows;
+
+  const safeName = (productName || "")
+    .toString()
+    .trim()
+    .substring(0, 24)
+    .toUpperCase();
+
+  for (let i = 0; i < 8; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+
+    // ⬇️ PENTING: HANYA kirim (barcodeValue, type)
+    const barcodeCanvas = generateBarcodeCanvas(barcodeValue, type);
+
+    const x = col * cellW + (cellW - barcodeCanvas.width) / 2;
+    const y = row * cellH + 12;
+
+    ctx.drawImage(barcodeCanvas, x, y);
+
+    // Nama produk di bawah barcode
+    if (safeName) {
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 24px Arial";
+      ctx.textAlign = "center";
+
+      ctx.fillText(
+        safeName,
+        col * cellW + cellW / 2,
+        y + barcodeCanvas.height + 18
+      );
+    }
+  }
+
+  return canvas.toDataURL("image/png");
+}
+
+
+
+
 
     function generateEAN13() {
       let code = '';
@@ -375,15 +498,15 @@ function stopCamera() {
     // TOAST NOTIFICATION
     // ==========================================
     
-    function showToast(message, type = 'info') {
-      const toast = document.getElementById('toast');
-      if (!toast) return; // <-- Tambahkan ini agar tidak error jika toast tidak ada
-      toast.textContent = message;
-      toast.className = 'toast ' + type + ' show';
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
-    }
+    // function showToast(message, type = 'info') {
+    //   const toast = document.getElementById('toast');
+    //   if (!toast) return; // <-- Tambahkan ini agar tidak error jika toast tidak ada
+    //   toast.textContent = message;
+    //   toast.className = 'toast ' + type + ' show';
+    //   setTimeout(() => {
+    //     toast.classList.remove('show');
+    //   }, 3000);
+    // }
 
     // Auto-focus scanner input on load
     document.addEventListener('DOMContentLoaded', function() {
@@ -493,25 +616,57 @@ function showProductNotFoundModal(barcode) {
 // Pastikan preload sudah expose window.electronAPI.sendBarcodeToPrint
 
 async function cetakBarcode() {
-  const type = document.getElementById("barcode-type").value; // boleh tetap
-  const value = document.getElementById("barcode-value").value.trim();
+  const barcodeValue = document
+    .getElementById("barcode-value")
+    ?.value.trim();
 
-  if (!value) {
-    showToast("Isi atau scan barcode dulu sebelum cetak.");
+  const type =
+    document.getElementById("barcode-type")?.value || "CODE128";
+
+  // ✅ FIX UTAMA: definisikan productName secara eksplisit
+  const productName =
+    document.getElementById("nama-produk")?.value?.trim() || "";
+
+  if (!barcodeValue) {
+    showToast("Barcode belum diisi", "error");
     return;
   }
 
+  if (!barcodePrinterAPI?.printBarcode) {
+    showToast("Barcode Printer API tidak tersedia", "error");
+    return;
+  }
+
+  let imageBase64;
   try {
-    const res = await window.electronAPI.printBarcode({ type, value });
-    if (!res.success) {
-      showToast("Gagal cetak: " + res.error);
-    } else {
-      showToast("Barcode dikirim ke printer.");
-    }
-  } catch (err) {
-    showToast("Error: " + err.message);
+    imageBase64 = generateBarcodeLabelImage(
+      barcodeValue,
+      productName, // ✅ sekarang sudah valid
+      type
+    ).replace(/^data:image\/png;base64,/, "");
+  } catch (e) {
+    console.error("GAGAL GENERATE IMAGE:", e);
+    showToast("Gagal membuat image barcode", "error");
+    return;
+  }
+
+  console.log("IMAGE BASE64 LENGTH:", imageBase64.length);
+
+  const res = await barcodePrinterAPI.printBarcode({
+    image: imageBase64,
+    printerName: "Xprinter XP-D4601B",
+    copies: 1
+  });
+
+  if (!res?.success) {
+    showToast("Gagal cetak barcode", "error");
+  } else {
+    showToast("Barcode berhasil dicetak", "success");
   }
 }
+
+
+
 
 // Event delegation: tombol Tutup Kamera (dinamis) selalu bisa memanggil stopCamera
 document.addEventListener('click', function (e) {
@@ -536,3 +691,82 @@ document.addEventListener('click', function (e) {
     return;
   }
 });
+
+// async function printBarcodeLabel() {
+//   const barcodeValue = document.getElementById("barcode-value").value.trim();
+
+//   if (!barcodeValue) {
+//     alert("Barcode belum diisi");
+//     return;
+//   }
+
+//   const res = await window.barcodeAPI.printBarcode({
+//     barcodeValue,
+//     copies: 8
+//   });
+
+//   if (!res.success) {
+//     alert("Gagal cetak barcode: " + res.error);
+//   } else {
+//     alert("Barcode berhasil dicetak");
+//   }
+// }
+
+// ===============================
+// PREVIEW BARCODE (LABEL 100x150)
+// ===============================
+function previewBarcode() {
+  const barcodeValue = document.getElementById("barcode-value").value.trim();
+
+  if (!barcodeValue) {
+    alert("Barcode belum diisi");
+    return;
+  }
+
+  const payload = {
+    value: barcodeValue,
+    copies: 8,
+    type: document.getElementById("barcode-type")?.value || "CODE128"
+  };
+
+  localStorage.setItem("barcode-preview-data", JSON.stringify(payload));
+
+  window.open(
+    "../pages/preview-barcode.html",
+    "_blank",
+    "width=420,height=650"
+  );
+}
+
+window.addEventListener("message", async (event) => {
+  if (event.data?.type !== "PRINT_BARCODE") return;
+
+  if (!barcodePrinterAPI?.printBarcode) return;
+
+  const { barcodeValue, copies, type = "CODE128" } = event.data.payload;
+  const productName = document.getElementById("nama-produk")?.value || "";
+
+  let imageBase64;
+  try {
+    imageBase64 = generateBarcodeLabelImage(
+      barcodeValue,
+      productName,
+      type
+    ).replace(/^data:image\/png;base64,/, "");
+  } catch (e) {
+    alert("Gagal generate barcode");
+    return;
+  }
+
+  const res = await barcodePrinterAPI.printBarcode({
+    image: imageBase64,
+    printerName: "Xprinter XP-D4601B",
+    copies
+  });
+
+  if (!res?.success) {
+    alert("Gagal mencetak: " + res.error);
+  }
+});
+
+
