@@ -1,65 +1,106 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    window.location.href = 'login.html';
-    return;
+  const usernameEl = document.querySelector('.username');
+  const emailEl = document.querySelector('.email');
+  const storeNameEl = document.querySelector('.store-name'); // optional
+  const logoutEl = document.querySelector('.sidebar-item.logout') || document.querySelector('[data-action="logout"]');
+
+  // helper: wait for window.apiRequest (api.js) to be ready
+  async function waitForApi(timeout = 3000) {
+    const start = Date.now();
+    while (typeof window.apiRequest !== 'function') {
+      if (Date.now() - start > timeout) return false;
+      await new Promise(r => setTimeout(r, 50));
+    }
+    return true;
   }
 
+  const ok = await waitForApi();
+  if (!ok) {
+    console.error('sidebar.js: window.apiRequest not available');
+  }
+
+  // fetch profile and populate sidebar
   try {
-    const profile = await window.apiRequest('/auth/profile');
-    const user = profile.user || {};
+    const res = await (typeof window.apiRequest === 'function'
+      ? window.apiRequest('/auth/profile')
+      : fetch('/api/auth/profile').then(r => r.json()));
+    const user = (res && (res.user || res.data?.user)) ? (res.user || res.data.user) : (res.user === undefined ? res : res.user);
 
-    // Simpan ke localStorage
-    if (user.role) localStorage.setItem('role', String(user.role));
-    if (user.id) localStorage.setItem('user_id', String(user.id));
-    if (user.owner_id) localStorage.setItem('owner_id', String(user.owner_id));
-    if (user.store_id) localStorage.setItem('store_id', String(user.store_id));
+    if (usernameEl) usernameEl.textContent = (user && user.username) ? user.username : '-';
+    if (emailEl) emailEl.textContent = (user && user.email) ? user.email : '-';
 
-    // Render info sidebar sesuai role
-    const usernameEl = document.querySelector('.username');
-    const emailEl = document.querySelector('.email');
-    if (user.role === 'owner') {
-      if (usernameEl) usernameEl.textContent = user.business_name || '-';
-      if (emailEl) emailEl.textContent = user.email || '-';
-    } else if (user.role === 'admin' || user.role === 'cashier') {
-      if (usernameEl) usernameEl.textContent = user.store_name || '-';
-      if (emailEl) emailEl.textContent = user.username || '-';
+    // optionally fetch store name if store-name element exists and user has store_id
+    const storeId = user && (user.store_id || localStorage.getItem('store_id'));
+    const token = (typeof window.getToken === 'function') ? window.getToken() : localStorage.getItem('token');
+    if (storeNameEl && storeId && token) {
+      try {
+        const storeRes = await fetch(`${(window.BASE_URL || 'http://103.126.116.119:8001/api')}/stores/${storeId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const storeJson = await storeRes.json();
+        if (storeJson && storeJson.data && storeJson.data.name) {
+          storeNameEl.textContent = storeJson.data.name;
+          localStorage.setItem('store_name', storeJson.data.name);
+        }
+      } catch (err) {
+        console.warn('sidebar.js: failed to fetch store name', err);
+      }
     }
   } catch (err) {
-    console.error('Gagal memuat profil sidebar:', err);
+    console.error('sidebar.js: failed to load profile', err);
+    if (usernameEl) usernameEl.textContent = '-';
+    if (emailEl) emailEl.textContent = '-';
   }
 
-  // logout binding (tidak berubah)
-  const logoutSelectors = ['.sidebar-item.logout', '#logout-btn', 'a[href="#logout"]'];
-  logoutSelectors.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (window.logout) window.logout();
-        else {
-          localStorage.clear();
-          window.location.href = 'login.html';
-        }
-      });
-    });
-  });
-});
+  // logout handler (robust with fallbacks to avoid 404)
+  async function doLogout() {
+    try {
+      if (typeof window.apiRequest === 'function') {
+        await window.apiRequest('/auth/logout', { method: 'POST' });
+      } else {
+        await fetch('/api/auth/logout', { method: 'POST' }).catch(()=>{});
+      }
+    } catch (e) {
+      console.warn('sidebar.js: logout request failed (continuing)', e);
+    }
 
-// role-based sidebar visibility (tidak berubah)
-document.addEventListener('DOMContentLoaded', () => {
-  const role = (localStorage.getItem('role') || '').toLowerCase();
-  const mapping = {
-    owner: null,
-    admin: null,
-    cashier: ['dashboard', 'kasir', 'produk', 'transaksi']
-  };
-  const allowed = mapping[role];
-  document.querySelectorAll('.sidebar-item[data-page]').forEach(a => {
-    const page = (a.dataset.page || '').toLowerCase();
-    if (Array.isArray(allowed) && !allowed.includes(page)) a.style.display = 'none';
-    else a.style.display = '';
-  });
-  if (window.permission && typeof window.permission.applyElementPermissions === 'function') {
-    window.permission.applyElementPermissions();
+    // clear local data
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Try SPA/router navigation first if available
+    if (window.router && typeof window.router.navigate === 'function') {
+      try { window.router.navigate('/login'); return; } catch {}
+    }
+    if (typeof window.navigateTo === 'function') {
+      try { window.navigateTo('login'); return; } catch {}
+    }
+
+    // Fallbacks for direct redirects (try several likely paths)
+    const candidates = [
+      'login.html',
+      './pages/login.html',
+      '../pages/login.html',
+      '/login.html',
+      '/'
+    ];
+    for (const p of candidates) {
+      try {
+        window.location.href = p;
+        return;
+      } catch (e) { /* ignore and try next */ }
+    }
+
+    // final fallback: reload (will likely show login if app clears auth)
+    window.location.reload();
+  }
+
+  if (logoutEl) {
+    logoutEl.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      doLogout();
+    });
+  } else {
+    console.warn('sidebar.js: logout element not found');
   }
 });

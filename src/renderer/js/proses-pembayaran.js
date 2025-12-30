@@ -13,81 +13,85 @@ function loadPendingTransaction() {
   }
 }
 
+// Ambil data store untuk mendapatkan tax_percentage
+async function fetchStoreTaxPercentage(storeId) {
+  const token = localStorage.getItem('token');
+  if (!storeId || !token) return 10; // fallback default 10%
+
+  try {
+    const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    if (data.success && data.data && data.data.tax_percentage) {
+      return Number(data.data.tax_percentage) || 10;
+    }
+    return 10;
+  } catch (err) {
+    console.error('Error fetching store tax percentage:', err);
+    return 10; // default
+  }
+}
+
+
 // Render pending transaction info in proses-pembayaran.html
-function renderPendingTransaction(pendingData) {
+async function renderPendingTransaction(pendingData) {
   if (!pendingData) return;
 
   let grossSubtotal = 0, discountTotal = 0;
   (pendingData.cart || []).forEach(item => {
     let harga = Number(item.price || 0);
-    let qty = Number(item.quantity || 0); // qty = total keluar (dibayar + bonus) untuk buyxgety
-    let diskon = 0;
+    let qty = Number(item.quantity || 0);
+    let discountAmount = 0;
 
-    // Diskon Persentase
-    if (item.discount_type === 'percentage' && item.discount_value) {
-      const itemGross = harga * qty;
-      diskon = itemGross * (item.discount_value / 100);
-      grossSubtotal += itemGross;
-      discountTotal += diskon;
+    if (item.discount_type === 'percentage' && item.discount_value > 0) {
+      discountAmount = harga * qty * (item.discount_value / 100);
+    } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
+      discountAmount = Math.min(item.discount_value, harga * qty);
+    } else if (item.discount_type === 'buyxgety' && item.buy_qty > 0 && item.free_qty > 0) {
+      const x = Number(item.buy_qty);
+      const y = Number(item.free_qty);
+      const totalQty = qty;
+      const groupQty = x + y;
+      const paidQty = Math.floor(totalQty / groupQty) * x + (totalQty % groupQty);
+      discountAmount = (totalQty - paidQty) * harga;
     }
-    // Diskon Nominal
-    else if (item.discount_type === 'nominal' && item.discount_value) {
-      const itemGross = harga * qty;
-      diskon = Math.min(item.discount_value, itemGross);
-      grossSubtotal += itemGross;
-      discountTotal += diskon;
-    }
-    // Buy X Get Y
-    else if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
-      const itemGross = harga * qty;
-      const promoUnit = Number(item.buy_qty) + Number(item.free_qty);
-      const promoTimes = Math.floor(qty / promoUnit);
-      const freeItems = promoTimes * Number(item.free_qty);
-      diskon = freeItems * harga;
-      grossSubtotal += itemGross;
-      discountTotal += diskon;
-    }
-    // Tanpa Diskon
-    else {
-      const itemGross = harga * qty;
-      grossSubtotal += itemGross;
-      // diskon = 0;
-      // discountTotal += diskon;
-    }
+
+    const netSubtotalItem = harga * qty - discountAmount;
+    grossSubtotal += harga * qty;
+    discountTotal += discountAmount;
+
+    item._subtotal = netSubtotalItem;
+    item._discountAmount = discountAmount;
   });
 
   const netSubtotal = grossSubtotal - discountTotal;
-  const pajakPersen = pendingData.tax_percentage || 10;
-  const tax = Math.round(netSubtotal * pajakPersen / 100);
+  const taxPercentage = Number(pendingData.tax_percentage || 10);
+  const tax = netSubtotal * (taxPercentage / 100);
   const grandTotal = netSubtotal + tax;
 
-  // Update UI
   document.getElementById('subtotal-pembayaran').textContent = `Rp ${grossSubtotal.toLocaleString('id-ID')}`;
   document.getElementById('diskon-pembayaran').textContent = `Rp ${discountTotal.toLocaleString('id-ID')}`;
-  document.getElementById('pajak-pembayaran').textContent = `Rp ${tax.toLocaleString('id-ID')}`;
+  document.getElementById('pajak-pembayaran').textContent = `Rp ${tax.toLocaleString('id-ID')} (${taxPercentage}%)`;
   document.getElementById('total-pembayaran').textContent = `Rp ${grandTotal.toLocaleString('id-ID')}`;
 
-  // Set uang diterima input to grandTotal initially
   const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input');
   if (inputTunai) {
     inputTunai.value = grandTotal.toLocaleString('id-ID');
     inputTunai.disabled = false;
   }
 
-  // Set initial kembalian to 0
-  const kembalianEl = document.querySelectorAll('.card-total-pembayaran h4')[3];
-  if (kembalianEl) kembalianEl.textContent = `Rp 0`;
-
-  // Simpan hasil kalkulasi ke pendingData untuk proses selanjutnya
   pendingData._grossSubtotal = grossSubtotal;
   pendingData._discountTotal = discountTotal;
   pendingData._netSubtotal = netSubtotal;
   pendingData._tax = tax;
   pendingData._grandTotal = grandTotal;
 
-  // Tambahkan render list item
   renderListItemPembayaran(pendingData.cart || []);
 }
+
 
 // Format number to Rupiah currency
 function formatRupiah(angka) {
@@ -104,7 +108,7 @@ function inisialisasiInputTunai(pendingData) {
   const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
   const kembalianEl = document.querySelectorAll('.card-total-pembayaran h4')[3];
   const taxPercentage = pendingData.tax_percentage || 10; // atau ambil dari store
-const subtotal = pendingData.total_cost || 0;
+const subtotal = pendingData._grandTotalt || 0;
 const tax = subtotal * (taxPercentage / 100);
 const totalFinal = subtotal + tax;
 
@@ -161,19 +165,18 @@ async function createTransaction(pendingData, receivedAmount) {
       notes: item.notes || ""
     };
 
-    if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
-      // qty = qty dibayar (input user)
-      const qtyDibayar = Number(item.quantity || 0);
-      const buy_qty = Number(item.buy_qty);
-      const free_qty = Number(item.free_qty);
-      // Hitung bonus
-      const promoTimes = Math.floor(qtyDibayar / buy_qty);
-      const bonusQty = promoTimes * free_qty;
-      obj.quantity = qtyDibayar + bonusQty; // total keluar
-      obj.discount_type = 'buyxgety';
-      obj.buy_qty = buy_qty;
-      obj.free_qty = free_qty;
-    } else {
+      if (item.discount_type === 'buyxgety' && item.buy_qty > 0 && item.free_qty > 0) {
+        const x = Number(item.buy_qty);
+        const y = Number(item.free_qty);
+        const totalQty = Number(item.quantity || 0);
+        const groupQty = x + y;
+        const paidQty = Math.floor(totalQty / groupQty) * x + (totalQty % groupQty);
+        const bonusQty = totalQty - paidQty;
+        obj.quantity = totalQty; // total keluar
+        obj.discount_type = 'buyxgety';
+        obj.buy_qty = x;
+        obj.free_qty = y;
+      } else {
       obj.quantity = Number(item.quantity || 0);
       if (item.discount_type === 'percentage' && item.discount_value) {
         obj.discount_type = 'percentage';
@@ -249,7 +252,20 @@ function inisialisasiBayar(pendingData) {
       const transaction = await createTransaction(pendingData, receivedAmount);
 
       // Save to localStorage for detail-transaksi.js
-      localStorage.setItem('last_transaction', JSON.stringify(transaction));
+      // Ambil nilai yang sudah dihitung di pendingData
+      const trxToSave = {
+        ...transaction,
+        _grossSubtotal: pendingData._grossSubtotal || 0,
+        _discountTotal: pendingData._discountTotal || 0,
+        _netSubtotal: pendingData._netSubtotal || 0,
+        _tax: pendingData._tax || 0,
+        _grandTotal: pendingData._grandTotal || 0,
+        tax_percentage: pendingData.tax_percentage || 10,
+        received: receivedAmount,
+        change: Math.max(0, receivedAmount - (pendingData._grandTotal || 0))
+      };
+
+      localStorage.setItem('last_transaction', JSON.stringify(trxToSave));
 
       // Clear pending transaction
       localStorage.removeItem('pending_transaction');
@@ -289,28 +305,39 @@ function inisialisasiPecahanUang(pendingData) {
 }
 
 // Render list item pembayaran
+// Render list item pembayaran dengan diskon jelas
 function renderListItemPembayaran(cart) {
   const listEl = document.getElementById('list-item-pembayaran');
   if (!listEl) return;
   listEl.innerHTML = '';
+  
   cart.forEach(item => {
     let harga = Number(item.price || 0);
-    let qtyDibayar = Number(item.quantity || 0);
+    let qty = Number(item.quantity || 0);
     let bonusQty = 0;
-    let buy_qty = Number(item.buy_qty || 0);
-    let free_qty = Number(item.free_qty || 0);
+    let diskonText = '';
 
     // Hitung bonus untuk buyxgety
-    if (item.discount_type === 'buyxgety' && buy_qty && free_qty) {
-      const promoTimes = Math.floor(qtyDibayar / buy_qty);
-      bonusQty = promoTimes * free_qty;
+    if (item.discount_type === 'buyxgety' && item.buy_qty > 0 && item.free_qty > 0) {
+      const totalQty = Number(item.quantity || 0);
+      const x = Number(item.buy_qty);
+      const y = Number(item.free_qty);
+      const groupQty = x + y;
+      const paidQty = Math.floor(totalQty / groupQty) * x + (totalQty % groupQty);
+      bonusQty = totalQty - paidQty;
+      diskonText = `Buy ${x} Get ${y}`;
+    } else if (item.discount_type === 'percentage' && item.discount_value > 0) {
+      diskonText = `Diskon ${item.discount_value}%`;
+    } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
+      diskonText = `Diskon Rp ${Number(item.discount_value).toLocaleString('id-ID')}`;
     }
 
     listEl.innerHTML += `
       <div style="margin-bottom:10px;">
         <div><b>${item.name || '-'}</b></div>
-        <div>${formatRupiah(harga)} x ${qtyDibayar}</div>
+        <div>${formatRupiah(harga)} x ${qty}</div>
         ${bonusQty > 0 ? `<div style="color:#10b981;">Bonus : ${bonusQty}</div>` : ''}
+        ${diskonText ? `<div style="color:#f59e42;font-size:13px;">${diskonText}</div>` : ''}
         <div style="color:#aaa;font-size:13px;">SKU: ${item.sku || '-'}</div>
       </div>
     `;
@@ -322,6 +349,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const pendingData = loadPendingTransaction();
 
   if (pendingData) {
+
+    // Ambil tax_percentage dari API store
+    const taxPercentage = await fetchStoreTaxPercentage(pendingData.storeId);
+    pendingData.tax_percentage = taxPercentage; // simpan di pendingData
     // Render pending transaction info
     renderPendingTransaction(pendingData);
     renderListItemPembayaran(pendingData.cart); // Render list item pembayaran

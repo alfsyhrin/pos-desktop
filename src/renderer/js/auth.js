@@ -38,13 +38,8 @@ async function login() {
 async function logout() {
   try {
     await window.apiRequest('/auth/logout', { method: 'POST' });
-  } catch (err) {
-    // Boleh abaikan error logout (misal token sudah expired)
-  }
-  // Bersihkan localStorage
-  localStorage.removeItem('token');
-  localStorage.removeItem('store_id');
-  // Redirect ke login
+  } catch (err) {}
+  localStorage.clear();
   window.location.href = 'login.html';
 }
 

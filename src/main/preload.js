@@ -22,4 +22,14 @@ contextBridge.exposeInMainWorld("printerAPI", {
   }
 });
 
+contextBridge.exposeInMainWorld("barcodeAPI", {
+  printBarcode: (payload) => {
+    return ipcRenderer.invoke("print-barcode-label", payload);
+  }
+});
+
 console.log(">> printerAPI exposed successfully");
+
+contextBridge.exposeInMainWorld("printerUtils", {
+  listPrinters: () => ipcRenderer.invoke("list-printers")
+});

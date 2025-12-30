@@ -55,7 +55,7 @@ function renderTransactions(transactions) {
         </div>
       </div>
       <div class="button-hapus-transaksi">
-        <button class="btn-hapus-transaksi" style="visibility: hidden;"><span class="material-symbols-outlined">delete</span></button>
+        <button class="btn-hapus-transaksi" data-permissions="owner, admin" style="visibility: hidden;"><span class="material-symbols-outlined">delete</span></button>
       </div>
     `;
     wrapper.appendChild(card);

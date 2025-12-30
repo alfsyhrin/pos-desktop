@@ -1,5 +1,6 @@
 // main.js
 const { app, BrowserWindow, ipcMain } = require("electron");
+// const { ThermalPrinter, PrinterTypes } = require("node-thermal-printer");
 const path = require("path");
 
 // ==== ESC/POS untuk thermal printer (WOYA WP58D) ====
@@ -12,6 +13,9 @@ try {
   console.warn("Bluetooth adapter not available:", e.message);
   Bluetooth = null;
 }
+
+// 🔥 INI YANG KURANG SELAMA INI
+const { PosPrinter } = require("electron-pos-printer");
 
 // ===== GLOBAL WINDOW =====
 let mainWindow = null;
@@ -327,58 +331,47 @@ app.on("window-all-closed", () => {
    - Cek USB WOYA
    - Opsional: info Bluetooth terakhir
 ================================ */
-ipcMain.handle("check-printer-status", async () => {
+const fs = require("fs");
+// const path = require("path");
+const os = require("os");
+// const { PosPrinter } = require("electron-pos-printer");
+
+ipcMain.handle("print-barcode-label", async (event, payload) => {
   try {
-    // 1. Cek printer USB WOYA
-    try {
-      const usbDevice = new USB();
+    const { image, printerName, copies = 1 } = payload;
 
-      await new Promise((resolve, reject) => {
-        usbDevice.open((err) => {
-          if (err) return reject(err);
-          // berhasil klaim device
-          // langsung tutup lagi supaya tidak ganggu proses cetak
-          usbDevice.close && usbDevice.close();
-          resolve();
-        });
-      });
+    if (!image) throw new Error("Image kosong");
 
-      return {
-        success: true,
-        connected: true,
-        type: "usb",
-        message: "Printer WOYA terhubung via USB.",
-        detail: "Device USB berhasil dibuka dan ditutup."
-      };
-    } catch (usbErr) {
-      // USB gagal dibuka (kabel lepas / driver / dll.)
-      const msg = usbErr && usbErr.message ? usbErr.message : String(usbErr);
+    const tmpPath = path.join(
+      app.getPath("temp"),
+      `barcode_${Date.now()}.png`
+    );
 
-      // Deteksi pola error umum dari libusb di Windows.[web:24][web:29]
-      let hint = "";
-      if (msg.includes("LIBUSB_ERROR_NOT_SUPPORTED")) {
-        hint = "Pasang driver WinUSB dengan Zadig untuk printer WOYA.";
-      } else if (msg.includes("LIBUSB_ERROR_ACCESS")) {
-        hint = "Coba jalankan aplikasi sebagai Administrator atau periksa izin USB.";
-      }
+    fs.writeFileSync(tmpPath, Buffer.from(image, "base64"));
 
-      return {
-        success: true,
-        connected: false,
-        type: "usb",
-        message: "Printer WOYA tidak terhubung via USB.",
-        detail: msg,
-        hint
-      };
-    }
-  } catch (err) {
-    // Error tak terduga
-    return {
-      success: false,
-      connected: false,
-      type: null,
-      message: "Gagal memeriksa status printer.",
-      detail: err && err.message ? err.message : String(err)
+    const data = [{
+      type: "image",
+      path: tmpPath,
+      position: "center",
+      width: "100mm",
+      height: "150mm"
+    }];
+
+    const options = {
+      printerName,
+      silent: false,
+      preview: false,
+      copies,
+      dpi: 203,
+      margin: "0 0 0 0",
+      pageSize: { width: 100000, height: 150000 }
     };
+
+    await PosPrinter.print(data, options);
+
+    return { success: true };
+  } catch (err) {
+    console.error("BARCODE PRINT ERROR FULL:", err);
+    return { success: false, error: err.message };
   }
 });

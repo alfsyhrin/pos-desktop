@@ -9,42 +9,42 @@ function extractProductsFromResponse(res) {
 }
 
 // ===== store selector (owner) =====
-async function fetchStoresForOwner() {
-  try {
-    const res = await window.apiRequest('/stores'); // ambil semua toko untuk owner
-    // debug singkat (hapus/komentari bila sudah ok)
-    console.log('fetchStoresForOwner response:', res);
+// async function fetchStoresForOwner() {
+//   try {
+//     const res = await window.apiRequest('/stores'); // ambil semua toko untuk owner
+//     // debug singkat (hapus/komentari bila sudah ok)
+//     console.log('fetchStoresForOwner response:', res);
 
-    // berbagai kemungkinan shape response:
-    // 1) res = [ ... ]
-    // 2) res = { data: [ ... ] }
-    // 3) res = { data: { stores: [ ... ] } }
-    // 4) res = { stores: [ ... ] }
-    // 5) res = { data: { items: [ ... ] } }
-    let stores = [];
+//     // berbagai kemungkinan shape response:
+//     // 1) res = [ ... ]
+//     // 2) res = { data: [ ... ] }
+//     // 3) res = { data: { stores: [ ... ] } }
+//     // 4) res = { stores: [ ... ] }
+//     // 5) res = { data: { items: [ ... ] } }
+//     let stores = [];
 
-    if (Array.isArray(res)) {
-      stores = res;
-    } else if (Array.isArray(res.data)) {
-      stores = res.data;
-    } else if (res?.data?.stores && Array.isArray(res.data.stores)) {
-      stores = res.data.stores;
-    } else if (res?.stores && Array.isArray(res.stores)) {
-      stores = res.stores;
-    } else if (res?.data?.items && Array.isArray(res.data.items)) {
-      stores = res.data.items;
-    } else {
-      // fallback: sometimes API nests under data -> data
-      const maybe = res?.data?.data;
-      if (Array.isArray(maybe)) stores = maybe;
-    }
+//     if (Array.isArray(res)) {
+//       stores = res;
+//     } else if (Array.isArray(res.data)) {
+//       stores = res.data;
+//     } else if (res?.data?.stores && Array.isArray(res.data.stores)) {
+//       stores = res.data.stores;
+//     } else if (res?.stores && Array.isArray(res.stores)) {
+//       stores = res.stores;
+//     } else if (res?.data?.items && Array.isArray(res.data.items)) {
+//       stores = res.data.items;
+//     } else {
+//       // fallback: sometimes API nests under data -> data
+//       const maybe = res?.data?.data;
+//       if (Array.isArray(maybe)) stores = maybe;
+//     }
 
-    return stores;
-  } catch (err) {
-    console.error('Gagal mengambil list toko:', err);
-    return [];
-  }
-}
+//     return stores;
+//   } catch (err) {
+//     console.error('Gagal mengambil list toko:', err);
+//     return [];
+//   }
+// }
 
 function showStoreSelector(stores) {
   const modal = document.getElementById('store-selector-modal');
@@ -88,27 +88,31 @@ let selectedCategory = '';
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Hanya jalankan kode list produk jika ada elemen .list-produk
   const listProdukEl = document.querySelector('.list-produk');
   if (!listProdukEl) return;
 
-  // Cek token dulu; jangan gunakan storeId sebelum dideklarasi
   const token = localStorage.getItem('token');
   if (!token) {
     window.location.href = 'login.html';
     return;
   }
 
-  // ambil storeId setelah cek token
+  const role = (localStorage.getItem('role') || '').toLowerCase();
   const storeId = localStorage.getItem('store_id');
+
   if (!storeId) {
-    const stores = await fetchStoresForOwner();
-    showStoreSelector(stores);
-    return; // tunggu pilihan store
+    if (role === 'owner') {
+      const stores = await window.fetchStoresForOwner();
+      showStoreSelector(stores);
+      return;
+    } else if (role === 'admin' || role === 'cashier') {
+      // Admin/kasir tidak boleh fetch /stores, tampilkan pesan error ramah
+      listProdukEl.innerHTML = '<p style="color:red;">Akun Anda belum terhubung ke toko. Hubungi owner/admin.</p>';
+      return;
+    }
   }
 
   try {
-    // Ambil daftar produk dari API
     const res = await window.apiRequest(`/stores/${storeId}/products`);
     console.log('API Response:', res);
 
@@ -399,22 +403,26 @@ window.renderProdukPage = async function renderProdukPage() {
   const listProdukEl = document.querySelector('.list-produk');
   if (!listProdukEl) return;
 
-  // cek token dulu
   const token = localStorage.getItem('token');
   if (!token) {
     window.location.href = 'login.html';
     return;
   }
 
-  // ambil storeId; jika belum ada (owner), tampilkan selector toko dan TIDAK redirect
+  const role = (localStorage.getItem('role') || '').toLowerCase();
   const storeId = localStorage.getItem('store_id');
+
   if (!storeId) {
-    const stores = await fetchStoresForOwner();
-    showStoreSelector(stores);
-    return; // tunggu pilihan store
+    if (role === 'owner') {
+      const stores = await window.fetchStoresForOwner();
+      showStoreSelector(stores);
+      return;
+    } else if (role === 'admin' || role === 'cashier') {
+      listProdukEl.innerHTML = '<p style="color:red;">Akun Anda belum terhubung ke toko. Hubungi owner/admin.</p>';
+      return;
+    }
   }
 
-  // sudah ada token & storeId -> lanjut ambil produk
   try {
     const res = await window.apiRequest(`/stores/${storeId}/products`);
     const products = extractProductsFromResponse(res);
@@ -765,8 +773,8 @@ window.onBarcodeScanned = async function(barcode) {
               <p class="harga-produk">Rp ${Number(p.sellPrice || p.price || p.hargaJual || 0).toLocaleString('id-ID')}</p>
             </div>
             <div class="button-produk-wrapper">
-              <button class="edit-produk" onclick="loadPage && loadPage('editProduk', {id: ${p.id}})"><span class="material-symbols-outlined">edit</span></button>
-              <button class="hapus-produk" onclick="hapusProduk(${p.id})"><span class="material-symbols-outlined">delete</span></button>
+              <button class="edit-produk" data-permissions="owner, admin" onclick="loadPage && loadPage('editProduk', {id: ${p.id}})"><span class="material-symbols-outlined">edit</span></button>
+              <button class="hapus-produk" data-permissions="owner, admin" onclick="hapusProduk(${p.id})"><span class="material-symbols-outlined">delete</span></button>
             </div>
           </div>
         </div>
@@ -814,3 +822,41 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.showToast) showToast('Barcode dari scan: ' + barcodeParam, 'info');
   }
 });
+
+const role = (localStorage.getItem('role') || '').toLowerCase();
+if (role === 'cashier') {
+  document.querySelectorAll('.edit-produk, .hapus-produk, .tambah-produk').forEach(btn => {
+    btn.style.display = 'none';
+  });
+}
+
+// Untuk owner: ambil semua toko
+window.fetchStoresForOwner = async function() {
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+  if (role !== 'owner') return [];
+  try {
+    const res = await window.apiRequest('/stores');
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res.data)) return res.data;
+    if (res?.data?.stores && Array.isArray(res.data.stores)) return res.data.stores;
+    if (res?.stores && Array.isArray(res.stores)) return res.stores;
+    if (res?.data?.items && Array.isArray(res.data.items)) return res.data.items;
+    return [];
+  } catch (err) {
+    return [];
+  }
+};
+
+// Untuk admin/kasir: ambil hanya toko sendiri
+window.fetchStoreForUser = async function() {
+  const storeId = localStorage.getItem('store_id');
+  if (!storeId) return null;
+  try {
+    const res = await window.apiRequest(`/stores/${storeId}`);
+    // Pastikan hasilnya konsisten array (agar bisa dipakai di showStoreSelector jika perlu)
+    if (res?.data) return [res.data];
+    return [];
+  } catch (err) {
+    return [];
+  }
+};

@@ -74,10 +74,12 @@
     isCashier: () => getRole() === 'cashier'
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    applyElementPermissions();
-    applySidebarPermissions();
-    // call ensureOwnerHasStore but keep it async
+document.addEventListener('DOMContentLoaded', () => {
+  applyElementPermissions();
+  applySidebarPermissions();
+  // Hanya owner yang perlu pilih store
+  if (window.permission.isOwner()) {
     setTimeout(() => { window.permission.ensureOwnerHasStore(); }, 100);
-  });
+  }
+});
 })();

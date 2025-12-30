@@ -40,15 +40,33 @@
         </div>
         <div class="nav-wrapper">
 
-          <a href="#" data-page="dashboard" class="sidebar-item active"><span class="material-symbols-outlined fill">home</span>Beranda</a>
-          <a href="#" data-page="kasir" class="sidebar-item"><span class="material-symbols-outlined fill">local_grocery_store</span>Kasir</a>
-          <a href="#" data-page="produk" class="sidebar-item"><span class="material-symbols-outlined fill">view_in_ar</span>Produk</a>
-          <a href="#" data-page="transaksi" class="sidebar-item"><span class="material-symbols-outlined fill">receipt_long</span>Transaksi</a>
-          <a href="#" data-page="karyawan" class="sidebar-item"><span class="material-symbols-outlined fill">people_alt</span>Karyawan</a>
-          <a href="#" data-page="laporan" class="sidebar-item"><span class="material-symbols-outlined fill">analytics</span>Laporan</a>
-          <a href="#" data-page="pengaturan" class="sidebar-item"><span class="material-symbols-outlined fill">settings</span>Pengaturan</a>
-          <a href="#" data-page="aktivitas" class="sidebar-item"><span class="material-symbols-outlined fill">list_alt</span>Log Aktivitas</a>
-          <a href="#" class="sidebar-item logout"><span class="material-symbols-outlined fill">logout</span>Logout</a>
+          <a href="#" data-page="dashboard" class="sidebar-item active" data-permissions="owner,admin, cashier">
+            <span class="material-symbols-outlined fill">home</span>Beranda
+          </a>
+          <a href="#" data-page="kasir" class="sidebar-item" data-permissions="cashier,admin">
+            <span class="material-symbols-outlined fill">local_grocery_store</span>Kasir
+          </a>
+          <a href="#" data-page="produk" class="sidebar-item" data-permissions="owner,admin,cashier">
+            <span class="material-symbols-outlined fill">view_in_ar</span>Produk
+          </a>
+          <a href="#" data-page="transaksi" class="sidebar-item" data-permissions="owner,admin, cashier">
+            <span class="material-symbols-outlined fill">receipt_long</span>Transaksi
+          </a>
+          <a href="#" data-page="karyawan" class="sidebar-item" data-permissions="owner,admin">
+            <span class="material-symbols-outlined fill">people_alt</span>Karyawan
+          </a>
+          <a href="#" data-page="laporan" class="sidebar-item" data-permissions="owner,admin">
+            <span class="material-symbols-outlined fill">analytics</span>Laporan
+          </a>
+          <a href="#" data-page="pengaturan" class="sidebar-item" data-permissions="owner,admin">
+            <span class="material-symbols-outlined fill">settings</span>Pengaturan
+          </a>
+          <a href="#" data-page="aktivitas" class="sidebar-item" data-permissions="owner,admin">
+            <span class="material-symbols-outlined fill">list_alt</span>Log Aktivitas
+          </a>
+          <a href="#" class="sidebar-item logout">
+            <span class="material-symbols-outlined fill">logout</span>Logout
+          </a>
         </div>
         
       </nav>
@@ -76,6 +94,7 @@
 
 <script src="../js/api.js"></script>
 <script src="../js/permissions.js"></script>
+<script src="../js/header.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="../js/barcode.js"></script>
 <script src="../js/produk.js"></script>
@@ -88,12 +107,12 @@
 <script src="../js/karyawan.js"></script>
 <!-- <script src="../js/tambah-karyawan.js"></script>
 <script src="../js/edit-karyawan.js"></script> -->
-<script src="../js/sidebar.js"></script>
 <script src="../js/dashboard.js"></script>
 <script src="../js/edit-produk.js"></script>
 <script src="../js/pengaturan.js"></script>
 <script src="../js/edit-toko.js"></script>
 <script src="../js/theme.js"></script>
+<script src="../js/sidebar.js"></script>
 <script>
     // Ambil elemen tombol
     const btnDark = document.getElementById('btn-dark');
