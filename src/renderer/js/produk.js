@@ -87,7 +87,8 @@ function showStoreSelector(stores) {
 let selectedCategory = '';
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+// UBAH: Ganti semua DOMContentLoaded pertama dengan function
+async function initProduk() {
   const listProdukEl = document.querySelector('.list-produk');
   if (!listProdukEl) return;
 
@@ -97,6 +98,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  window.updateHeaderStoreName(); // Update header
+  
   const role = (localStorage.getItem('role') || '').toLowerCase();
   const storeId = localStorage.getItem('store_id');
 
@@ -106,7 +109,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       showStoreSelector(stores);
       return;
     } else if (role === 'admin' || role === 'cashier') {
-      // Admin/kasir tidak boleh fetch /stores, tampilkan pesan error ramah
       listProdukEl.innerHTML = '<p style="color:red;">Akun Anda belum terhubung ke toko. Hubungi owner/admin.</p>';
       return;
     }
@@ -114,13 +116,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     const res = await window.apiRequest(`/stores/${storeId}/products`);
-    console.log('API Response:', res);
-
-    // Perbaikan parsing response
     const products = extractProductsFromResponse(res);
     listProdukEl.innerHTML = '';
 
-    if (products.length === 0) {
+    // update statistik dasar
+    const totalProdukEl = document.querySelector('.card-detail-produk .detail-produk-info h5 + p');
+    const kategoriSet = new Set(products.map(p => p.category).filter(Boolean));
+    if (totalProdukEl) totalProdukEl.textContent = products.length;
+    const kategoriCountEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
+      .find(el => el.textContent.trim().toLowerCase() === 'kategori')?.nextElementSibling;
+    if (kategoriCountEl) kategoriCountEl.textContent = kategoriSet.size;
+
+    // ambil stok menipis
+    try {
+      const stokRes = await window.apiRequest(`/stores/${storeId}/products/low-stock?threshold=10`);
+      const stokCount = stokRes?.data?.count ?? 0;
+      const stokEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
+        .find(el => el.textContent.trim().toLowerCase() === 'stok menipis')?.nextElementSibling;
+      if (stokEl) stokEl.textContent = stokCount;
+    } catch (err) {
+      const stokEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
+        .find(el => el.textContent.trim().toLowerCase() === 'stok menipis')?.nextElementSibling;
+      if (stokEl) stokEl.textContent = '!';
+    }
+
+    populateCategoryDropdown(Array.from(kategoriSet));
+
+    if (!products || products.length === 0) {
       listProdukEl.innerHTML = '<p>Tidak ada produk.</p>';
       return;
     }
@@ -130,7 +152,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imageUrl = imageUrlRaw
         ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
         : '';
-      // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
       const imgTag = imageUrl
         ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
             onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
@@ -150,6 +171,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p class="harga-produk">Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</p>
               </div>
               <div class="button-produk-wrapper">
+                <button class="barcode-produk" title="Preview Barcode" onclick="previewBarcodeProduk('${product.barcode || product.barcode || ''}', '${product.name || ''}')">
+                  <span class="material-symbols-outlined">qr_code</span>
+                </button>
                 <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
                 <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
               </div>
@@ -160,14 +184,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       listProdukEl.innerHTML += productCard;
     });
 
-    // Panggil inisialisasi pencarian di sini
     inisialisasiPencarianProduk();
+    setupScanButtonsProduk();
 
   } catch (err) {
     console.error('Gagal memuat daftar produk:', err);
-    if (listProdukEl) listProdukEl.innerHTML = '<p style="color:red;">Gagal memuat produk.</p>';
+    listProdukEl.innerHTML = '<p style="color:red;">Gagal memuat produk.</p>';
   }
-});
+}
+
+// Call saat DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initProduk);
+} else {
+  initProduk();
+}
+
+// Export untuk router
+window.initProduk = initProduk;
 
 window.tambahProduk = async function tambahProduk() {
   const storeId = localStorage.getItem('store_id');
@@ -328,6 +362,28 @@ async function hapusProduk(productId) {
   }
 }
 
+window.previewBarcodeProduk = function(barcode, name = "") {
+  if (!barcode) {
+    alert("Barcode produk tidak tersedia!");
+    return;
+  }
+
+  // Payload sama seperti di barcode.js
+  const payload = {
+    value: barcode,
+    copies: 8,
+    type: "CODE128",
+    name: name
+  };
+
+  localStorage.setItem("barcode-preview-data", JSON.stringify(payload));
+
+  window.open(
+    "../pages/preview-barcode.html",
+    "_blank",
+    "width=420,height=650"
+  );
+};
 // function generateBarcode() {
 //   const barcodeValue = document.getElementById('barcode-value').value;
 //   if (!barcodeValue) {
@@ -483,6 +539,10 @@ window.renderProdukPage = async function renderProdukPage() {
                 <p class="harga-produk">Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</p>
               </div>
               <div class="button-produk-wrapper">
+<button class="barcode-produk" title="Preview Barcode"
+  onclick="previewBarcodeProduk('${product.barcode}','${product.name}')">
+  <span class="material-symbols-outlined">qr_code</span>
+</button>
                 <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
                 <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
               </div>
@@ -572,6 +632,10 @@ async function cariProduk(q, category = '') {
                 <p class="harga-produk">Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</p>
               </div>
               <div class="button-produk-wrapper">
+<button class="barcode-produk" title="Preview Barcode"
+  onclick="previewBarcodeProduk('${product.barcode}','${product.name}')">
+  <span class="material-symbols-outlined">qr_code</span>
+</button>
                 <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
                 <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
               </div>
@@ -773,6 +837,10 @@ window.onBarcodeScanned = async function(barcode) {
               <p class="harga-produk">Rp ${Number(p.sellPrice || p.price || p.hargaJual || 0).toLocaleString('id-ID')}</p>
             </div>
             <div class="button-produk-wrapper">
+<button class="barcode-produk" title="Preview Barcode"
+  onclick="previewBarcodeProduk('${product.barcode}','${product.name}')">
+  <span class="material-symbols-outlined">qr_code</span>
+</button>
               <button class="edit-produk" data-permissions="owner, admin" onclick="loadPage && loadPage('editProduk', {id: ${p.id}})"><span class="material-symbols-outlined">edit</span></button>
               <button class="hapus-produk" data-permissions="owner, admin" onclick="hapusProduk(${p.id})"><span class="material-symbols-outlined">delete</span></button>
             </div>
@@ -859,4 +927,128 @@ window.fetchStoreForUser = async function() {
   } catch (err) {
     return [];
   }
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  window.updateHeaderStoreName(); // TAMBAH BARIS INI
+  const listProdukEl = document.querySelector('.list-produk');
+  if (!listProdukEl) return;
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+  const storeId = localStorage.getItem('store_id');
+
+  if (!storeId) {
+    if (role === 'owner') {
+      const stores = await window.fetchStoresForOwner();
+      showStoreSelector(stores);
+      return;
+    } else if (role === 'admin' || role === 'cashier') {
+      listProdukEl.innerHTML = '<p style="color:red;">Akun Anda belum terhubung ke toko. Hubungi owner/admin.</p>';
+      return;
+    }
+  }
+
+  try {
+    const res = await window.apiRequest(`/stores/${storeId}/products`);
+    const products = extractProductsFromResponse(res);
+    listProdukEl.innerHTML = '';
+
+    // update statistik dasar (total & kategori) berdasarkan products
+    const totalProdukEl = document.querySelector('.card-detail-produk .detail-produk-info h5 + p');
+    const kategoriSet = new Set(products.map(p => p.category).filter(Boolean));
+    if (totalProdukEl) totalProdukEl.textContent = products.length;
+    const kategoriCountEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
+      .find(el => el.textContent.trim().toLowerCase() === 'kategori')?.nextElementSibling;
+    if (kategoriCountEl) kategoriCountEl.textContent = kategoriSet.size;
+
+    // ambil stok menipis via API terpisah
+    try {
+      const stokRes = await window.apiRequest(`/stores/${storeId}/products/low-stock?threshold=10`);
+      const stokCount = stokRes?.data?.count ?? 0;
+      const stokEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
+        .find(el => el.textContent.trim().toLowerCase() === 'stok menipis')?.nextElementSibling;
+      if (stokEl) stokEl.textContent = stokCount;
+    } catch (err) {
+      // keep silent, tampilkan ! jika gagal
+      const stokEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
+        .find(el => el.textContent.trim().toLowerCase() === 'stok menipis')?.nextElementSibling;
+      if (stokEl) stokEl.textContent = '!';
+    }
+
+    // populate kategori dropdown
+    populateCategoryDropdown(Array.from(kategoriSet));
+
+    if (!products || products.length === 0) {
+      listProdukEl.innerHTML = '<p>Tidak ada produk.</p>';
+      return;
+    }
+
+    products.forEach(product => {
+      const imageUrlRaw = product.image_url || product.imageUrl || '';
+      const imageUrl = imageUrlRaw
+        ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
+        : '';
+      // Tambahkan onerror agar fallback ke icon default jika gambar gagal dimuat
+      const imgTag = imageUrl
+        ? `<img src="${imageUrl}" alt="Gambar Produk" class="card-img" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
+            onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
+        : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+
+      const productCard = `
+        <div class="card-produk">
+          ${imgTag}
+          <div class="info-produk">
+            <div class="nama-produk-stok-wrapper">
+              <h4>${product.name}</h4>
+              <h4>Stok: ${product.stock}</h4>
+            </div>
+            <div class="kode-harga-button-wrapper">
+              <div class="kode-harga-wrapper">
+                <p class="kode-produk">SKU: ${product.sku}</p>
+                <p class="harga-produk">Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</p>
+              </div>
+              <div class="button-produk-wrapper">
+                <button class="barcode-produk" title="Preview Barcode" onclick="previewBarcodeProduk('${product.barcode || product.barcode || ''}', '${product.name || ''}')">
+                  <span class="material-symbols-outlined">qr_code</span>
+                </button>
+                <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
+                <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      listProdukEl.innerHTML += productCard;
+    });
+
+    inisialisasiPencarianProduk();
+  } catch (err) {
+    console.error('Gagal memuat daftar produk:', err);
+    listProdukEl.innerHTML = '<p style="color:red;">Gagal memuat produk.</p>';
+  }
+});
+
+window.previewBarcodeProduk = function(barcode, name) {
+  if (!barcode) {
+    alert('Barcode produk tidak tersedia!');
+    return;
+  }
+  // Simpan data ke localStorage (seperti preview-barcode.html)
+  localStorage.setItem("barcode-preview-data", JSON.stringify({
+    value: barcode,
+    copies: 8,
+    type: "CODE128",
+    name: name || ""
+  }));
+  window.open(
+    "../pages/preview-barcode.html",
+    "_blank",
+    "width=420,height=650"
+  );
 };

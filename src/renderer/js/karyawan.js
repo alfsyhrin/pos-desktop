@@ -49,7 +49,7 @@ async function fetchStoreUsers(storeId, q = '', opts = {}) {
 async function initKaryawanPage(search = '') {
   const container = document.querySelector('.container-card-karyawan');
   if (!container) return;
-  container.innerHTML = '<p>Memuat...</p>';
+  container.innerHTML = '<p>Memula...</p>';
   const role = (localStorage.getItem('role') || '').toLowerCase();
 
   try {
@@ -64,43 +64,37 @@ async function initKaryawanPage(search = '') {
       const res = await fetchStoreUsers(storeId, search);
       if (!res || !res.success) return container.innerHTML = `<p>Gagal memuat: ${res?.message || 'unknown'}</p>`;
       renderList(container, res.data || []);
+      window.updateHeaderStoreName();
       return;
     }
 
     if (role === 'owner') {
       let storeId = localStorage.getItem('store_id');
+      
+      // TAMBAH: Jika belum ada store_id, ambil dari fetchStoresForOwner
       if (!storeId) {
-        // fetch stores for owner and show modal selection
-        const ownerId = localStorage.getItem('owner_id') || localStorage.getItem('user_id');
-        let stores = [];
-        try {
-          // try owners/:id/stores or /stores and filter
-          const r1 = await apiGet(`/owners/${ownerId}/stores`).catch(()=>null);
-          if (r1 && r1.data) stores = r1.data;
-          if (!stores.length) {
-            const r2 = await apiGet(`/stores`).catch(()=>null);
-            if (r2 && Array.isArray(r2.data)) stores = (r2.data || []).filter(s => String(s.owner_id) === String(ownerId));
-            else if (Array.isArray(r2)) stores = r2;
-          }
-        } catch (e) { /* ignore */ }
-
-        // if still empty, fallback prompt
-        if (!stores || !stores.length) {
-          const pick = prompt('Anda owner. Masukkan store_id untuk manajemen karyawan:');
-          if (pick) {
-            localStorage.setItem('store_id', String(pick));
-            storeId = String(pick);
-          }
+        const stores = await window.fetchStoresForOwner();
+        if (stores && stores.length > 0) {
+          storeId = await showStoreSelectionModal(stores);
         } else {
-          await showStoreSelectionModal(stores);
-          storeId = localStorage.getItem('store_id');
+          container.innerHTML = `
+            <p style="color: #ff6b6b; padding: 20px; text-align: center;">
+              ⚠️ Anda belum memilih toko. Silakan pilih toko di halaman <strong>Produk</strong> terlebih dahulu.
+            </p>
+          `;
+          return;
         }
       }
 
-      if (!storeId) return container.innerHTML = '<p>Store belum dipilih.</p>';
+      if (!storeId) {
+        container.innerHTML = '<p>Pemilihan toko dibatalkan.</p>';
+        return;
+      }
+
       const res = await fetchStoreUsers(storeId, search);
       if (!res || !res.success) return container.innerHTML = `<p>Gagal memuat: ${res?.message || 'unknown'}</p>`;
       renderList(container, res.data || []);
+      window.updateHeaderStoreName();
       return;
     }
 
@@ -258,3 +252,7 @@ function setupSearchHandler() {
     }
   });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.updateHeaderStoreName(); // TAMBAH BARIS INI
+});

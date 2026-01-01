@@ -199,37 +199,26 @@ ipcMain.handle("detect-bluetooth-printers", async () => {
 ================================ */
 ipcMain.handle("print-receipt", async (event, payload) => {
   try {
-    const { printType = 'usb', bluetoothAddress } = payload;
+    const { printType = 'usb', bluetoothAddress, storeData } = payload;
 
     let device;
     let printer;
 
     if (printType === 'bluetooth') {
-      // Bluetooth printing
       if (!bluetoothAddress) {
         throw new Error("Bluetooth address is required for Bluetooth printing");
       }
-
       device = new Bluetooth(bluetoothAddress);
-
       await new Promise((resolve, reject) => {
         device.open((err) => (err ? reject(err) : resolve()));
       });
-
-      printer = new Printer(device, {
-        encoding: "CP437",
-      });
+      printer = new Printer(device, { encoding: "CP437" });
     } else {
-      // USB printing (default)
       device = new USB();
-
       await new Promise((resolve, reject) => {
         device.open((err) => (err ? reject(err) : resolve()));
       });
-
-      printer = new Printer(device, {
-        encoding: "CP437",
-      });
+      printer = new Printer(device, { encoding: "CP437" });
     }
 
     const {
@@ -246,20 +235,23 @@ ipcMain.handle("print-receipt", async (event, payload) => {
       store = {},
     } = payload || {};
 
-    // 2. Tulis struk ke buffer ESC/POS
+    // HEADER: Nama Toko
     printer
       .align("ct")
       .style("b")
       .size(1, 1)
-      .text(store.name || "TOKO SAYA")
+      .text((store.name || storeData?.name || "TOKO SAYA").toUpperCase())
       .style("normal")
       .size(0, 0);
 
-    if (store.address) printer.text(store.address);
-    if (store.phone) printer.text(store.phone);
+    if (store.address || storeData?.address) 
+      printer.text(store.address || storeData.address);
+    if (store.phone || storeData?.phone) 
+      printer.text(`Telp: ${store.phone || storeData.phone}`);
 
     printer.drawLine();
 
+    // Detail Transaksi
     printer
       .align("lt")
       .text(`No   : ${txId || "-"}`)
@@ -274,13 +266,9 @@ ipcMain.handle("print-receipt", async (event, payload) => {
       const total = qty * price;
 
       printer.text(it.name || "-");
-      printer.text(
-        `${qty} x ${formatRupiah(price)} = ${formatRupiah(total)}`
-      );
-      if (it.sku) {
-        printer.text(`SKU: ${it.sku}`);
-      }
-      printer.text(""); // spasi antar item
+      printer.text(`${qty} x ${formatRupiah(price)} = ${formatRupiah(total)}`);
+      if (it.sku) printer.text(`SKU: ${it.sku}`);
+      printer.text("");
     });
 
     printer.drawLine();
@@ -296,10 +284,19 @@ ipcMain.handle("print-receipt", async (event, payload) => {
     printer.text(`Kembalian : ${formatRupiah(change)}`);
     printer.drawLine();
 
-    printer
-      .align("ct")
-      .text("Terima kasih")
-      .text(" ");
+    // FOOTER: Receipt Template dari database
+    if (storeData?.receipt_template) {
+      printer
+        .align("ct")
+        .text(storeData.receipt_template)
+        .text(" ");
+    } else {
+      printer
+        .align("ct")
+        .text("Terima kasih")
+        .text("Selamat datang kembali")
+        .text(" ");
+    }
 
     printer.feed(4);
     printer.cut();

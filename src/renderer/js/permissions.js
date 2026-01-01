@@ -1,4 +1,3 @@
-// ...new file...
 /**
  * Simple permission helpers and auto-hide for elements.
  * Usage:
@@ -21,26 +20,44 @@
     });
   }
 
-  // Hide sidebar items by data-page mapping (fallback if sidebar script not handling role)
+  // Hide sidebar items by data-page mapping
   function applySidebarPermissions() {
     const role = getRole();
-    const allowedForCashier = ['dashboard','kasir','produk','transaksi']; // cashier limited
+    // Cashier bisa akses: dashboard, kasir, produk, transaksi, pengaturan
+    const allowedForCashier = ['dashboard','kasir','produk','transaksi','pengaturan'];
+    // Owner bisa akses: dashboard, produk, transaksi, karyawan, laporan, pengaturan, aktivitas (TIDAK KASIR)
+    const allowedForOwner = ['dashboard','produk','transaksi','karyawan','laporan','pengaturan','aktivitas'];
+    
     document.querySelectorAll('.sidebar-item[data-page]').forEach(a => {
       const page = (a.dataset.page || '').toLowerCase();
+      
       if (role === 'cashier') {
-        if (!allowedForCashier.includes(page)) a.style.display = 'none';
+        // Cashier hanya bisa akses yang ada di allowedForCashier
+        if (!allowedForCashier.includes(page)) {
+          a.style.display = 'none';
+        } else {
+          a.style.display = '';
+        }
+      } else if (role === 'owner') {
+        // Owner hanya bisa akses yang ada di allowedForOwner
+        if (!allowedForOwner.includes(page)) {
+          a.style.display = 'none';
+        } else {
+          a.style.display = '';
+        }
       } else {
-        a.style.display = ''; // owner/admin show default
+        // Admin bisa akses semua
+        a.style.display = '';
       }
     });
   }
 
-  // If owner and no store selected, force selection prompt (simple); replace with modal/store page if exists
+  // If owner and no store selected, force selection prompt
   async function ensureOwnerHasStore() {
     const role = getRole();
     if (role !== 'owner') return;
     if (getStoreId()) return;
-    // try to get stores from backend (if api helper available)
+    // try to get stores from backend
     try {
       let stores = [];
       if (window.apiRequest && typeof window.apiRequest === 'function') {
@@ -74,12 +91,12 @@
     isCashier: () => getRole() === 'cashier'
   };
 
-document.addEventListener('DOMContentLoaded', () => {
-  applyElementPermissions();
-  applySidebarPermissions();
-  // Hanya owner yang perlu pilih store
-  if (window.permission.isOwner()) {
-    setTimeout(() => { window.permission.ensureOwnerHasStore(); }, 100);
-  }
-});
+  document.addEventListener('DOMContentLoaded', () => {
+    applyElementPermissions();
+    applySidebarPermissions();
+    // Hanya owner yang perlu pilih store
+    if (window.permission.isOwner()) {
+      setTimeout(() => { window.permission.ensureOwnerHasStore(); }, 100);
+    }
+  });
 })();

@@ -615,9 +615,10 @@ function formatCurrency(value) {
 }
 
 // ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', function() {
-    renderTopProducts();
-    renderLowStockProducts();
-    renderEmployeePerformance();
-    renderTopSellers();
+document.addEventListener('DOMContentLoaded', () => {
+  window.updateHeaderStoreName(); // TAMBAH BARIS INI
+  renderTopProducts();
+  renderLowStockProducts();
+  renderEmployeePerformance();
+  renderTopSellers();
 });

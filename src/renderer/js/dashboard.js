@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', async () => {
+// UBAH dari DOMContentLoaded menjadi function biasa
+async function initDashboard() {
   const token = localStorage.getItem('token');
   if (!token) {
     window.location.href = 'login.html';
@@ -55,7 +56,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   renderDashboardStats();
-});
+  window.updateHeaderStoreName(); // TAMBAH BARIS INI
+}
+
+// Call function saat halaman loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDashboard);
+} else {
+  initDashboard();
+}
+
+// Export untuk router
+window.initDashboard = initDashboard;
 
 // --- Fungsi render statistik dashboard ---
 async function renderDashboardStats() {

@@ -599,3 +599,7 @@ const _pollInterval = setInterval(() => {
   _pollCount++;
   initKasirPage().catch(()=>{});
 }, 500);
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.updateHeaderStoreName(); // TAMBAH BARIS INI
+});

@@ -1,10 +1,17 @@
 // ...existing code...
 window.initEditProdukPage = async function() {
+  // Ambil dari URL query string terlebih dahulu, fallback ke sessionStorage
+  let productId = null;
   const urlParams = new URLSearchParams(window.location.search);
-  const productId = urlParams.get('id');
+  if (urlParams.has('id')) {
+    productId = urlParams.get('id');
+    sessionStorage.setItem('edit_product_id', productId); // sync ke sessionStorage juga
+  } else {
+    productId = sessionStorage.getItem('edit_product_id');
+  }
   const storeId = localStorage.getItem('store_id');
   if (!productId || !storeId) {
-    loadPage('produk');
+    window.location.href = 'produk.html';
     return;
   }
 
@@ -25,6 +32,7 @@ window.initEditProdukPage = async function() {
     document.getElementById('product-id').value = produk.id;
     document.getElementById('nama-produk').value = produk.name || '';
     document.getElementById('sku').value = produk.sku || '';
+    document.getElementById('barcode').value = produk.barcode || ''; // ✅ TAMBAH INI
     document.getElementById('harga-jual').value = produk.price || produk.sellPrice || 0;
     document.getElementById('stok').value = produk.stock || 0;
     document.getElementById('is-active').value = String(produk.is_active ?? true);

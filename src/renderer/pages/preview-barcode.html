@@ -79,51 +79,57 @@
   <div class="paper" id="paper"></div>
 
   <script>
-    const raw = localStorage.getItem("barcode-preview-data");
+  const raw = localStorage.getItem("barcode-preview-data");
+  if (!raw) {
+    alert("Data barcode tidak ditemukan");
+    window.close();
+  }
+  const data = JSON.parse(raw);
+  const paper = document.getElementById("paper");
 
-    if (!raw) {
-      alert("Data barcode tidak ditemukan");
-      window.close();
+  for (let i = 0; i < data.copies; i++) {
+    const label = document.createElement("div");
+    label.className = "label";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    JsBarcode(svg, data.value, {
+      format: data.type === "QR" ? "CODE128" : data.type,
+      height: 60,
+      displayValue: true
+    });
+
+    label.appendChild(svg);
+
+    // Tambahkan nama produk di bawah barcode jika ada
+    if (data.name) {
+      const nameDiv = document.createElement("div");
+      nameDiv.style.fontSize = "13px";
+      nameDiv.style.marginTop = "2px";
+      nameDiv.textContent = data.name;
+      label.appendChild(nameDiv);
     }
 
-    const data = JSON.parse(raw);
-    const paper = document.getElementById("paper");
-
-    for (let i = 0; i < data.copies; i++) {
-      const label = document.createElement("div");
-      label.className = "label";
-
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-
-      JsBarcode(svg, data.value, {
-        format: data.type === "QR" ? "CODE128" : data.type,
-        height: 60,
-        displayValue: true
-      });
-
-      label.appendChild(svg);
-      paper.appendChild(label);
-    }
-
-async function printFromPreview() {
-  if (!window.opener) {
-    alert("Window utama tidak ditemukan");
-    return;
+    paper.appendChild(label);
   }
 
-  window.opener.postMessage(
-    {
-      type: "PRINT_BARCODE",
-      payload: {
-        barcodeValue: data.value,
-        copies: data.copies
-      }
-    },
-    "*"
-  );
-}
-
-
+  async function printFromPreview() {
+    if (!window.opener) {
+      alert("Window utama tidak ditemukan");
+      return;
+    }
+    window.opener.postMessage(
+      {
+        type: "PRINT_BARCODE",
+        payload: {
+          barcodeValue: data.value,
+          copies: data.copies,
+          type: data.type,
+          name: data.name || ""
+        }
+      },
+      "*"
+    );
+  }
   </script>
 
 </body>

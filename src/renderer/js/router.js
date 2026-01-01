@@ -44,27 +44,24 @@ function loadPage(page, params = {}) {
       setActiveMenu(page);
       saveLastPage(page);
 
-      // Dashboard
-      if (page === 'dashboard') {
-        const script = document.createElement('script');
-        script.src = '../js/dashboard.js';
-        script.defer = true;
-        document.body.appendChild(script);
+      // TAMBAH INI - panggil init function sesuai halaman
+      if (page === 'dashboard' && window.initDashboard) {
+        setTimeout(() => window.initDashboard(), 100);
+      } else if (page === 'transaksi' && window.initTransaksi) {
+        setTimeout(() => window.initTransaksi(), 100);
+      } else if (page === 'pengaturan' && window.initPengaturan) {
+        setTimeout(() => window.initPengaturan(), 100);
+      } else if (page === 'produk' && window.initProduk) {
+        setTimeout(() => window.initProduk(), 100);
+      } else if (page === 'editProduk' && params?.id) {
+        sessionStorage.setItem('edit_product_id', params.id);
+        setTimeout(() => window.initEditProdukPage?.(), 200);
       }
 
-      // Produk
-      if (page === 'produk') {
-        if (window.renderProdukPage) window.renderProdukPage();
-      }
-
-      // Edit Produk (inject id ke window.location.search)
-      if (page === 'editProduk') {
-        // Simulasikan window.location.search agar edit-produk.js tetap bisa pakai URLSearchParams
-        if (params.id) {
-          window.history.replaceState({}, '', `?id=${params.id}`);
-        }
-        if (window.initEditProdukPage) window.initEditProdukPage();
-      }
+      // Update header
+      setTimeout(() => {
+        window.updateHeaderStoreName();
+      }, 200);
     })
     .catch(err => {
       content.innerHTML = `<h2>Error loading page</h2>`;
@@ -118,10 +115,30 @@ sidebarItems.forEach(item => {
   });
 });
 
+/**
+ * Setup mutation observer untuk update header saat content berubah
+ */
+function setupMutationObserver() {
+  const content = document.getElementById('app-content');
+  
+  const observer = new MutationObserver(() => {
+    console.log('🔄 Content berubah, update header...');
+    window.updateHeaderStoreName();
+  });
+
+  observer.observe(content, {
+    childList: true,
+    subtree: true
+  });
+
+  console.log('✅ Mutation observer aktif');
+}
+
 // ==============================
 // INIT APP
 // ==============================
 document.addEventListener('DOMContentLoaded', () => {
+  setupMutationObserver();
   const lastPage = getLastPage();
   loadPage(lastPage);
 });

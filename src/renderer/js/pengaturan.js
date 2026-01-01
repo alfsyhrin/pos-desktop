@@ -1,25 +1,14 @@
 /**
  * ======================================================
- * PENGATURAN TOKO - MOVE TO BODY FIX
+ * PENGATURAN TOKO - ROLE-BASED CONDITIONAL LOADING
  * ======================================================
  */
 
 let isSetupComplete = false;
-let allStores = []; // Simpan semua stores
+let allStores = []; // Untuk owner (multiple stores)
+let currentStore = null; // Untuk admin/cashier (single store)
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
-
-window.addEventListener('load', function() {
-  if (!isSetupComplete) {
-    init();
-  }
-});
-
-function init() {
+function initPengaturan() {
   console.log('🚀 Pengaturan.js loaded');
   
   const userRole = localStorage.getItem('role');
@@ -28,13 +17,16 @@ function init() {
   // Set role class ke body
   document.body.className = 'role-' + userRole;
   
+  // HAPUS line ini: updateHeaderStoreName();
+  
   // Load data owner hanya untuk OWNER
   if (userRole === 'owner') {
     loadOwnerInfo();
+    loadAllStoresForOwner();
+  } else if (userRole === 'admin' || userRole === 'cashier') {
+    // Admin & Cashier load single store
+    loadSingleStoreForAdminCashier();
   }
-  
-  // Load semua stores
-  loadAllStores();
 
   // Setup modal toko
   setupModalWithRetry();
@@ -45,10 +37,38 @@ function init() {
   }
 }
 
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPengaturan);
+} else {
+  initPengaturan();
+}
+
+window.initPengaturan = initPengaturan;
+
 /* ======================================================
- * LOAD ALL STORES (FIXED - data.stores)
+ * UPDATE HEADER DENGAN NAMA TOKO/BISNIS
  * ====================================================== */
-async function loadAllStores() {
+function updateHeaderStoreName() {
+  const headerStoreName = document.getElementById('headerStoreName');
+  if (!headerStoreName) return;
+
+  const userRole = localStorage.getItem('role');
+  
+  if (userRole === 'owner') {
+    // Owner: tampilkan nama bisnis
+    const businessName = localStorage.getItem('owner_business_name') || 'Bisnis Anda';
+    headerStoreName.textContent = businessName;
+  } else {
+    // Admin & Cashier: tampilkan nama toko
+    const storeName = localStorage.getItem('store_name') || 'Toko Anda';
+    headerStoreName.textContent = storeName;
+  }
+}
+
+/* ======================================================
+ * LOAD ALL STORES - HANYA UNTUK OWNER
+ * ====================================================== */
+async function loadAllStoresForOwner() {
   const token = localStorage.getItem('token');
 
   if (!token) {
@@ -57,7 +77,7 @@ async function loadAllStores() {
   }
 
   try {
-    console.log('📡 Fetching stores from API...');
+    console.log('📡 [OWNER] Fetching all stores from API...');
     const res = await fetch('http://103.126.116.119:8001/api/stores', {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -65,12 +85,12 @@ async function loadAllStores() {
     const data = await res.json();
     console.log('📦 API Response:', data);
     
-    // FIX: data.stores bukan data.data
     if (data?.success && Array.isArray(data.data?.stores)) {
       allStores = data.data.stores;
       console.log('✅ All stores loaded:', allStores);
       console.log('📊 Total stores:', allStores.length);
-      renderStoreAccordions(allStores);
+      renderStoreAccordionsForOwner(allStores);
+      setupAccordionListeners(); // TAMBAH: Setup accordion listeners
     } else {
       console.error('❌ Failed to load stores:', data?.message);
       showNotification('Gagal memuat data toko', 'error');
@@ -82,9 +102,45 @@ async function loadAllStores() {
 }
 
 /* ======================================================
- * RENDER MULTIPLE ACCORDION STORES
+ * LOAD SINGLE STORE - UNTUK ADMIN & CASHIER
  * ====================================================== */
-function renderStoreAccordions(stores) {
+async function loadSingleStoreForAdminCashier() {
+  const storeId = localStorage.getItem('store_id');
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('role');
+
+  if (!storeId || !token) {
+    console.warn('⚠️ Store ID atau token tidak ditemukan');
+    return;
+  }
+
+  try {
+    console.log(`📡 [${userRole.toUpperCase()}] Fetching single store:`, storeId);
+    const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    console.log('📦 API Response:', data);
+    
+    if (data?.success && data?.data) {
+      currentStore = data.data;
+      console.log('✅ Single store loaded:', currentStore);
+      renderStoreSingleForAdminCashier(currentStore);
+    } else {
+      console.error('❌ Failed to load store:', data?.message);
+      showNotification('Gagal memuat data toko', 'error');
+    }
+  } catch (err) {
+    console.error('❌ Error loading store:', err);
+    showNotification('Gagal memuat data toko: ' + err.message, 'error');
+  }
+}
+
+/* ======================================================
+ * RENDER STORES UNTUK OWNER (MULTIPLE ACCORDION)
+ * ====================================================== */
+function renderStoreAccordionsForOwner(stores) {
   const container = document.getElementById('storesContainer');
   if (!container) return;
 
@@ -96,23 +152,24 @@ function renderStoreAccordions(stores) {
   }
 
   stores.forEach((store, index) => {
-    const accordion = createStoreAccordion(store, index);
+    const accordion = createStoreAccordionForOwner(store, index);
     container.appendChild(accordion);
   });
 
-  console.log('✅ Rendered ' + stores.length + ' store accordion(s)');
+  console.log('✅ Rendered ' + stores.length + ' store accordion(s) for OWNER');
 }
 
 /* ======================================================
- * CREATE SINGLE STORE ACCORDION
+ * CREATE STORE ACCORDION UNTUK OWNER (DENGAN EDIT BUTTON)
  * ====================================================== */
-function createStoreAccordion(store, index) {
+function createStoreAccordionForOwner(store, index) {
   const wrapper = document.createElement('div');
   wrapper.className = 'accordion-toko-wrapper';
   wrapper.dataset.storeId = store.id;
 
   const button = document.createElement('button');
   button.className = 'accordion-toko-btn active';
+  button.type = 'button';
   button.innerHTML = `
     <span class="material-symbols-outlined accordion-icon">expand_more</span>
     <span class="accordion-store-name">${store.name || 'Toko ' + (index + 1)}</span>
@@ -129,9 +186,144 @@ function createStoreAccordion(store, index) {
             <h3>Informasi Toko</h3>
             <p>Data toko yang digunakan untuk identitas & nota</p>
           </div>
-          <button class="edit-toko" data-store-id="${store.id}" data-permissions="owner, admin">
+          <button class="edit-toko" data-store-id="${store.id}" data-permissions="owner, admin" type="button">
             <span class="material-symbols-outlined">edit</span>Edit
           </button>
+        </div>
+        <div class="detail-info-toko">
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">ID</p>
+            <p class="detail-toko-deskripsi">${store.id ?? '-'}</p>
+          </div>
+    
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">Owner ID</p>
+            <p class="detail-toko-deskripsi">${store.owner_id ?? '-'}</p>
+          </div>
+    
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">Nama</p>
+            <p class="detail-toko-deskripsi" data-field="nama">${store.name || '-'}</p>
+          </div>
+
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">Alamat</p>
+            <p class="detail-toko-deskripsi" data-field="alamat">${store.address || '-'}</p>
+          </div>
+
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">Telepon</p>
+            <p class="detail-toko-deskripsi" data-field="telepon">${store.phone || '-'}</p>
+          </div>
+
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">Pajak (PPN)</p>
+            <p class="detail-toko-deskripsi" data-field="pajak">${(store.tax_percentage || '10') + '%'}</p>
+          </div>
+    
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">Receipt Template</p>
+            <p class="detail-toko-deskripsi">${store.receipt_template || '-'}</p>
+          </div>
+    
+          <div class="detail-toko-wrapper">
+            <p class="detail-toko-judul">Created At</p>
+            <p class="detail-toko-deskripsi">${store.created_at || '-'}</p>
+          </div>
+    
+          <div class="detail-toko-wrapper" style="margin: 0; border: none; padding: 0;">
+            <p class="detail-toko-judul">Updated At</p>
+            <p class="detail-toko-deskripsi">${store.updated_at || '-'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Toggle accordion - ATTACH LANGSUNG KE BUTTON
+  button.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🎯 Accordion button clicked for store:', store.id);
+    button.classList.toggle('active');
+    content.classList.toggle('active');
+  });
+
+  wrapper.appendChild(button);
+  wrapper.appendChild(content);
+
+  return wrapper;
+}
+
+/* ======================================================
+ * SETUP ACCORDION LISTENERS (untuk re-render cases)
+ * ====================================================== */
+function setupAccordionListeners() {
+  document.querySelectorAll('.accordion-toko-btn').forEach(button => {
+    // Remove old listeners
+    const newBtn = button.cloneNode(true);
+    button.parentNode.replaceChild(newBtn, button);
+    
+    // Add new listener
+    newBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const content = newBtn.nextElementSibling;
+      if (content && content.classList.contains('accordion-toko-content')) {
+        console.log('🎯 Accordion toggled');
+        newBtn.classList.toggle('active');
+        content.classList.toggle('active');
+      }
+    });
+  });
+}
+
+/* ======================================================
+ * RENDER SINGLE STORE UNTUK ADMIN & CASHIER (DENGAN ACCORDION)
+ * ====================================================== */
+function renderStoreSingleForAdminCashier(store) {
+  const container = document.getElementById('storesContainer');
+  if (!container) return;
+
+  container.innerHTML = '';
+  const userRole = localStorage.getItem('role');
+
+  // TAMBAH: Simpan nama toko ke localStorage & update header
+  localStorage.setItem('store_name', store.name || '');
+  updateHeaderStoreName();
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'accordion-toko-wrapper';
+  wrapper.dataset.storeId = store.id;
+
+  const button = document.createElement('button');
+  button.className = 'accordion-toko-btn active';
+  button.type = 'button';
+  button.innerHTML = `
+    <span class="material-symbols-outlined accordion-icon">expand_more</span>
+    <span class="accordion-store-name">${store.name || 'Toko'}</span>
+  `;
+
+  const content = document.createElement('div');
+  content.className = 'accordion-toko-content active';
+  
+  // Edit button HANYA untuk ADMIN, TIDAK ada untuk CASHIER
+  const editButtonHTML = userRole === 'admin' 
+    ? `<button class="edit-toko" data-store-id="${store.id}" data-permissions="owner, admin" type="button">
+        <span class="material-symbols-outlined">edit</span>Edit
+       </button>`
+    : '';
+
+  content.innerHTML = `
+    <div class="informasi-toko-bisnis" style="margin: 0; border-top: none; border-radius: 0 0 8px 8px;">
+      <div class="card-informasi-toko">
+        <div class="judul-informasi-toko">
+          <span class="material-symbols-outlined logo-toko">store</span>
+          <div class="informasi-toko">
+            <h3>Informasi Toko</h3>
+            <p>Data toko yang digunakan untuk identitas & nota</p>
+          </div>
+          ${editButtonHTML}
         </div>
         <div class="detail-info-toko">
           <div class="detail-toko-wrapper">
@@ -186,18 +378,21 @@ function createStoreAccordion(store, index) {
   // Toggle accordion
   button.addEventListener('click', function(e) {
     e.preventDefault();
+    e.stopPropagation();
+    console.log('🎯 Accordion button clicked for store:', store.id);
     button.classList.toggle('active');
     content.classList.toggle('active');
   });
 
   wrapper.appendChild(button);
   wrapper.appendChild(content);
+  container.appendChild(wrapper);
 
-  return wrapper;
+  console.log(`✅ Rendered single store with accordion for ${userRole.toUpperCase()}`);
 }
 
 /* ======================================================
- * SETUP MODAL DENGAN RETRY (TOKO - JANGAN DIUBAH)
+ * SETUP MODAL DENGAN RETRY (TOKO)
  * ====================================================== */
 function setupModalWithRetry() {
   let attempts = 0;
@@ -234,19 +429,27 @@ function setupModalWithRetry() {
 }
 
 /* ======================================================
- * SETUP MODAL EVENTS (TOKO - JANGAN DIUBAH)
+ * SETUP MODAL EVENTS (TOKO)
  * ====================================================== */
 function setupModalEvents(modal, cancelBtn, saveBtn) {
   console.log('⚙️ Setting up modal event listeners...');
   
   let currentStoreId = null;
+  const userRole = localStorage.getItem('role');
 
   function openModal(storeId) {
     currentStoreId = storeId;
     console.log('🎯 Opening modal for store:', storeId);
     
-    // Cari store dari allStores
-    const store = allStores.find(s => s.id == storeId);
+    // Cari store sesuai role
+    let store = null;
+    
+    if (userRole === 'owner') {
+      store = allStores.find(s => s.id == storeId);
+    } else {
+      store = currentStore && currentStore.id == storeId ? currentStore : null;
+    }
+
     if (!store) {
       showNotification('Toko tidak ditemukan', 'error');
       return;
@@ -256,11 +459,13 @@ function setupModalEvents(modal, cancelBtn, saveBtn) {
     const inputAlamat = document.getElementById('editAlamat');
     const inputTelepon = document.getElementById('editTelepon');
     const inputPajak = document.getElementById('editPajak');
+    const inputReceiptTemplate = document.getElementById('editReceiptTemplate'); // TAMBAH
 
     if (inputNama) inputNama.value = store.name || '';
     if (inputAlamat) inputAlamat.value = store.address || '';
     if (inputTelepon) inputTelepon.value = store.phone || '';
     if (inputPajak) inputPajak.value = store.tax_percentage || '10';
+    if (inputReceiptTemplate) inputReceiptTemplate.value = store.receipt_template || ''; // TAMBAH
 
     modal.style.cssText = `
       display: flex !important;
@@ -365,7 +570,7 @@ function setupModalEvents(modal, cancelBtn, saveBtn) {
 }
 
 /* ======================================================
- * UPDATE STORE INFO (UPDATED untuk multiple stores)
+ * UPDATE STORE INFO
  * ====================================================== */
 async function updateStoreInfo(storeId) {
   const token = localStorage.getItem('token');
@@ -379,13 +584,14 @@ async function updateStoreInfo(storeId) {
   const address = document.getElementById('editAlamat')?.value.trim() || '';
   const phone = document.getElementById('editTelepon')?.value.trim() || '';
   const tax_percentage = document.getElementById('editPajak')?.value.trim() || '10';
+  const receipt_template = document.getElementById('editReceiptTemplate')?.value.trim() || ''; // TAMBAH
 
   if (!name || !address || !phone) {
     showNotification('Semua field harus diisi!', 'warning');
     return;
   }
 
-  console.log('📤 Updating store:', storeId, { name, address, phone, tax_percentage });
+  console.log('📤 Updating store:', storeId, { name, address, phone, tax_percentage, receipt_template });
 
   try {
     const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}`, {
@@ -394,7 +600,7 @@ async function updateStoreInfo(storeId) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ name, address, phone, tax_percentage })
+      body: JSON.stringify({ name, address, phone, tax_percentage, receipt_template }) // TAMBAH receipt_template
     });
 
     const data = await res.json();
@@ -411,7 +617,14 @@ async function updateStoreInfo(storeId) {
       }
       
       showNotification('Informasi toko berhasil diupdate', 'success');
-      await loadAllStores();
+      
+      // Reload data sesuai role
+      const userRole = localStorage.getItem('role');
+      if (userRole === 'owner') {
+        await loadAllStoresForOwner();
+      } else {
+        await loadSingleStoreForAdminCashier();
+      }
     } else {
       showNotification(data?.message || 'Gagal update toko', 'error');
     }
@@ -422,7 +635,7 @@ async function updateStoreInfo(storeId) {
 }
 
 /* ======================================================
- * LOAD OWNER INFO
+ * LOAD OWNER INFO (HANYA UNTUK OWNER)
  * ====================================================== */
 async function loadOwnerInfo() {
   const ownerId = localStorage.getItem('owner_id');
@@ -454,6 +667,10 @@ function renderOwnerInfo(owner) {
   document.getElementById('ownerAddress').textContent = owner.address ?? '-';
   document.getElementById('ownerCreatedAt').textContent = owner.created_at ?? '-';
 
+  // PINDAHKAN SINI - setelah data render
+  localStorage.setItem('owner_business_name', owner.business_name || '');
+  updateHeaderStoreName();
+
   const editBtn = document.querySelector('.edit-owner');
   const userRole = localStorage.getItem('role');
   if (editBtn) {
@@ -462,7 +679,7 @@ function renderOwnerInfo(owner) {
 }
 
 /* ======================================================
- * SETUP MODAL OWNER
+ * SETUP MODAL OWNER (HANYA UNTUK OWNER)
  * ====================================================== */
 function setupOwnerModalWithRetry() {
   let attempts = 0;

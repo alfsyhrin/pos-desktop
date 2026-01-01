@@ -486,3 +486,28 @@ button.btn-active {
   border-radius: 10px;
   color: #fff;
 }
+
+
+/* Tambahkan/ubah ini di bawah .edit-produk dan .hapus-produk */
+.barcode-produk {
+  background-color: #e4e8ff38;         /* mirip edit tapi warna biru */
+  color: #1e88e5;
+  border: none;
+  padding: 6px;
+  border-radius: 8px;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.barcode-produk .material-symbols-outlined {
+  font-size: 21px;
+  color: #1e88e5;
+}
+
+.barcode-produk:hover {
+  background-color: #d0e2ff;
+}

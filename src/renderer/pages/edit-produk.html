@@ -19,26 +19,39 @@
   <div class="main-container">
     <form id="form-edit-produk">
       <input type="hidden" id="product-id">
+      
       <div class="form-group">
         <label>Nama Produk</label>
         <input type="text" id="nama-produk" required>
       </div>
+
       <div class="form-group">
         <label>SKU</label>
         <input type="text" id="sku">
       </div>
+
+      <!-- TAMBAH: Barcode field (read-only) -->
+      <div class="form-group">
+        <label>Barcode</label>
+        <input type="text" id="barcode" readonly style="background-color: #333; color: #999; cursor: not-allowed;">
+        <small style="color: #999;">* Tidak dapat diubah</small>
+      </div>
+
       <div class="form-group">
         <label>Harga Jual</label>
         <input type="number" id="harga-jual">
       </div>
+
       <div class="form-group">
         <label>Stok</label>
         <input type="number" id="stok">
       </div>
+
       <div class="form-group">
         <label>Upload Gambar Produk (opsional)</label>
         <input type="file" id="product-image" accept="image/*">
       </div>
+
       <div class="form-group">
         <label>Aktif?</label>
         <select id="is-active">
@@ -46,7 +59,7 @@
           <option value="false">Tidak</option>
         </select>
       </div>
-      <!-- PROMO/DISKON (sama seperti tambah-produk) -->
+
       <div class="form-group">
         <label>Tipe Promo</label>
         <select id="promo-type" onchange="handlePromoChangeEdit()">
@@ -57,32 +70,39 @@
           <option value="bundle">Diskon Paket</option>
         </select>
       </div>
+
       <div class="form-group" id="promo-percent-wrapper" style="display:none;">
         <label>Promo Percent (%)</label>
         <input type="number" id="promo-percent" placeholder="Contoh: 10">
       </div>
+
       <div class="form-group" id="promo-amount-wrapper" style="display:none;">
         <label>Promo Amount (Rp)</label>
         <input type="number" id="promo-amount" placeholder="Contoh: 2000">
       </div>
+
       <div class="form-group" id="buyxgety-wrapper" style="display:none;">
         <label>Beli Qty (X)</label>
         <input type="number" id="buy-qty" placeholder="Contoh: 2">
         <label>Gratis Qty (Y)</label>
         <input type="number" id="free-qty" placeholder="Contoh: 1">
       </div>
+
       <div class="form-group" id="bundle-wrapper" style="display:none;">
         <label>Bundle Qty</label>
         <input type="number" id="bundle-qty" placeholder="Contoh: 3">
         <label>Bundle Total Price</label>
         <input type="number" id="bundle-total-price" placeholder="Contoh: 5000">
       </div>
+
       <div class="action-buttons">
         <button type="submit" class="btn btn-success">Simpan Perubahan</button>
       </div>
     </form>
   </div>
+
   <script src="../js/notifications.js"></script>
   <script src="../js/api.js"></script>
+  <script src="../js/edit-produk.js"></script>
 </body>
 </html>
