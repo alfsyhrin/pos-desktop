@@ -5,61 +5,54 @@
   </header>
   
   <p class="judul-section" style="font-size: 16px;">Informasi Toko / Bisnis</p>
-  <div class="informasi-toko-bisnis">
-    <div class="card-informasi-toko">
-      <div class="judul-informasi-toko">
-        <span class="material-symbols-outlined logo-toko">store</span>
-        <div class="informasi-toko">
-          <h3>Informasi Toko</h3>
-          <p>Data toko yang digunakan untuk identitas & nota</p>
+  <div class="informasi-owner-bisnis" id="ownerBusinessCard" style="margin: 16px 16px 16px 16px;">
+    <div class="card-informasi-owner">
+      <div class="judul-informasi-owner">
+        <span class="material-symbols-outlined logo-toko">business</span>
+        <div class="informasi-owner">
+          <h3>Informasi Bisnis (Owner)</h3>
+          <p>Data bisnis utama milik owner</p>
         </div>
-        <button class="edit-toko" data-permissions="owner, admin"><span class="material-symbols-outlined">edit</span>Edit</button>
+        <button class="edit-owner" style="display:none;" data-permissions="owner">
+          <span class="material-symbols-outlined">edit</span>Edit
+        </button>
       </div>
-      <div class="detail-info-toko">
-        <div class="detail-toko-wrapper">
-          <p class="detail-toko-judul">ID</p>
-          <p class="detail-toko-deskripsi">1</p>
+      <div class="detail-info-owner">
+        <div class="detail-owner-wrapper">
+          <p class="detail-owner-judul">ID</p>
+          <p class="detail-owner-deskripsi" id="ownerId">-</p>
         </div>
-  
-        <div class="detail-toko-wrapper">
-          <p class="detail-toko-judul">Owner ID</p>
-          <p class="detail-toko-deskripsi">10</p>
+        <div class="detail-owner-wrapper">
+          <p class="detail-owner-judul">Nama Bisnis</p>
+          <p class="detail-owner-deskripsi" id="ownerBusinessName">-</p>
         </div>
-  
-        <div class="detail-toko-wrapper">
-          <p class="detail-toko-judul">Nama</p>
-          <p id="namaToko" class="detail-toko-deskripsi" data-field="nama">CV Betarak Indonesia</p>
+        <div class="detail-owner-wrapper">
+          <p class="detail-owner-judul">Email</p>
+          <p class="detail-owner-deskripsi" id="ownerEmail">-</p>
         </div>
-
-        <div class="detail-toko-wrapper">
-          <p class="detail-toko-judul">Alamat</p>
-          <p id="alamatToko" class="detail-toko-deskripsi" data-field="alamat">Jl. North Sangaji, Kota Ternate Utara, Kota Ternate</p>
+        <div class="detail-owner-wrapper">
+          <p class="detail-owner-judul">Telepon</p>
+          <p class="detail-owner-deskripsi" id="ownerPhone">-</p>
         </div>
-
-        <div class="detail-toko-wrapper">
-          <p class="detail-toko-judul">Telepon</p>
-          <p id="teleponToko" class="detail-toko-deskripsi" data-field="telepon">+62 812-3456-7890</p>
+        <div class="detail-owner-wrapper">
+          <p class="detail-owner-judul">Alamat</p>
+          <p class="detail-owner-deskripsi" id="ownerAddress">-</p>
         </div>
-  
-        <div class="detail-toko-wrapper">
-          <p class="detail-toko-judul">Receipt Template</p>
-          <p class="detail-toko-deskripsi">DEFAULT_TEMPLATE_V1</p>
+        <div class="detail-owner-wrapper" style="margin: 0; border: none; padding: 0;">
+          <p class="detail-owner-judul">Created At</p>
+          <p class="detail-owner-deskripsi" id="ownerCreatedAt">-</p>
         </div>
-  
-        <div class="detail-toko-wrapper">
-          <p class="detail-toko-judul">Created At</p>
-          <p class="detail-toko-deskripsi">2025-12-01 10:22:11</p>
-        </div>
-  
-        <div class="detail-toko-wrapper" style="margin: 0; border: none; padding: 0;">
-          <p class="detail-toko-judul">Updated At</p>
-          <p class="detail-toko-deskripsi">2025-12-15 10:22:11</p>
-        </div>
-  
       </div>
     </div>
   </div>
-  
+
+  <div style="margin: 16px;">
+    <p class="judul-section" style="font-size: 16px; margin-left: 0; margin-bottom: 12px;">Informasi Toko</p>
+    
+    <!-- CONTAINER UNTUK MULTIPLE ACCORDION TOKO -->
+    <div id="storesContainer"></div>
+  </div>
+
   <p class="judul-section" style="font-size: 16px;">Plan & Billing</p>
   <div class="card-billing" style="margin-bottom: 16px;">
     <span class="material-symbols-outlined logo-billing">rocket_launch</span>
@@ -165,7 +158,23 @@
       <button type="button" class="btn-cancel modal-cancel">Batal</button>
       <button type="button" class="btn-save modal-save">Simpan</button>
     </div>
-  </div> <!-- Tutup modal-card -->
-</div> <!-- Tutup modalEditToko -->
+  </div>
+</div>
 
+<div id="modalEditOwner">
+  <div class="modal-card">
+    <h3>Edit Informasi Bisnis</h3>
+    <label for="editOwnerBusinessName">Nama Bisnis</label>
+    <input type="text" id="editOwnerBusinessName" placeholder="Nama Bisnis">
+    <label for="editOwnerEmail">Email</label>
+    <input type="email" id="editOwnerEmail" placeholder="Email">
+    <label for="editOwnerPhone">No HP</label>
+    <input type="tel" id="editOwnerPhone" placeholder="No HP">
+    <label for="editOwnerAddress">Alamat</label>
+    <textarea id="editOwnerAddress" rows="3" placeholder="Alamat"></textarea>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel modal-owner-cancel">Batal</button>
+      <button type="button" class="btn-save modal-owner-save">Simpan</button>
+    </div>
+  </div>
 </div>

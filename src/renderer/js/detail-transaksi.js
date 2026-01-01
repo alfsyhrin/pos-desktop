@@ -118,7 +118,7 @@ async function deleteTransactionAndGoToKasir() {
 document.addEventListener('DOMContentLoaded', renderDetailTransaksi);
 document.getElementById('btn-delete').addEventListener('click', deleteTransactionAndGoToKasir);
 // detail-transaksi.js
-document.getElementById('btn-selesai').onclick = function() {
+document.getElementById('btn-selesai' && 'btn-back-kasir').onclick = function() {
   localStorage.removeItem('pos_cart');
   localStorage.removeItem('pending_transaction');
   localStorage.setItem('current_page', 'kasir');
