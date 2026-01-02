@@ -103,4 +103,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     console.warn('sidebar.js: logout element not found');
   }
+
+  // Sinkronisasi manual
+  const syncEl = document.getElementById('btn-sync');
+  if (syncEl && typeof window.syncAllData === 'function') {
+    syncEl.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      syncEl.classList.add('loading');
+      syncEl.innerHTML = '<span class="material-symbols-outlined fill spin">sync</span>Sinkronisasi...';
+      try {
+        await window.syncAllData();
+        alert('Sinkronisasi selesai!');
+      } catch (e) {
+        alert('Gagal sinkronisasi: ' + (e.message || e));
+      }
+      syncEl.classList.remove('loading');
+      syncEl.innerHTML = '<span class="material-symbols-outlined fill">sync</span>Sinkron';
+    });
+  }
 });
