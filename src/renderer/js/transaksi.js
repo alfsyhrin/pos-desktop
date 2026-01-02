@@ -382,3 +382,32 @@ function cancelBulkSelect() {
   document.querySelectorAll('.trx-checkbox').forEach(c => c.checked = false);
   document.getElementById('bulk-delete-toolbar').style.display = 'none';
 }
+
+window.showStoreSelectionModal = function(stores = []) {
+  return new Promise(resolve => {
+    const modal = document.createElement('div');
+    modal.className = 'store-select-modal';
+    modal.style = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    const box = document.createElement('div');
+    box.style = 'background:#1b1b1b;padding:20px;border-radius:8px;max-width:600px;width:90%;color:#fff;';
+    box.innerHTML = `<h3>Pilih toko untuk melihat transaksi</h3><div class="list-stores" style="margin-top:10px;"></div><div style="text-align:right;margin-top:12px;"><button class="cancel-store" style="margin-right:8px;">Batal</button></div>`;
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+    const listEl = box.querySelector('.list-stores');
+    stores.forEach(s => {
+      const btn = document.createElement('button');
+      btn.textContent = `${s.id} — ${s.name || s.branch || s.store_name || '-'}`;
+      btn.style = 'display:block;margin:6px 0;padding:8px;border-radius:6px;width:100%;text-align:left;';
+      btn.addEventListener('click', () => {
+        localStorage.setItem('store_id', String(s.id));
+        document.body.removeChild(modal);
+        resolve(s.id);
+      });
+      listEl.appendChild(btn);
+    });
+    box.querySelector('.cancel-store').addEventListener('click', () => {
+      document.body.removeChild(modal);
+      resolve(null);
+    });
+  });
+};
