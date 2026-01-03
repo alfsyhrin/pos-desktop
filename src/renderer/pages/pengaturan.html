@@ -81,7 +81,7 @@
   </div>
 
   <p class="judul-section" style="font-size: 16px;">Data</p>
-  <div class="card-billing" style="cursor: pointer;">
+  <div class="card-billing card-backup-export" style="cursor: pointer;">
     <span class="material-symbols-outlined backup-data">cloud_upload</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
@@ -90,16 +90,16 @@
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
 
-  <div class="card-billing">
+  <div class="card-billing card-backup-import">
     <span class="material-symbols-outlined copy-data">cloud_download</span>
     <div class="card-billing-info-wrapper">
-      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
+      <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Import Data</p>
       <p style="color: var(--paragraph-color); font-size: 14px; font-weight: var(--weight-bold);">Simpan data ke file</p>
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
 
-  <div class="card-billing" style="margin-bottom: 16px;">
+  <div class="card-billing card-reset-data" style="margin-bottom: 16px;">
     <span class="material-symbols-outlined hapus-data">delete</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Hapus Semua Data</p>
@@ -136,7 +136,9 @@
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
 
-  <!-- Modal Export Data -->
+  
+</main>
+<!-- Modal Export Data -->
 <div id="modalExportData" class="modal-overlay">
   <div class="modal-card">
     <h3>Export Data</h3>
@@ -161,8 +163,6 @@
     </div>
   </div>
 </div>
-
-</main>
 
 <div id="modalEditToko">
   <div class="modal-card">
