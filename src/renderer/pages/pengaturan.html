@@ -81,7 +81,7 @@
   </div>
 
   <p class="judul-section" style="font-size: 16px;">Data</p>
-  <div class="card-billing">
+  <div class="card-billing" style="cursor: pointer;">
     <span class="material-symbols-outlined backup-data">cloud_upload</span>
     <div class="card-billing-info-wrapper">
       <p style="color: var(--foreground-color); font-weight: var(--weight-bold); font-size: 14px;">Backup Data</p>
@@ -135,6 +135,32 @@
     </div>
     <span class="material-symbols-outlined detail-arrow">arrow_forward_ios</span>
   </div>
+
+  <!-- Modal Export Data -->
+<div id="modalExportData" class="modal-overlay">
+  <div class="modal-card">
+    <h3>Export Data</h3>
+    <label for="exportDataType">Pilih Data yang Ingin Diexport</label>
+    <select id="exportDataType">
+      <option value="all">Semua Data</option>
+      <option value="produk">Produk</option>
+      <option value="transaksi">Transaksi</option>
+      <option value="karyawan">Karyawan</option>
+      <option value="pelanggan">Pelanggan</option>
+      <!-- Tambahkan sesuai kebutuhan -->
+    </select>
+    <label for="exportFileType" style="margin-top:10px;">Pilih Tipe File</label>
+    <select id="exportFileType">
+      <option value="excel">Excel (.xlsx)</option>
+      <option value="csv">CSV (.csv)</option>
+      <option value="json">JSON (.json)</option>
+    </select>
+    <div class="modal-actions" style="margin-top:18px;">
+      <button type="button" class="btn-cancel" id="cancelExportBtn">Batal</button>
+      <button type="button" class="btn-save" id="confirmExportBtn">Export</button>
+    </div>
+  </div>
+</div>
 
 </main>
 

@@ -734,3 +734,24 @@ body.role-cashier .informasi-owner-bisnis {
 body.role-owner .informasi-owner-bisnis {
   display: block !important;
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal-card {
+  background: var(--card-color, #1a1a1a);
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}

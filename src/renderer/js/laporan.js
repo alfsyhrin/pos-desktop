@@ -1,19 +1,36 @@
 // ===== CURRENT FILTERS =====
 let currentFilters = {
-    keuangan: 'today',
-    produk: 'today',
-    karyawan: 'today'
+    keuangan: '30days', // atau 'all'
+    produk: '30days',
+    karyawan: '30days',
+    dashboard: '30days'
 };
+
+// ===== PAGINATION STATE FOR KAS MASUK =====
+let kasMasukPage = 1;
+const kasMasukLimit = 5;
 
 // ===== FILTER FUNCTIONALITY =====
 function setFilter(tab, filter, btn) {
     currentFilters[tab] = filter;
-    
     const filterSection = btn.parentElement;
     filterSection.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
-    console.log(`Filter ${tab} set to ${filter}`);
+    if (tab === 'produk') {
+        renderLaporanProduk();
+    }
+    if (tab === 'dashboard') {
+        renderDashboard();
+    }
+    if (tab === 'keuangan') {
+        kasMasukPage  = 1;
+        renderLaporanKeuangan();
+    }
+    if (tab === 'karyawan') {
+        renderLaporanKaryawan();
+    }
+
+    // ...tab lain tetap seperti sebelumnya
 }
 
 // ===== TAB FUNCTIONALITY =====
@@ -21,17 +38,24 @@ function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
     });
-    
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    
     document.getElementById('tab-' + tabName).classList.add('active');
     event.target.closest('.tab-btn').classList.add('active');
-    
-    if (tabName === 'dashboard') {
-        setTimeout(initDashboardCharts, 100);
+    if (tabName === 'produk') {
+        renderLaporanProduk();
     }
+    if (tabName === 'dashboard') {
+        renderDashboard();
+    }
+    if (tabName === 'keuangan') {
+        renderLaporanKeuangan();
+    }
+    if (tabName === 'karyawan') {
+        renderLaporanKaryawan();
+    }
+    // ...tab lain tetap seperti sebelumnya
 }
 
 // ===== DATA =====
@@ -80,7 +104,7 @@ const topSellersData = [
 // ===== RENDER FUNCTIONS =====
 function renderTopProducts() {
     const container = document.getElementById('top-products');
-    container.innerHTML = topProductsData.map((product, index) => {
+    container.innerHTML = (window.topProductsData || []).map((product, index) => {
         let rankClass = 'normal';
         if (index === 0) rankClass = 'gold';
         else if (index === 1) rankClass = 'silver';
@@ -97,14 +121,25 @@ function renderTopProducts() {
                     <div class="product-value">${formatCurrency(product.revenue)}</div>
                     <div class="product-qty">${product.sales} terjual</div>
                 </div>
+                <div class="product-actions">
+                    <button onclick="loadPage('editProduk', {id: ${product.id}})" title="Edit Produk">
+                        <span class="material-symbols-outlined">edit</span>
+                    </button>
+                    <button onclick="hapusProduk(${product.id})" title="Hapus Produk">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
+
+    // ===== DATA DUMMY (KOMENTARI) =====
+    // container.innerHTML = topProductsData.map(...).join('');
 }
 
 function renderLowStockProducts() {
     const container = document.getElementById('low-stock-products');
-    container.innerHTML = lowStockData.map(product => `
+    container.innerHTML = (window.lowStockData || []).map(product => `
         <div class="low-stock-item ${product.status === 'critical' ? 'critical' : ''}">
             <div class="stock-icon">
                 <span class="material-symbols-outlined">inventory</span>
@@ -114,8 +149,19 @@ function renderLowStockProducts() {
                 <div class="stock-qty">Stok: ${product.stock} / Min: ${product.minStock}</div>
             </div>
             <span class="stock-badge ${product.status}">${product.status === 'critical' ? 'Kritis' : 'Menipis'}</span>
+            <div class="stock-actions">
+                <button onclick="loadPage('editProduk', {id: ${product.id}})" title="Edit Produk">
+                    <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button onclick="hapusProduk(${product.id})" title="Hapus Produk">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </div>
         </div>
     `).join('');
+
+    // ===== DATA DUMMY (KOMENTARI) =====
+    // container.innerHTML = lowStockData.map(...).join('');
 }
 
 function renderEmployeePerformance() {
@@ -149,30 +195,36 @@ function renderEmployeePerformance() {
     }).join('');
 }
 
-function renderTopSellers() {
+async function renderTopSellers() {
+    const data = await fetchKaryawanData();
+    let cashiers = data.cashiers || [];
+    cashiers = cashiers.sort((a, b) => (b.total_penjualan || 0) - (a.total_penjualan || 0));
     const container = document.getElementById('top-sellers');
-    container.innerHTML = topSellersData.map((emp, index) => {
+    container.innerHTML = cashiers.slice(0, 5).map((emp, index) => {
         let rankClass = 'normal';
         if (index === 0) rankClass = 'gold';
         else if (index === 1) rankClass = 'silver';
         else if (index === 2) rankClass = 'bronze';
-        
+
         return `
             <div class="employee-item">
                 <div class="product-rank ${rankClass}">${index + 1}</div>
                 <div class="employee-info">
                     <div class="employee-name">${emp.name}</div>
-                    <div class="employee-position">${emp.position}</div>
+                    <div class="employee-position">${emp.role}</div>
                 </div>
                 <div class="employee-stats">
                     <div class="employee-stat">
-                        <div class="employee-stat-value">${formatCurrency(emp.totalSales)}</div>
-                        <div class="employee-stat-label">${emp.transactions} transaksi</div>
+                        <div class="employee-stat-value">Rp ${emp.total_penjualan.toLocaleString('id-ID')}</div>
+                        <div class="employee-stat-label">${emp.total_transaksi} transaksi</div>
                     </div>
                 </div>
             </div>
         `;
     }).join('');
+
+    // ===== DATA DUMMY (KOMENTARI) =====
+    // container.innerHTML = topSellersData.map(...).join('');
 }
 
 // ===== CHART INITIALIZATION =====
@@ -405,120 +457,145 @@ function getChartOptions() {
 async function exportPDF(tabName) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
-    const titles = {
-        keuangan: 'Laporan Keuangan',
-        dashboard: 'Dashboard',
-        produk: 'Laporan Produk',
-        karyawan: 'Laporan Karyawan'
-    };
-
-    doc.setFontSize(20);
-    doc.setTextColor(228, 54, 54);
-    doc.text(titles[tabName], 14, 22);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(129, 131, 134);
-    doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 30);
-    
-    let startY = 40;
 
     if (tabName === 'keuangan') {
+        const data = await fetchLaporanKeuangan(currentFilters.keuangan);
+        doc.setFontSize(20);
+        doc.setTextColor(228, 54, 54);
+        doc.text('Laporan Keuangan', 14, 22);
+        doc.setFontSize(10);
+        doc.setTextColor(129, 131, 134);
+        doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 30);
+        let startY = 40;
         doc.setFontSize(14);
         doc.setTextColor(30, 41, 59);
         doc.text('Ringkasan Keuangan', 14, startY);
-        
         doc.autoTable({
             startY: startY + 5,
             head: [['Keterangan', 'Jumlah']],
             body: [
-                ['Total Pembayaran', 'Rp 15.750.000'],
-                ['Banyak Transaksi', '234'],
-                ['Margin', '32.5%'],
-                ['Total Pendapatan', 'Rp 18.500.000'],
-                ['Diskon', 'Rp 850.000'],
-                ['Pendapatan Bersih', 'Rp 17.650.000'],
-                ['Modal/HPP', 'Rp 11.850.000'],
-                ['Laba Kotor', 'Rp 5.800.000'],
-                ['Laba Bersih', 'Rp 4.250.000'],
-                ['Rata-rata Transaksi', 'Rp 67.308']
+                ['Total Pembayaran', formatCurrency(data.total_pendapatan || 0)],
+                ['Banyak Transaksi', data.total_transaksi || 0],
+                ['Margin', data.margin || '0%'],
+                ['Total Pendapatan', formatCurrency(data.total_pendapatan || 0)],
+                ['Diskon', formatCurrency(data.total_diskon || 0)],
+                ['Pendapatan Bersih', formatCurrency(data.net_revenue || 0)],
+                ['Modal/HPP', formatCurrency(data.total_hpp || 0)],
+                ['Laba Kotor', formatCurrency(data.gross_profit || 0)],
+                ['Laba Bersih', formatCurrency(data.net_profit || 0)],
+                ['Rata-rata Transaksi', formatCurrency(data.avg_daily || 0)]
             ],
             theme: 'grid',
             headStyles: { fillColor: [228, 54, 54] }
         });
-    } else if (tabName === 'produk') {
-        doc.setFontSize(14);
-        doc.text('Ringkasan Produk', 14, startY);
-        
-        doc.autoTable({
-            startY: startY + 5,
-            head: [['Keterangan', 'Jumlah']],
-            body: [
-                ['Total Produk', '1,247'],
-                ['Total Produk Terjual', '3,856'],
-                ['Stok Menipis', '23'],
-                ['Stok Habis', '8']
-            ],
-            theme: 'grid',
-            headStyles: { fillColor: [228, 54, 54] }
-        });
+        doc.save(`Laporan_Keuangan_${new Date().toISOString().split('T')[0]}.pdf`);
+        return;
+    }
 
+    if (tabName === 'produk') {
+        const data = await fetchLaporanProduk(currentFilters.produk);
+        doc.setFontSize(20);
+        doc.setTextColor(228, 54, 54);
+        doc.text('Laporan Produk', 14, 22);
+        doc.setFontSize(10);
+        doc.setTextColor(129, 131, 134);
+        doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 30);
+        let startY = 40;
+        doc.setFontSize(14);
+        doc.setTextColor(30, 41, 59);
+        doc.text('Ringkasan Produk', 14, startY);
+        doc.autoTable({
+            startY: startY + 5,
+            head: [['Keterangan', 'Jumlah']],
+            body: [
+                ['Total Produk', data.total_products || 0],
+                ['Total Produk Terjual', data.total_sold || 0],
+                ['Stok Menipis', (data.stok_menipis || []).length],
+                ['Stok Habis', data.stok_habis || 0]
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [228, 54, 54] }
+        });
         doc.text('10 Produk Teratas', 14, doc.lastAutoTable.finalY + 15);
         doc.autoTable({
             startY: doc.lastAutoTable.finalY + 20,
-            head: [['Rank', 'Nama Produk', 'Kategori', 'Terjual', 'Pendapatan']],
-            body: topProductsData.map((p, i) => [
-                i + 1, p.name, p.category, p.sales, formatCurrency(p.revenue)
+            head: [['Rank', 'Nama Produk', 'SKU', 'Terjual', 'Pendapatan']],
+            body: (data.top_products || []).map((p, i) => [
+                i + 1, p.name, p.sku || '', p.sold, formatCurrency(p.revenue)
             ]),
             theme: 'grid',
             headStyles: { fillColor: [228, 54, 54] }
         });
-    } else if (tabName === 'karyawan') {
+        doc.save(`Laporan_Produk_${new Date().toISOString().split('T')[0]}.pdf`);
+        return;
+    }
+
+    if (tabName === 'karyawan') {
+        const data = await fetchLaporanKaryawan(currentFilters.karyawan);
+        doc.setFontSize(20);
+        doc.setTextColor(228, 54, 54);
+        doc.text('Laporan Karyawan', 14, 22);
+        doc.setFontSize(10);
+        doc.setTextColor(129, 131, 134);
+        doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 30);
+        let startY = 40;
         doc.setFontSize(14);
+        doc.setTextColor(30, 41, 59);
         doc.text('Ringkasan Karyawan', 14, startY);
-        
         doc.autoTable({
             startY: startY + 5,
             head: [['Keterangan', 'Jumlah']],
             body: [
-                ['Total Karyawan', '48'],
-                ['Rata-rata Performa', '89.2%'],
-                ['Total Penjualan', 'Rp 85.200.000'],
-                ['Kehadiran', '98.5%']
+                ['Total Karyawan', data.total_karyawan || 0],
+                ['Rata-rata Performa (%)', data.avg_performance || 0],
+                ['Total Penjualan', formatCurrency(data.total_penjualan || 0)],
+                ['Kehadiran (%)', data.avg_attendance || 0]
             ],
             theme: 'grid',
             headStyles: { fillColor: [228, 54, 54] }
         });
-
         doc.text('Performa Karyawan', 14, doc.lastAutoTable.finalY + 15);
         doc.autoTable({
             startY: doc.lastAutoTable.finalY + 20,
-            head: [['Nama', 'Posisi', 'Performa', 'Target']],
-            body: employeePerformanceData.map(e => [
-                e.name, e.position, e.performance + '%', e.target + '%'
+            head: [['Nama', 'Posisi', 'Transaksi', 'Penjualan']],
+            body: (data.cashiers || []).map(e => [
+                e.name, e.role, e.total_transaksi || 0, formatCurrency(e.total_penjualan || 0)
             ]),
             theme: 'grid',
             headStyles: { fillColor: [228, 54, 54] }
         });
-    } else if (tabName === 'dashboard') {
-        doc.setFontSize(12);
-        doc.text('Ringkasan Dashboard', 14, startY);
-        
+        doc.save(`Laporan_Karyawan_${new Date().toISOString().split('T')[0]}.pdf`);
+        return;
+    }
+
+    if (tabName === 'dashboard') {
+        const data = await fetchLaporanKeuangan(currentFilters.dashboard || '30days');
+        doc.setFontSize(20);
+        doc.setTextColor(228, 54, 54);
+        doc.text('Dashboard', 14, 22);
+        doc.setFontSize(10);
+        doc.setTextColor(129, 131, 134);
+        doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 30);
+        let startY = 40;
+        doc.setFontSize(14);
+        doc.setTextColor(30, 41, 59);
+        doc.text('Ringkasan', 14, startY);
         doc.autoTable({
             startY: startY + 5,
             head: [['Keterangan', 'Jumlah']],
             body: [
-                ['Total Transaksi', '1,234'],
-                ['Total Kas Masuk', 'Rp 45.000.000'],
-                ['Total Kas Keluar', 'Rp 20.000.000'],
-                ['Saldo', 'Rp 47.000.000']
+                ['Total Transaksi', data.total_transaksi || 0],
+                ['Total Kas Masuk', formatCurrency(data.total_pendapatan || 0)],
+                ['Penjualan Tertinggi', formatCurrency(data.best_sales_day || 0)],
+                ['Penjualan Terendah', formatCurrency(data.lowest_sales_day || 0)],
+                ['Rata-rata Harian', formatCurrency(data.avg_daily || 0)]
             ],
             theme: 'grid',
             headStyles: { fillColor: [228, 54, 54] }
         });
+        doc.save(`Dashboard_${new Date().toISOString().split('T')[0]}.pdf`);
+        return;
     }
-
-    doc.save(`${titles[tabName]}_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 function exportExcel(tabName) {
@@ -614,11 +691,373 @@ function formatCurrency(value) {
     return 'Rp ' + value.toLocaleString('id-ID');
 }
 
+function getDateRange(filter) {
+    const today = new Date();
+    let start, end;
+    end = today.toISOString().slice(0,10);
+    if (filter === 'today') {
+        start = end;
+    } else if (filter === '7days') {
+        const d = new Date(today); d.setDate(d.getDate() - 6);
+        start = d.toISOString().slice(0,10);
+    } else if (filter === '30days') {
+        const d = new Date(today); d.setDate(d.getDate() - 29);
+        start = d.toISOString().slice(0,10);
+    } else if (filter === '1year') {
+        const d = new Date(today); d.setFullYear(d.getFullYear() - 1);
+        start = d.toISOString().slice(0,10);
+    } else if (filter === 'all') {
+        start = '2000-01-01'; // tanggal awal data
+    } else {
+        start = end;
+    }
+    return { start, end };
+}
+
+// ===== API CONFIGURATION =====
+const API_BASE = 'http://103.126.116.119:8001/api';
+const store_id = localStorage.getItem('store_id');
+const token = localStorage.getItem('token');
+
+async function fetchLaporanKeuangan(filter) {
+    const { start, end } = getDateRange(filter);
+    const res = await fetch(`${API_BASE}/stores/${store_id}/reports/summary?start=${start}&end=${end}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    const json = await res.json();
+    return json.data || {};
+}
+
+async function fetchLaporanProduk(filter) {
+    const { start, end } = getDateRange(filter);
+    const res = await fetch(`${API_BASE}/stores/${store_id}/reports/products?start=${start}&end=${end}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    const json = await res.json();
+    return json.data || {};
+}
+
+async function fetchLaporanKaryawan(filter) {
+    const { start, end } = getDateRange(filter);
+    const res = await fetch(`${API_BASE}/stores/${store_id}/reports/cashiers?start=${start}&end=${end}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    const json = await res.json();
+    return json.data || {};
+}
+
+async function fetchKaryawanData() {
+    const storeId = store_id || 1;
+    const tokenVal = token || '';
+    const { start, end } = getDateRange(currentFilters['karyawan']);
+    const endpoint = `${API_BASE}/stores/${storeId}/reports/cashiers?start=${start}&end=${end}`;
+    const res = await fetch(endpoint, {
+        headers: { 'Authorization': 'Bearer ' + tokenVal }
+    });
+    const json = await res.json();
+    return json.data || {};
+}
+
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
-  window.updateHeaderStoreName(); // TAMBAH BARIS INI
+  window.updateHeaderStoreName();
+  renderDashboard();
+  renderLaporanKeuangan();
+  renderLaporanProduk();
+  renderLaporanKaryawan();
   renderTopProducts();
   renderLowStockProducts();
   renderEmployeePerformance();
   renderTopSellers();
 });
+
+async function renderLaporanKeuangan() {
+    const data = await fetchLaporanKeuangan(currentFilters.keuangan);
+
+    // Update header stats
+    document.querySelectorAll('.header-stat-card .stat-value')[0].textContent = formatCurrency(data.total_pendapatan || 0);
+    document.querySelectorAll('.header-stat-card .stat-value')[1].textContent = data.total_transaksi || 0;
+    document.querySelectorAll('.header-stat-card .stat-value')[2].textContent = data.margin || '0%';
+
+    // Update stat cards
+    const statValues = document.querySelectorAll('.stat-card-new .stat-value');
+    statValues[0].textContent = formatCurrency(data.total_pendapatan || 0);
+    statValues[1].textContent = formatCurrency(data.total_diskon || 0);
+    statValues[2].textContent = formatCurrency(data.net_revenue || 0);
+    statValues[3].textContent = formatCurrency(data.total_hpp || 0);
+    statValues[4].textContent = formatCurrency(data.gross_profit || 0);
+    statValues[5].textContent = formatCurrency(data.net_profit || 0);
+
+    // Update single stat
+    document.querySelector('.stat-single .stat-value').textContent = formatCurrency(data.avg_daily || 0);
+
+    // Top products
+    window.topProductsData = (data.top_products || []).map(p => ({
+        name: p.name,
+        category: p.sku || '',
+        sales: p.sold,
+        revenue: p.revenue
+    }));
+    renderTopProducts();
+
+    // Low stock
+    window.lowStockData = (data.stok_menipis || []).map(p => ({
+        name: p.name,
+        stock: p.remaining,
+        minStock: 10,
+        status: (p.remaining <= 3 ? 'critical' : 'warning')
+    }));
+    renderLowStockProducts();
+
+    renderKasMasukTerbaru();
+}
+
+async function renderLaporanProduk() {
+    const data = await fetchLaporanProduk(currentFilters.produk);
+
+    // Update stat cards
+    const statValues = document.querySelectorAll('#tab-produk .stat-value');
+    statValues[0].textContent = data.total_products || 0;
+    statValues[1].textContent = data.total_sold || 0;
+    statValues[2].textContent = (data.stok_menipis || []).length;
+    statValues[3].textContent = data.stok_habis || 0;
+
+    // Top products
+    window.topProductsData = (data.top_products || []).map(p => ({
+        name: p.name,
+        category: p.sku || '',
+        sales: p.sold,
+        revenue: p.revenue
+    }));
+    renderTopProducts();
+
+    // Low stock
+    window.lowStockData = (data.stok_menipis || []).map(p => ({
+        name: p.name,
+        stock: p.remaining,
+        minStock: 10,
+        status: (p.remaining <= 3 ? 'critical' : 'warning')
+    }));
+    renderLowStockProducts();
+
+    // ===== DATA DUMMY (KOMENTARI) =====
+    // statValues[0].textContent = '1,247';
+    // statValues[1].textContent = '3,856';
+    // statValues[2].textContent = '23';
+    // statValues[3].textContent = '8';
+}
+
+async function renderLaporanKaryawan() {
+    const data = await fetchLaporanKaryawan(currentFilters.karyawan);
+
+    // Update stat cards
+    const statValues = document.querySelectorAll('#tab-karyawan .stat-value');
+    statValues[0].textContent = data.total_karyawan || 0;
+    statValues[1].textContent = (data.avg_performance || 0) + '%';
+    statValues[2].textContent = formatCurrency(data.total_penjualan || 0);
+    statValues[3].textContent = (data.avg_attendance || 0) + '%';
+
+    // Employee performance
+    window.employeePerformanceData = (data.cashiers || []).map(emp => ({
+        name: emp.name,
+        position: emp.role,
+        performance: emp.total_transaksi || 0,
+        sales: emp.total_penjualan || 0,
+        target: 100
+    }));
+    renderEmployeePerformance();
+
+    // Top sellers
+    window.topSellersData = (data.cashiers || []).map(emp => ({
+        name: emp.name,
+        position: emp.role,
+        totalSales: emp.total_penjualan || 0,
+        transactions: emp.total_transaksi || 0
+    }));
+    renderTopSellers();
+}
+
+async function generateDailyReport() {
+    const storeId = localStorage.getItem('store_id');
+    const token = localStorage.getItem('token');
+    const date = new Date().toISOString().slice(0,10);
+    const btn = document.getElementById('btn-generate-daily');
+    const statusEl = document.getElementById('generate-daily-status');
+    btn.disabled = true;
+    statusEl.textContent = 'Memproses...';
+    try {
+        const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}/reports/daily/generate?date=${date}`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success) {
+            statusEl.textContent = 'Laporan harian berhasil disimpan!';
+            statusEl.style.color = '#328E6E';
+            if (window.showToast) window.showToast('Laporan harian berhasil disimpan!', 'success');
+        } else {
+            statusEl.textContent = data.message || 'Gagal generate laporan!';
+            statusEl.style.color = '#E43636';
+            if (window.showToast) window.showToast(data.message || 'Gagal generate laporan!', 'error');
+        }
+    } catch (e) {
+        statusEl.textContent = 'Gagal generate laporan!';
+        statusEl.style.color = '#E43636';
+        if (window.showToast) window.showToast('Gagal generate laporan!', 'error');
+    }
+    btn.disabled = false;
+}
+
+// Cek apakah laporan hari ini sudah ada, disable tombol jika sudah
+async function checkDailyReportExists() {
+    const storeId = localStorage.getItem('store_id');
+    const token = localStorage.getItem('token');
+    const date = new Date().toISOString().slice(0,10);
+    const btn = document.getElementById('btn-generate-daily');
+    const statusEl = document.getElementById('generate-daily-status');
+    try {
+        const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}/reports/daily?date=${date}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success && data.data && data.data.id) {
+            btn.disabled = true;
+            statusEl.textContent = 'Laporan hari ini sudah ada.';
+            statusEl.style.color = '#328E6E';
+        } else {
+            btn.disabled = false;
+            statusEl.textContent = '';
+        }
+    } catch (e) {
+        btn.disabled = false;
+        statusEl.textContent = '';
+    }
+}
+
+// Inisialisasi tombol saat halaman laporan dibuka
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btn-generate-daily');
+    if (btn) {
+        btn.onclick = generateDailyReport;
+        checkDailyReportExists();
+    }
+});
+
+async function renderEmployeePerformance() {
+    const data = await fetchKaryawanData();
+    const cashiers = data.cashiers || [];
+    const container = document.getElementById('employee-performance');
+    container.innerHTML = cashiers.map(emp => {
+        let perfClass = 'average';
+        const performance = emp.total_transaksi || 0;
+        if (performance >= 95) perfClass = 'excellent';
+        else if (performance >= 85) perfClass = 'good';
+        else if (performance < 75) perfClass = 'poor';
+
+        return `
+            <div class="employee-item">
+                <div class="employee-avatar">${emp.name.charAt(0)}</div>
+                <div class="employee-info">
+                    <div class="employee-name">${emp.name}</div>
+                    <div class="employee-position">${emp.role}</div>
+                </div>
+                <div class="employee-stats">
+                    <div class="employee-stat">
+                        <div class="employee-stat-value">${performance}</div>
+                        <div class="employee-stat-label">Transaksi</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="performance-bar">
+                        <div class="performance-fill ${perfClass}" style="width: ${performance}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // ===== DATA DUMMY (KOMENTARI) =====
+    // container.innerHTML = employeePerformanceData.map(...).join('');
+}
+
+async function renderDashboard() {
+    const data = await fetchLaporanKeuangan(currentFilters.dashboard || '30days');
+
+    // Kas Masuk
+    const kasMasukEl = document.getElementById('dashboard-kas-masuk');
+    if (kasMasukEl) {
+        const valueEl = kasMasukEl.querySelector('.card-value');
+        if (valueEl) valueEl.textContent = formatCurrency(data.total_pendapatan || 0);
+    }
+
+    // Total Transaksi
+    const totalTransaksiEl = document.getElementById('dashboard-total-transaksi');
+    if (totalTransaksiEl) totalTransaksiEl.textContent = data.total_transaksi || 0;
+
+    // Penjualan Tertinggi
+    const tertinggiEl = document.getElementById('dashboard-tertinggi');
+    if (tertinggiEl) {
+        const valueEl = tertinggiEl.querySelector('.card-value');
+        if (valueEl) valueEl.textContent = formatCurrency(data.best_sales_day || 0);
+    }
+
+    // Penjualan Terendah
+    const terendahEl = document.getElementById('dashboard-terendah');
+    if (terendahEl) {
+        const valueEl = terendahEl.querySelector('.card-value');
+        if (valueEl) valueEl.textContent = formatCurrency(data.lowest_sales_day || 0);
+    }
+
+    // Rata-rata Harian
+    const rataEl = document.getElementById('dashboard-ratarata');
+    if (rataEl) {
+        const valueEl = rataEl.querySelector('.card-value');
+        if (valueEl) valueEl.textContent = formatCurrency(data.avg_daily || 0);
+    }
+
+    // Sembunyikan widget yang tidak ada datanya
+    const kasKeluar = document.getElementById('dashboard-kas-keluar');
+    const saldo = document.getElementById('dashboard-saldo');
+    const donut = document.getElementById('dashboard-donut');
+    if (kasKeluar) kasKeluar.style.display = 'none';
+    if (saldo) saldo.style.display = 'none';
+    if (donut) donut.style.display = 'none';
+}
+
+// Ambil 5 transaksi terbaru untuk kas masuk
+async function renderKasMasukTerbaru() {
+    const transactions = await fetchTransactions({ limit: kasMasukLimit, page: kasMasukPage });
+    const container = document.getElementById('kas-masuk-terbaru');
+    if (!container) return;
+
+    if (!transactions || transactions.length === 0) {
+        container.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#888;">Tidak ada data kas masuk.</td></tr>`;
+    } else {
+        container.innerHTML = transactions.map(trx => `
+            <tr>
+                <td>${trx.createdAt ? new Date(trx.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                <td>${trx.note || trx.description || (trx.items && trx.items[0] && trx.items[0].name) || '-'}</td>
+                <td><span class="badge badge-success">${formatCurrency(trx.total || 0)}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    // Update pagination info & button state
+    const pageInfo = document.getElementById('kas-masuk-page-info');
+    if (pageInfo) pageInfo.textContent = `Halaman ${kasMasukPage}`;
+
+    // Enable/disable tombol
+    document.getElementById('kas-masuk-prev').disabled = kasMasukPage === 1;
+    document.getElementById('kas-masuk-next').disabled = !transactions || transactions.length < kasMasukLimit;
+}
+
+function kasMasukPrevPage() {
+    if (kasMasukPage > 1) {
+        kasMasukPage--;
+        renderKasMasukTerbaru();
+    }
+}
+function kasMasukNextPage() {
+    kasMasukPage++;
+    renderKasMasukTerbaru();
+}

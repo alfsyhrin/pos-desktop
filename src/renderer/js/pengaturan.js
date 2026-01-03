@@ -812,6 +812,108 @@ async function updateOwnerInfo() {
   }
 }
 
+// === BACKUP DATA (EXPORT) ===
+document.querySelector('.card-billing .backup-data').closest('.card-billing').addEventListener('click', () => {
+  document.getElementById('modalExportData').classList.add('active');
+});
+
+// === IMPORT DATA (RESTORE) ===
+document.querySelector('.card-billing .copy-data').closest('.card-billing').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,.csv,.xlsx,application/json,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.click();
+  input.onchange = async () => {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const token = localStorage.getItem('token');
+    if (!token) return showNotification('Token tidak ditemukan', 'error');
+    if (file.name.endsWith('.zip')) {
+      showNotification('Import ZIP belum didukung. Silakan upload file .json, .csv, atau .xlsx', 'warning');
+      input.remove();
+      return;
+    }
+    showNotification('Mengimpor data, mohon tunggu...', 'info');
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('http://103.126.116.119:8001/api/backup/import', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification('Import data berhasil! Silakan reload aplikasi.', 'success');
+      } else {
+        showNotification(data.message || 'Import data gagal', 'error');
+      }
+    } catch (err) {
+      showNotification('Gagal import data: ' + err.message, 'error');
+    }
+    input.remove();
+  };
+});
+
+// === RESET DATA ===
+document.querySelector('.card-billing .hapus-data').closest('.card-billing').addEventListener('click', async () => {
+  if (!confirm('Yakin ingin menghapus SEMUA data? Tindakan ini tidak dapat dibatalkan!')) return;
+  const token = localStorage.getItem('token');
+  if (!token) return showNotification('Token tidak ditemukan', 'error');
+  showNotification('Mereset data aplikasi...', 'info');
+  try {
+    const res = await fetch('http://103.126.116.119:8001/api/backup/reset', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      showNotification('Data berhasil direset. Aplikasi akan direfresh.', 'success');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showNotification(data.message || 'Reset data gagal', 'error');
+    }
+  } catch (err) {
+    showNotification('Gagal reset data: ' + err.message, 'error');
+  }
+});
+
+// Modal Export Data
+const modalExport = document.getElementById('modalExportData');
+const cancelExportBtn = document.getElementById('cancelExportBtn');
+const confirmExportBtn = document.getElementById('confirmExportBtn');
+
+cancelExportBtn.onclick = () => modalExport.classList.remove('active');
+
+confirmExportBtn.onclick = async () => {
+  const dataType = document.getElementById('exportDataType').value;
+  const fileType = document.getElementById('exportFileType').value;
+  modalExport.classList.remove('active');
+  showNotification('Menyiapkan export data...', 'info');
+  try {
+    const token = localStorage.getItem('token');
+    let url = `http://103.126.116.119:8001/api/backup/export?data=${dataType}&type=${fileType}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error('Export gagal');
+    const blob = await res.blob();
+    let ext = fileType === 'excel' ? 'xlsx' : fileType;
+    let filename = `export_${dataType}_${new Date().toISOString().slice(0,10)}`;
+    if (dataType === 'all') filename += `.${fileType}.zip`;
+    else filename += `.${ext}`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showNotification('Export data berhasil diunduh!', 'success');
+  } catch (err) {
+    showNotification('Export data gagal: ' + err.message, 'error');
+  }
+};
+
 /* ======================================================
  * HELPER: SHOW NOTIFICATION
  * ====================================================== */
