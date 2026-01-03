@@ -5,8 +5,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   store_id INTEGER,
   action TEXT,
   detail TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  is_synced INTEGER DEFAULT 0
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table: clients
@@ -17,8 +16,7 @@ CREATE TABLE IF NOT EXISTS clients (
   db_name TEXT,
   db_user TEXT,
   db_password TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  is_synced INTEGER DEFAULT 0
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table: owners
@@ -31,8 +29,7 @@ CREATE TABLE IF NOT EXISTS owners (
   package_id INTEGER DEFAULT 1,
   package_expired_at TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  address TEXT,
-  is_synced INTEGER DEFAULT 0
+  address TEXT
 );
 
 -- Table: products
@@ -64,7 +61,6 @@ CREATE TABLE IF NOT EXISTS products (
   diskon_bundle_value REAL DEFAULT NULL,
   buy_qty INTEGER DEFAULT NULL,
   free_qty INTEGER DEFAULT NULL,
-  is_synced INTEGER DEFAULT 0,
   FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
 );
 
@@ -81,8 +77,7 @@ CREATE TABLE IF NOT EXISTS stores (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
   tax_percentage REAL DEFAULT 0,
-  is_synced INTEGER DEFAULT 0,
-  FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE,
+  FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE
 );
 
 -- Table: struck_receipt
@@ -93,7 +88,6 @@ CREATE TABLE IF NOT EXISTS struck_receipt (
   template_data TEXT NOT NULL,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  is_synced INTEGER DEFAULT 0,
   FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
 );
 
@@ -107,7 +101,6 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   start_date TEXT NOT NULL,
   end_date TEXT NOT NULL,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  is_synced INTEGER DEFAULT 0,
   FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE
 );
 
@@ -130,7 +123,6 @@ CREATE TABLE IF NOT EXISTS transactions (
   tax_percentage REAL DEFAULT 0,
   role TEXT DEFAULT NULL,
   is_owner INTEGER DEFAULT 0,
-  is_synced INTEGER DEFAULT 0,
   FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE SET NULL,
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -144,7 +136,6 @@ CREATE TABLE IF NOT EXISTS transaction_items (
   qty INTEGER NOT NULL,
   price REAL NOT NULL,
   subtotal REAL NOT NULL,
-  is_synced INTEGER DEFAULT 0,
   FOREIGN KEY(transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
   FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
 );
@@ -161,7 +152,27 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT CHECK(role IN ('owner','admin','cashier')) DEFAULT 'cashier',
   is_active INTEGER DEFAULT 1,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  is_synced INTEGER DEFAULT 0,
   FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE,
   FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE SET NULL
+);
+
+-- Table: reports_daily
+CREATE TABLE IF NOT EXISTS reports_daily (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  store_id INTEGER NOT NULL,
+  report_date TEXT NOT NULL,
+  total_transactions INTEGER DEFAULT 0,
+  total_income REAL DEFAULT 0,
+  total_discount REAL DEFAULT 0,
+  net_revenue REAL DEFAULT 0,
+  total_hpp REAL DEFAULT 0,
+  gross_profit REAL DEFAULT 0,
+  operational_cost REAL DEFAULT 0,
+  net_profit REAL DEFAULT 0,
+  margin TEXT DEFAULT '0%',
+  best_sales_day REAL DEFAULT 0,
+  lowest_sales_day REAL DEFAULT 0,
+  avg_daily REAL DEFAULT 0,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(store_id) REFERENCES stores(id)
 );

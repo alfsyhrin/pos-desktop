@@ -159,47 +159,39 @@ async function createTransaction(pendingData, receivedAmount) {
   }
 
   const items = pendingData.cart.map(item => {
-    let qty = Number(item.quantity || 0);
-    let obj = {
-      product_id: item.id,
+    const qty = Number(item.quantity || 0);
+    const obj = {
+      product_id: Number(item.id),
+      quantity: qty,
       notes: item.notes || ""
     };
 
-      if (item.discount_type === 'buyxgety' && item.buy_qty > 0 && item.free_qty > 0) {
-        const x = Number(item.buy_qty);
-        const y = Number(item.free_qty);
-        const totalQty = Number(item.quantity || 0);
-        const groupQty = x + y;
-        const paidQty = Math.floor(totalQty / groupQty) * x + (totalQty % groupQty);
-        const bonusQty = totalQty - paidQty;
-        obj.quantity = totalQty; // total keluar
-        obj.discount_type = 'buyxgety';
-        obj.buy_qty = x;
-        obj.free_qty = y;
-      } else {
-      obj.quantity = Number(item.quantity || 0);
-      if (item.discount_type === 'percentage' && item.discount_value) {
-        obj.discount_type = 'percentage';
-        obj.discount_value = item.discount_value;
-      } else if (item.discount_type === 'nominal' && item.discount_value) {
-        obj.discount_type = 'nominal';
-        obj.discount_value = item.discount_value;
-      } else {
-        obj.discount_type = null;
-      }
+    if (item.discount_type === 'buyxgety' && item.buy_qty > 0 && item.free_qty > 0) {
+      obj.discount_type = 'buyxgety';
+      obj.buy_qty = Number(item.buy_qty);
+      obj.free_qty = Number(item.free_qty);
+      obj.discount_value = 0;
+    } 
+    else if (item.discount_type === 'percentage' && item.discount_value > 0) {
+      obj.discount_type = 'percentage';
+      obj.discount_value = Number(item.discount_value);
+    } 
+    else if (item.discount_type === 'nominal' && item.discount_value > 0) {
+      obj.discount_type = 'nominal';
+      obj.discount_value = Number(item.discount_value);
     }
+
     return obj;
   });
 
   const body = {
-    // user_id: Number(pendingData.userId),
     payment_type: "cash",
     payment_method: "cash",
-    received_amount: receivedAmount,
+    received_amount: Number(receivedAmount),
     items
   };
 
-  console.info('[proses-pembayaran] create transaction payload', body);
+  console.info('[CREATE TRANSACTION PAYLOAD]', body);
 
   const res = await fetch(
     `http://103.126.116.119:8001/api/stores/${storeId}/transactions`,
@@ -215,18 +207,15 @@ async function createTransaction(pendingData, receivedAmount) {
 
   const text = await res.text();
   let data;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    data = { raw: text };
-  }
+  try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
   if (res.ok && data?.success) {
     return data.data;
-  } else {
-    throw new Error(data?.message || 'Gagal membuat transaksi');
   }
+
+  throw new Error(data?.message || `HTTP ${res.status}`);
 }
+
 
 
 // Event tombol Bayar - create transaction and redirect to detail-transaksi.html

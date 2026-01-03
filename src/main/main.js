@@ -966,10 +966,10 @@ ipcMain.handle("print-barcode-label", async (event, payload) => {
   }
 });
 
-window.addEventListener('online', () => {
-  showToast('Koneksi internet tersedia. Sinkronisasi data...');
-  syncAllData();
-});
-window.addEventListener('offline', () => {
-  showToast('Aplikasi berjalan offline.', 'warning');
-});
+// window.addEventListener('online', () => {
+//   showToast('Koneksi internet tersedia. Sinkronisasi data...');
+//   syncAllData();
+// });
+// window.addEventListener('offline', () => {
+//   showToast('Aplikasi berjalan offline.', 'warning');
+// });

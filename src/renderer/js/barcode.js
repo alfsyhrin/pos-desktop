@@ -7,81 +7,89 @@ if (!barcodePrinterAPI?.printBarcode) {
   console.warn("barcodeAPI tidak tersedia (cek preload.js)");
 }
 
-
-
 let html5QrCode = null;
-    let cameraActive = false;
-    let scannerBuffer = '';
-    let scannerTimeout = null;
+let cameraActive = false;
+let scannerBuffer = '';
+let scannerTimeout = null;
 
-    // ==========================================
-    // WIRED BARCODE SCANNER (WOYA) SUPPORT
-    // ==========================================
-    // Scanner kabel bekerja seperti keyboard - mengirim karakter diakhiri Enter
-    
-    document.addEventListener('keydown', function(e) {
-      // Jika fokus di input form, abaikan
-      const activeElement = document.activeElement;
-      const isFormInput = activeElement.tagName === 'INPUT' || 
-                          activeElement.tagName === 'TEXTAREA' || 
-                          activeElement.tagName === 'SELECT';
-      
-      if (isFormInput && activeElement.id !== 'scanner-input') {
-        return;
-      }
+// ==========================================
+// FUNGSI UTILITAS EAN-13
+// ==========================================
 
-      // Tangkap karakter dari scanner
-      if (e.key === 'Enter') {
-        if (scannerBuffer.length > 3) {
-          // Barcode terdeteksi!
-          handleScannedBarcode(scannerBuffer);
-        }
-        scannerBuffer = '';
-        clearTimeout(scannerTimeout);
-      } else if (e.key.length === 1) {
-        scannerBuffer += e.key;
-        
-        // Reset buffer setelah 100ms tidak ada input (scanner sangat cepat)
-        clearTimeout(scannerTimeout);
-        scannerTimeout = setTimeout(() => {
-          scannerBuffer = '';
-        }, 100);
-      }
-    });
+// Fungsi untuk menghitung checksum EAN-13
+function calculateEAN13Checksum(first12Digits) {
+  if (!/^\d{12}$/.test(first12Digits)) {
+    throw new Error('Harus 12 digit angka untuk EAN-13');
+  }
+  
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    const digit = parseInt(first12Digits.charAt(i));
+    // Digit di posisi ganjil (indeks genap) dikali 1
+    // Digit di posisi genap (indeks ganjil) dikali 3
+    sum += digit * (i % 2 === 0 ? 1 : 3);
+  }
+  
+  const checksum = (10 - (sum % 10)) % 10;
+  return checksum;
+}
 
-    function handleScannedBarcode(barcode) {
-      showToast('Barcode terdeteksi: ' + barcode, 'success');
-      // Panggil handler pencarian produk di produk.js
-      if (window.onBarcodeScanned) {
-        window.onBarcodeScanned(barcode);
-      }
-      // Isi kolom barcode di tools
-      document.getElementById('barcode-value').value = barcode;
-      
-      // Isi kolom barcode di form produk
-      document.getElementById('product-barcode').value = barcode;
-      
-      // Generate preview barcode
-      generateBarcodeFromValue(barcode);
+// ==========================================
+// WIRED BARCODE SCANNER (WOYA) SUPPORT
+// ==========================================
+
+document.addEventListener('keydown', function(e) {
+  const activeElement = document.activeElement;
+  const isFormInput = activeElement.tagName === 'INPUT' || 
+                      activeElement.tagName === 'TEXTAREA' || 
+                      activeElement.tagName === 'SELECT';
+  
+  if (isFormInput && activeElement.id !== 'scanner-input') {
+    return;
+  }
+
+  if (e.key === 'Enter') {
+    if (scannerBuffer.length > 3) {
+      handleScannedBarcode(scannerBuffer);
     }
+    scannerBuffer = '';
+    clearTimeout(scannerTimeout);
+  } else if (e.key.length === 1) {
+    scannerBuffer += e.key;
+    clearTimeout(scannerTimeout);
+    scannerTimeout = setTimeout(() => {
+      scannerBuffer = '';
+    }, 100);
+  }
+});
 
-    function focusScannerInput() {
-      document.addEventListener('DOMContentLoaded', function() {
-        const scannerInput = document.getElementById('scanner-input');
-        if (scannerInput) scannerInput.focus();
-      });
-      showToast('Scanner mode aktif - Arahkan scanner Woya ke barcode', 'info');
-    }
+function handleScannedBarcode(barcode) {
+  showToast('Barcode terdeteksi: ' + barcode, 'success');
+  if (window.onBarcodeScanned) {
+    window.onBarcodeScanned(barcode);
+  }
+  document.getElementById('barcode-value').value = barcode;
+  document.getElementById('product-barcode').value = barcode;
+  generateBarcodeFromValue(barcode);
+}
 
-    function focusProductBarcode() {
-      document.getElementById('scanner-input').focus();
-      showToast('Scan barcode produk dengan scanner Woya', 'info');
-    }
+function focusScannerInput() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const scannerInput = document.getElementById('scanner-input');
+    if (scannerInput) scannerInput.focus();
+  });
+  showToast('Scanner mode aktif - Arahkan scanner Woya ke barcode', 'info');
+}
 
-    // ==========================================
-    // BARCODE GENERATION
-    // ==========================================
-    
+function focusProductBarcode() {
+  document.getElementById('scanner-input').focus();
+  showToast('Scan barcode produk dengan scanner Woya', 'info');
+}
+
+// ==========================================
+// BARCODE GENERATION
+// ==========================================
+
 // Defensive helpers + ensure UI
 function safeGet(id) { return document.getElementById(id) || null; }
 
@@ -98,6 +106,7 @@ function ensureToastContainer() {
   }
   return t;
 }
+
 function showToast(msg, type = 'info') {
   const toast = ensureToastContainer();
   toast.textContent = msg;
@@ -106,126 +115,221 @@ function showToast(msg, type = 'info') {
   toast._hideTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// Safe DOM operations wrappers used later
 function setInputValue(id, val) { const el = safeGet(id); if (el) el.value = val; }
 
-    function handleTypeChange() {
-      const type = document.getElementById('barcode-type').value;
-      const input = document.getElementById('barcode-value');
-      
-      if (type === 'EAN13') {
-        input.placeholder = 'Masukkan 12 digit angka';
-        input.maxLength = 12;
-      } else if (type === 'QR') {
-        input.placeholder = 'Masukkan teks bebas';
-        input.maxLength = 500;
-      } else {
-        input.placeholder = 'Masukkan atau scan barcode...';
-        input.maxLength = 50;
-      }
-    }
+// Fungsi utama yang diperbaiki untuk handle type change
+// function handleTypeChange() {
+//   const type = document.getElementById('barcode-type').value;
+//   const input = document.getElementById('barcode-value');
+//   const helpElement = document.getElementById('ean13-help');
+  
+//   if (type === 'EAN13') {
+//     input.placeholder = 'Masukkan 12 atau 13 digit angka';
+//     input.maxLength = 13; // Diperbolehkan 13 digit
+    
+//     // Tampilkan help text jika ada
+//     if (helpElement) helpElement.style.display = 'block';
+//     else {
+//       // Buat help text jika belum ada
+//       const help = document.createElement('div');
+//       help.id = 'ean13-help';
+//       help.style.cssText = 'font-size:12px; color:#666; margin-top:4px; background:#f0f9ff; padding:6px 10px; border-radius:4px; border-left:3px solid #0ea5e9;';
+//       help.innerHTML = 'EAN-13: 12 digit data + 1 digit checksum = 13 digit total<br>Jika input 12 digit, checksum akan dihitung otomatis';
+//       input.parentNode.appendChild(help);
+//     }
+//   } else if (type === 'QR') {
+//     input.placeholder = 'Masukkan teks bebas';
+//     input.maxLength = 500;
+//     if (helpElement) helpElement.style.display = 'none';
+//   } else {
+//     input.placeholder = 'Masukkan atau scan barcode...';
+//     input.maxLength = 50;
+//     if (helpElement) helpElement.style.display = 'none';
+//   }
+// }
 
-    function generateBarcode() {
-      const type = document.getElementById('barcode-type').value;
-      let value = document.getElementById('barcode-value').value.trim();
-      
-      // Generate random value jika kosong
-      if (!value) {
-        if (type === 'EAN13') {
-          value = generateEAN13();
-        } else if (type === 'QR') {
-          value = 'PRODUCT-' + Date.now();
-        } else {
-          value = 'CODE-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-        }
-        document.getElementById('barcode-value').value = value;
-      }
-      
-      generateBarcodeFromValue(value);
+// Fungsi utama generate barcode dengan penanganan checksum
+function generateBarcode() {
+  const type = document.getElementById('barcode-type').value;
+  let value = document.getElementById('barcode-value').value.trim();
+  
+  // Generate random value jika kosong
+  if (!value) {
+    if (type === 'EAN13') {
+      value = generateEAN13(); // Fungsi ini sudah mengembalikan 13 digit
+    } else if (type === 'QR') {
+      value = 'PRODUCT-' + Date.now();
+    } else {
+      value = 'CODE-' + Math.random().toString(36).substring(2, 10).toUpperCase();
     }
-
-    function generateBarcodeFromValue(value) {
-      const type = document.getElementById('barcode-type').value;
-      const barcodePreview = document.getElementById('barcode-preview');
-      const qrPreview = document.getElementById('qr-preview');
-      
-      // Clear previews
-      barcodePreview.innerHTML = '<span class="preview-empty">Belum ada barcode</span>';
-      qrPreview.innerHTML = '<span class="preview-empty">Belum ada QR Code</span>';
-      
+    document.getElementById('barcode-value').value = value;
+  }
+  
+  // Handle khusus EAN-13 dengan checksum
+  if (type === 'EAN13') {
+    const cleanValue = value.replace(/\D/g, '');
+    
+    if (cleanValue.length === 12) {
+      // Hitung checksum untuk 12 digit
       try {
-        if (type === 'QR') {
-          // Generate QR Code
-          const canvas = document.createElement('canvas');
-          QRCode.toCanvas(canvas, value, {
-            width: 150,
-            margin: 2,
-            color: {
-              dark: '#000000',
-              light: '#ffffff'
-            }
-          }, function(error) {
-            if (error) {
-              showToast('Gagal generate QR Code: ' + error, 'error');
-            } else {
-              qrPreview.innerHTML = '';
-              qrPreview.appendChild(canvas);
-              showToast('QR Code berhasil dibuat', 'success');
-            }
-          });
-        } else {
-          // Generate Barcode (Code128 or EAN13)
-          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          
-          let barcodeFormat = type;
-          let barcodeValue = value;
-          
-          if (type === 'EAN13') {
-            // Validasi EAN-13: harus 12 digit
-            barcodeValue = value.replace(/\D/g, '').substring(0, 12);
-            if (barcodeValue.length !== 12) {
-              showToast('EAN-13 membutuhkan tepat 12 digit angka', 'error');
-              return;
-            }
-          }
-          
-          JsBarcode(svg, barcodeValue, {
-            format: barcodeFormat,
-            width: 2,
-            height: 80,
-            displayValue: true,
-            fontSize: 14,
-            margin: 10
-          });
-          
-          barcodePreview.innerHTML = '';
-          barcodePreview.appendChild(svg);
-          showToast('Barcode berhasil dibuat', 'success');
-        }
+        const checksum = calculateEAN13Checksum(cleanValue);
+        const fullEAN13 = cleanValue + checksum;
         
-        // Update product barcode field juga
-        document.getElementById('product-barcode').value = value;
+        // Update nilai di input
+        document.getElementById('barcode-value').value = fullEAN13;
+        value = fullEAN13;
+        
+        // Tampilkan info checksum
+        showChecksumInfo(cleanValue, checksum, fullEAN13);
         
       } catch (error) {
         showToast('Error: ' + error.message, 'error');
+        return;
       }
+    } else if (cleanValue.length === 13) {
+      // Validasi checksum jika input 13 digit
+      const input12 = cleanValue.substring(0, 12);
+      const inputChecksum = parseInt(cleanValue.charAt(12));
+      const calculatedChecksum = calculateEAN13Checksum(input12);
+      
+      if (inputChecksum !== calculatedChecksum) {
+        showToast(`Peringatan: Checksum tidak valid. Seharusnya ${calculatedChecksum}`, 'warning');
+      }
+    } else {
+      showToast('EAN-13 membutuhkan 12 atau 13 digit angka', 'error');
+      return;
     }
+  }
+  
+  generateBarcodeFromValue(value);
+}
 
+// Fungsi untuk menampilkan info checksum
+function showChecksumInfo(input12, checksum, fullEAN13) {
+  const previewContainer = document.getElementById('barcode-preview').parentNode;
+  let infoElement = document.getElementById('checksum-info');
+  
+  if (!infoElement) {
+    infoElement = document.createElement('div');
+    infoElement.id = 'checksum-info';
+    infoElement.className = 'checksum-info';
+    infoElement.style.cssText = 'background:#f8fafc; border-left:4px solid #3b82f6; padding:10px; margin:10px 0; border-radius:4px; font-size:14px;';
+    previewContainer.appendChild(infoElement);
+  }
+  
+  infoElement.innerHTML = `
+    <strong>Info EAN-13:</strong><br>
+    Input: <code>${input12}</code><br>
+    Checksum: <strong>${checksum}</strong><br>
+    Lengkap: <code><strong>${fullEAN13}</strong></code>
+  `;
+}
+
+// Fungsi generate barcode utama (telah diperbaiki)
+function generateBarcodeFromValue(value) {
+  const type = document.getElementById('barcode-type').value;
+  const barcodePreview = document.getElementById('barcode-preview');
+  const qrPreview = document.getElementById('qr-preview');
+  
+  // Clear previews
+  barcodePreview.innerHTML = '<span class="preview-empty">Belum ada barcode</span>';
+  qrPreview.innerHTML = '<span class="preview-empty">Belum ada QR Code</span>';
+  
+  try {
+    if (type === 'QR') {
+      const canvas = document.createElement('canvas');
+      QRCode.toCanvas(canvas, value, {
+        width: 150,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' }
+      }, function(error) {
+        if (error) {
+          showToast('Gagal generate QR Code: ' + error, 'error');
+        } else {
+          qrPreview.innerHTML = '';
+          qrPreview.appendChild(canvas);
+          showToast('QR Code berhasil dibuat', 'success');
+        }
+      });
+    } else {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      let barcodeFormat = type;
+      let barcodeValue = value;
+      
+      if (type === 'EAN13') {
+        // Ambil hanya angka dan pastikan panjangnya
+        const clean = value.replace(/\D/g, '');
+        if (clean.length === 13) {
+          barcodeValue = clean; // Gunakan 13 digit lengkap
+        } else if (clean.length === 12) {
+          // Jika masih 12 digit, hitung checksum
+          try {
+            const checksum = calculateEAN13Checksum(clean);
+            barcodeValue = clean + checksum;
+          } catch (error) {
+            showToast('Error EAN-13: ' + error.message, 'error');
+            return;
+          }
+        } else {
+          showToast('EAN-13 membutuhkan 12 atau 13 digit angka', 'error');
+          return;
+        }
+      }
+      
+      // Generate barcode dengan pengaturan yang lebih baik
+      JsBarcode(svg, barcodeValue, {
+        format: barcodeFormat,
+        width: 3,
+        height: 120,
+        displayValue: true,
+        fontSize: 35,
+        fontOptions: "bold",
+        margin: 15,
+        textMargin: 5,
+        background: "#ffffff"
+      });
+      
+      barcodePreview.innerHTML = '';
+      barcodePreview.appendChild(svg);
+      showToast('Barcode berhasil dibuat', 'success');
+    }
+    
+    // Update product barcode field
+    document.getElementById('product-barcode').value = value;
+    
+  } catch (error) {
+    showToast('Error: ' + error.message, 'error');
+  }
+}
+
+// Fungsi generate EAN13 yang diperbaiki (kembalikan 13 digit)
+function generateEAN13() {
+  let code = '';
+  for (let i = 0; i < 12; i++) {
+    code += Math.floor(Math.random() * 10);
+  }
+  
+  const checksum = calculateEAN13Checksum(code);
+  return code + checksum; // Kembalikan 13 digit
+}
+
+// Fungsi generate barcode canvas untuk cetakan
 function generateBarcodeCanvas(value, type = "CODE128") {
-  // Format yang DIDUKUNG JsBarcode
   const allowedFormats = ["CODE128", "EAN13", "EAN8"];
 
   if (!allowedFormats.includes(type)) {
     throw new Error("Format barcode tidak didukung: " + type);
   }
 
-  // Validasi khusus EAN13
   if (type === "EAN13") {
     const clean = value.replace(/\D/g, "");
-    if (clean.length !== 12) {
-      throw new Error("EAN13 harus 12 digit angka");
+    if (clean.length === 12) {
+      // Jika 12 digit, hitung checksum
+      const checksum = calculateEAN13Checksum(clean);
+      value = clean + checksum;
+    } else if (clean.length !== 13) {
+      throw new Error("EAN13 harus 12 atau 13 digit angka");
     }
-    value = clean;
   }
 
   const canvas = document.createElement("canvas");
@@ -233,15 +337,17 @@ function generateBarcodeCanvas(value, type = "CODE128") {
   JsBarcode(canvas, value, {
     format: type,
     width: 4,
-    height: 150,
+    height: 180,
     displayValue: true,
-    fontSize: 18,
-    margin: 10
+    fontSize: 30,
+    fontOptions: "bold",
+    margin: 15,
+    textMargin: 8,
+    background: "#fff"
   });
 
   return canvas;
 }
-
 
 function normalizeProductName(name, maxLength = 24) {
   if (!name) return "";
@@ -252,12 +358,54 @@ function normalizeProductName(name, maxLength = 24) {
     .toUpperCase();
 }
 
+// Fungsi generate sharp barcode canvas
+function generateSharpBarcodeCanvas(value, type = "CODE128") {
+  const allowedFormats = ["CODE128", "EAN13", "EAN8"];
+  
+  if (!allowedFormats.includes(type)) {
+    throw new Error("Format barcode tidak didukung: " + type);
+  }
 
-function generateBarcodeLabelImage(
-  barcodeValue,
-  productName = "",
-  type = "CODE128"
-) {
+  if (type === "EAN13") {
+    const clean = value.replace(/\D/g, "");
+    if (clean.length === 12) {
+      const checksum = calculateEAN13Checksum(clean);
+      value = clean + checksum;
+    } else if (clean.length !== 13) {
+      throw new Error("EAN13 harus 12 atau 13 digit angka");
+    }
+  }
+
+  const scale = 2;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  
+  canvas.width = 400 * scale;
+  canvas.height = 200 * scale;
+  
+  JsBarcode(canvas, value, {
+    format: type,
+    width: 3 * scale,
+    height: 100 * scale,
+    displayValue: true,
+    fontSize: 28 * scale,
+    fontOptions: "bold",
+    margin: 10 * scale,
+    textMargin: 6 * scale
+  });
+
+  const finalCanvas = document.createElement("canvas");
+  finalCanvas.width = 400;
+  finalCanvas.height = 200;
+  const finalCtx = finalCanvas.getContext("2d");
+  
+  finalCtx.imageSmoothingEnabled = false;
+  finalCtx.drawImage(canvas, 0, 0, 400, 200);
+  
+  return finalCanvas;
+}
+
+function generateBarcodeLabelImage(barcodeValue, productName = "", type = "CODE128") {
   if (!barcodeValue) {
     throw new Error("Barcode kosong saat generate image");
   }
@@ -266,18 +414,18 @@ function generateBarcodeLabelImage(
   const mmToPx = (mm) => Math.round((mm / 25.4) * dpi);
 
   const canvas = document.createElement("canvas");
-  canvas.width  = mmToPx(100); // 100mm
-  canvas.height = mmToPx(150); // 150mm
+  canvas.width  = mmToPx(100);
+  canvas.height = mmToPx(150);
 
   const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  ctx.textRendering = "geometricPrecision";
 
-  // Background putih
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const cols = 2;
   const rows = 4;
-
   const cellW = canvas.width / cols;
   const cellH = canvas.height / rows;
 
@@ -291,19 +439,18 @@ function generateBarcodeLabelImage(
     const col = i % cols;
     const row = Math.floor(i / cols);
 
-    // ⬇️ PENTING: HANYA kirim (barcodeValue, type)
-    const barcodeCanvas = generateBarcodeCanvas(barcodeValue, type);
+    const barcodeCanvas = generateSharpBarcodeCanvas(barcodeValue, type);
 
     const x = col * cellW + (cellW - barcodeCanvas.width) / 2;
-    const y = row * cellH + 12;
+    const y = row * cellH + 15;
 
     ctx.drawImage(barcodeCanvas, x, y);
 
-    // Nama produk di bawah barcode
     if (safeName) {
       ctx.fillStyle = "#000000";
-      ctx.font = "bold 24px Arial";
+      ctx.font = "bold 28px 'Arial Black', Arial, sans-serif";
       ctx.textAlign = "center";
+      ctx.textBaseline = "top";
 
       ctx.fillText(
         safeName,
@@ -313,44 +460,30 @@ function generateBarcodeLabelImage(
     }
   }
 
-  return canvas.toDataURL("image/png");
+  return canvas.toDataURL("image/png", 1.0);
 }
 
+// ==========================================
+// CAMERA SCANNER
+// ==========================================
 
-
-
-
-    function generateEAN13() {
-      let code = '';
-      for (let i = 0; i < 12; i++) {
-        code += Math.floor(Math.random() * 10);
-      }
-      return code;
-    }
-
-    // ==========================================
-    // CAMERA SCANNER
-    // ==========================================
-    
-    function toggleCamera() {
-      if (cameraActive) {
-        stopCamera();
-      } else {
-        startCamera();
-      }
-    }
+function toggleCamera() {
+  if (cameraActive) {
+    stopCamera();
+  } else {
+    startCamera();
+  }
+}
 
 async function startCamera() {
-  // tunggu singkat agar SPA bisa menyisipkan elemen produk.html ke DOM
   let cameraReader = document.getElementById('camera-reader');
   let retry = 0;
-  while (!cameraReader && retry < 20) { // tunggu sampai 2s total
+  while (!cameraReader && retry < 20) {
     await new Promise(r => setTimeout(r, 100));
     cameraReader = document.getElementById('camera-reader');
     retry++;
   }
 
-  // fallback: buat container/reader jika belum ada (mencegah null)
   let container = document.getElementById('camera-container');
   if (!container) {
     container = document.createElement('div');
@@ -364,10 +497,8 @@ async function startCamera() {
     container.appendChild(cameraReader);
   }
 
-  // pilih button yang ada di halaman (dukung btn-camera atau btn-scan-camera)
   const btn = document.getElementById('btn-camera') || document.getElementById('btn-scan-camera') || null;
 
-  // pastikan library Html5Qrcode tersedia
   if (typeof Html5Qrcode === 'undefined') {
     showToast('Library scanner belum dimuat (Html5Qrcode).', 'error');
     return;
@@ -376,9 +507,8 @@ async function startCamera() {
   try {
     container.style.display = 'block';
     container.classList.add('active');
-    cameraReader.innerHTML = ''; // aman karena kita sudah memastikan cameraReader ada
+    cameraReader.innerHTML = '';
 
-    // inisialisasi html5QrCode
     if (html5QrCode) {
       try { await html5QrCode.clear(); } catch (_) {}
       html5QrCode = null;
@@ -442,99 +572,88 @@ function stopCamera() {
   }
 }
 
-    // ==========================================
-    // FORM ACTIONS
-    // ==========================================
+// ==========================================
+// FORM ACTIONS
+// ==========================================
+
+function simpan() {
+  const namaProduk = document.getElementById('nama-produk').value.trim();
+  
+  if (!namaProduk) {
+    showToast('Nama produk harus diisi!', 'error');
+    return;
+  }
+  
+  const data = {
+    nama: namaProduk,
+    barcode: document.getElementById('product-barcode').value,
+    hargaModal: document.getElementById('harga-modal').value,
+    hargaJual: document.getElementById('harga-jual').value,
+    sku: document.getElementById('sku').value,
+    stok: document.getElementById('stok').value,
+    kategori: document.getElementById('kategori').value,
+    diskon: document.getElementById('diskon').value,
+    deskripsi: document.getElementById('deskripsi').value,
+    imageUrl: document.getElementById('image-url').value
+  };
+  
+  console.log('Data Produk:', data);
+  showToast('Produk berhasil disimpan!', 'success');
+}
+
+function batalkan() {
+  if (confirm('Yakin ingin membatalkan? Data yang diisi akan hilang.')) {
+    document.getElementById('nama-produk').value = '';
+    document.getElementById('product-barcode').value = '';
+    document.getElementById('barcode-value').value = '';
+    document.getElementById('harga-modal').value = '';
+    document.getElementById('harga-jual').value = '';
+    document.getElementById('sku').value = '';
+    document.getElementById('stok').value = '';
+    document.getElementById('kategori').value = '';
+    document.getElementById('diskon').value = '';
+    document.getElementById('deskripsi').value = '';
+    document.getElementById('image-url').value = '';
     
-    function simpan() {
-      const namaProduk = document.getElementById('nama-produk').value.trim();
-      
-      if (!namaProduk) {
-        showToast('Nama produk harus diisi!', 'error');
-        return;
-      }
-      
-      const data = {
-        nama: namaProduk,
-        barcode: document.getElementById('product-barcode').value,
-        hargaModal: document.getElementById('harga-modal').value,
-        hargaJual: document.getElementById('harga-jual').value,
-        sku: document.getElementById('sku').value,
-        stok: document.getElementById('stok').value,
-        kategori: document.getElementById('kategori').value,
-        diskon: document.getElementById('diskon').value,
-        deskripsi: document.getElementById('deskripsi').value,
-        imageUrl: document.getElementById('image-url').value
-      };
-      
-      console.log('Data Produk:', data);
-      showToast('Produk berhasil disimpan!', 'success');
-    }
-
-    function batalkan() {
-      if (confirm('Yakin ingin membatalkan? Data yang diisi akan hilang.')) {
-        // Reset semua form
-        document.getElementById('nama-produk').value = '';
-        document.getElementById('product-barcode').value = '';
-        document.getElementById('barcode-value').value = '';
-        document.getElementById('harga-modal').value = '';
-        document.getElementById('harga-jual').value = '';
-        document.getElementById('sku').value = '';
-        document.getElementById('stok').value = '';
-        document.getElementById('kategori').value = '';
-        document.getElementById('diskon').value = '';
-        document.getElementById('deskripsi').value = '';
-        document.getElementById('image-url').value = '';
-        
-        // Reset preview
-        document.getElementById('barcode-preview').innerHTML = '<span class="preview-empty">Belum ada barcode</span>';
-        document.getElementById('qr-preview').innerHTML = '<span class="preview-empty">Belum ada QR Code</span>';
-        
-        showToast('Form direset', 'info');
-      }
-    }
-
-    // ==========================================
-    // TOAST NOTIFICATION
-    // ==========================================
+    document.getElementById('barcode-preview').innerHTML = '<span class="preview-empty">Belum ada barcode</span>';
+    document.getElementById('qr-preview').innerHTML = '<span class="preview-empty">Belum ada QR Code</span>';
     
-    // function showToast(message, type = 'info') {
-    //   const toast = document.getElementById('toast');
-    //   if (!toast) return; // <-- Tambahkan ini agar tidak error jika toast tidak ada
-    //   toast.textContent = message;
-    //   toast.className = 'toast ' + type + ' show';
-    //   setTimeout(() => {
-    //     toast.classList.remove('show');
-    //   }, 3000);
-    // }
+    // Hapus info checksum jika ada
+    const infoElement = document.getElementById('checksum-info');
+    if (infoElement) infoElement.remove();
+    
+    showToast('Form direset', 'info');
+  }
+}
 
-    // Auto-focus scanner input on load
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('scanner-input').focus();
-    });
+// Auto-focus scanner input on load
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('scanner-input').focus();
+});
 
-    // Handler barcode scan khusus halaman produk
+// Handler barcode scan khusus halaman produk
 window.handleScannedBarcode = async function(barcode) {
-  // Isi field search
   const searchInput = document.querySelector('.bar-pencarian-produk input[type="text"]');
   if (searchInput) {
     searchInput.value = barcode;
   }
   showToast('Barcode terdeteksi: ' + barcode, 'success');
-  // Cari produk berdasarkan barcode
+  
   const storeId = localStorage.getItem('store_id');
   if (!storeId) return;
+  
   const listProdukEl = document.querySelector('.list-produk');
   if (!listProdukEl) return;
+  
   listProdukEl.innerHTML = '<p>Mencari produk berdasarkan barcode...</p>';
+  
   try {
     const res = await window.apiRequest(`/stores/${storeId}/products/search?query=${encodeURIComponent(barcode)}`);
     const products = extractProductsFromResponse(res);
+    
     if (products.length > 0) {
-      // Render hasil pencarian (gunakan fungsi render produk yang sudah ada)
       listProdukEl.innerHTML = '';
       products.forEach(product => {
-        // ...gunakan kode render produk card seperti biasa...
         const imageUrlRaw = product.image_url || product.imageUrl || '';
         const imageUrl = imageUrlRaw
           ? (imageUrlRaw.startsWith('http') ? imageUrlRaw : `${window.BASE_URL.replace('/api','')}/${imageUrlRaw.replace(/^\/+/,'')}`)
@@ -568,7 +687,6 @@ window.handleScannedBarcode = async function(barcode) {
         listProdukEl.innerHTML += productCard;
       });
     } else {
-      // Produk tidak ditemukan, tampilkan modal notifikasi
       showProductNotFoundModal(barcode);
     }
   } catch (err) {
@@ -576,9 +694,7 @@ window.handleScannedBarcode = async function(barcode) {
   }
 };
 
-// Modal produk tidak ditemukan
 function showProductNotFoundModal(barcode) {
-  // Buat modal sederhana jika belum ada
   let modal = document.getElementById('modal-notfound');
   if (!modal) {
     modal = document.createElement('div');
@@ -606,26 +722,17 @@ function showProductNotFoundModal(barcode) {
     modal.querySelector('p').innerHTML = `Barcode: <b>${barcode}</b>`;
     modal.style.display = 'flex';
   }
-  // Event
+  
   modal.querySelector('#btn-notfound-cancel').onclick = () => { modal.style.display = 'none'; };
   modal.querySelector('#btn-notfound-add').onclick = () => {
     window.location.href = `tambah-produk.html?barcode=${encodeURIComponent(barcode)}`;
   };
 }
 
-// Pastikan preload sudah expose window.electronAPI.sendBarcodeToPrint
-
 async function cetakBarcode() {
-  const barcodeValue = document
-    .getElementById("barcode-value")
-    ?.value.trim();
-
-  const type =
-    document.getElementById("barcode-type")?.value || "CODE128";
-
-  // ✅ FIX UTAMA: definisikan productName secara eksplisit
-  const productName =
-    document.getElementById("nama-produk")?.value?.trim() || "";
+  const barcodeValue = document.getElementById("barcode-value")?.value.trim();
+  const type = document.getElementById("barcode-type")?.value || "CODE128";
+  const productName = document.getElementById("nama-produk")?.value?.trim() || "";
 
   if (!barcodeValue) {
     showToast("Barcode belum diisi", "error");
@@ -639,9 +746,19 @@ async function cetakBarcode() {
 
   let imageBase64;
   try {
+    // Pastikan EAN-13 memiliki checksum yang benar
+    let finalBarcodeValue = barcodeValue;
+    if (type === "EAN13") {
+      const clean = barcodeValue.replace(/\D/g, "");
+      if (clean.length === 12) {
+        const checksum = calculateEAN13Checksum(clean);
+        finalBarcodeValue = clean + checksum;
+      }
+    }
+    
     imageBase64 = generateBarcodeLabelImage(
-      barcodeValue,
-      productName, // ✅ sekarang sudah valid
+      finalBarcodeValue,
+      productName,
       type
     ).replace(/^data:image\/png;base64,/, "");
   } catch (e) {
@@ -665,15 +782,10 @@ async function cetakBarcode() {
   }
 }
 
-
-
-
-// Event delegation: tombol Tutup Kamera (dinamis) selalu bisa memanggil stopCamera
+// Event delegation untuk tombol Tutup Kamera
 document.addEventListener('click', function (e) {
-  // Cek jika yang diklik adalah tombol dengan id="btn-close-camera"
   const target = e.target;
 
-  // Jika langsung klik button-nya
   if (target.id === 'btn-close-camera') {
     e.preventDefault();
     stopCamera();
@@ -682,7 +794,6 @@ document.addEventListener('click', function (e) {
     return;
   }
 
-  // Jika yang diklik ikon <span> di dalam button
   if (target.closest && target.closest('#btn-close-camera')) {
     e.preventDefault();
     stopCamera();
@@ -692,29 +803,7 @@ document.addEventListener('click', function (e) {
   }
 });
 
-// async function printBarcodeLabel() {
-//   const barcodeValue = document.getElementById("barcode-value").value.trim();
-
-//   if (!barcodeValue) {
-//     alert("Barcode belum diisi");
-//     return;
-//   }
-
-//   const res = await window.barcodeAPI.printBarcode({
-//     barcodeValue,
-//     copies: 8
-//   });
-
-//   if (!res.success) {
-//     alert("Gagal cetak barcode: " + res.error);
-//   } else {
-//     alert("Barcode berhasil dicetak");
-//   }
-// }
-
-// ===============================
-// PREVIEW BARCODE (LABEL 100x150)
-// ===============================
+// Preview barcode
 function previewBarcode() {
   const barcodeValue = document.getElementById("barcode-value").value.trim();
 
@@ -768,5 +857,3 @@ window.addEventListener("message", async (event) => {
     alert("Gagal mencetak: " + res.error);
   }
 });
-
-
