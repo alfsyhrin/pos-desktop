@@ -56,6 +56,8 @@ function loadPage(page, params = {}) {
       } else if (page === 'editProduk' && params?.id) {
         sessionStorage.setItem('edit_product_id', params.id);
         setTimeout(() => window.initEditProdukPage?.(), 200);
+      } else if (page === 'aktivitas' && window.renderActivityLogs) {
+        setTimeout(() => window.renderActivityLogs(1), 100);
       }
 
       // Update header

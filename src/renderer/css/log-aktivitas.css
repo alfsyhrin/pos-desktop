@@ -90,3 +90,12 @@ header.header-logaktivitas p {
 .waktu-log p {
   font-size: 12px;
 }
+
+.pagination-log button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pagination-log span {
+  font-weight: bold;
+  color: #E43636;
+}
