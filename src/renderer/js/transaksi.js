@@ -89,7 +89,7 @@ function renderTransactions(transactions) {
         </div>
       </div>
       <div class="button-hapus-transaksi">
-        <button class="btn-hapus-transaksi" onclick="event.stopPropagation(); deleteTransaction('${trx.transaction_id}')">
+        <button class="btn-hapus-transaksi" data-permissions="owner, admin" onclick="event.stopPropagation(); deleteTransaction('${trx.transaction_id}')">
           <span class="material-symbols-outlined">delete</span>
         </button>
       </div>
