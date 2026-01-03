@@ -65,11 +65,17 @@ document.addEventListener('keydown', function(e) {
 
 function handleScannedBarcode(barcode) {
   showToast('Barcode terdeteksi: ' + barcode, 'success');
+  // Panggil handler utama (override per halaman)
+  if (typeof window.handleScannedBarcode === 'function') {
+    window.handleScannedBarcode(barcode);
+    return;
+  }
+  // Fallback ke handler lama
   if (window.onBarcodeScanned) {
     window.onBarcodeScanned(barcode);
   }
-  document.getElementById('barcode-value').value = barcode;
-  document.getElementById('product-barcode').value = barcode;
+  setInputValue('barcode-value', barcode);
+  setInputValue('product-barcode', barcode);
   generateBarcodeFromValue(barcode);
 }
 

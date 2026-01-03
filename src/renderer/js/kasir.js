@@ -646,3 +646,52 @@ const _pollInterval = setInterval(() => {
 document.addEventListener('DOMContentLoaded', () => {
   window.updateHeaderStoreName(); // TAMBAH BARIS INI
 });
+
+async function scanAndAddToCart(barcode) {
+  const storeId = localStorage.getItem('store_id');
+  const token = localStorage.getItem('token');
+  if (!storeId) {
+    showToastKasir('Pilih toko terlebih dahulu!', 'error');
+    return;
+  }
+  try {
+    // Fetch produk by barcode
+    const url = `http://103.126.116.119:8001/api/stores/${storeId}/products/barcode/${encodeURIComponent(barcode)}`;
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    const json = await res.json();
+    const p = json?.data;
+    const id = p?.id ?? p?.product_id ?? p?.productId ?? null;
+    if (!p || !id) {
+      showProductNotFoundModalKasir(barcode);
+      return;
+    }
+    // Tambahkan produk ke keranjang
+    if (typeof addToCartFrontend === 'function') {
+      addToCartFrontend({
+        id: Number(id),
+        name: p.name ?? p.title ?? '',
+        price: Number(p.sellPrice ?? p.price ?? p.unit_price ?? 0),
+        sku: p.sku ?? '',
+        stock: Number(p.stock ?? p.quantity ?? 0),
+        discount_type: p.discount_type ?? p.jenis_diskon ?? null,
+        discount_value: Number(p.discount_value ?? p.nilai_diskon ?? 0),
+        buy_qty: Number(p.buyQty ?? 0),
+        free_qty: Number(p.freeQty ?? 0),
+        bundle_qty: Number(p.bundle_min_qty ?? p.diskon_bundle_min_qty ?? 0),
+        bundle_value: Number(p.bundle_total_price ?? p.diskon_bundle_value ?? 0)
+      });
+      showToastKasir('Produk berhasil ditambahkan ke keranjang!', 'success');
+    }
+  } catch (err) {
+    showToastKasir('Gagal mencari produk: ' + (err.message || err), 'error');
+  }
+}
+
+// Handler utama: hanya di kasir, override global handler
+window.handleScannedBarcode = function(barcode) {
+  if (typeof scanAndAddToCart === 'function') {
+    scanAndAddToCart(barcode);
+  } else if (typeof window.onBarcodeScannedKasir === 'function') {
+    window.onBarcodeScannedKasir(barcode);
+  }
+};

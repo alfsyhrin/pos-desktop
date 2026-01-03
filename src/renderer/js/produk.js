@@ -1066,3 +1066,11 @@ window.previewBarcodeProduk = function(barcode, name) {
     "width=420,height=650"
   );
 };
+
+document.addEventListener('DOMContentLoaded', function() {
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+  if (role === 'cashier') {
+    const btn = document.querySelector('.tambah-produk-btn');
+    if (btn) btn.style.display = 'none';
+  }
+});

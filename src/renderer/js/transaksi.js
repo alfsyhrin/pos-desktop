@@ -38,6 +38,8 @@ function renderTransactions(transactions) {
 
   wrapper.innerHTML = '';
 
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+
   if (transactions.length === 0) {
     const card = document.createElement('div');
     card.className = 'card-transaksi';
@@ -73,9 +75,14 @@ function renderTransactions(transactions) {
     const itemCount = trx.items ? trx.items.length : 0;
     const idShort = trx.idShort || trx.idFull || trx.transaction_id || '-';
 
+    // Hanya tampilkan checkbox jika bukan cashier
+    let checkboxHtml = '';
+    if (role !== 'cashier') {
+      checkboxHtml = `<input type="checkbox" class="trx-checkbox" data-id="${trx.transaction_id}" style="position:absolute;top:10px;left:10px;width:18px;height:18px;cursor:pointer;">`;
+    }
+
     card.innerHTML = `
-      <input type="checkbox" class="trx-checkbox" data-id="${trx.transaction_id}" style="position:absolute;top:10px;left:10px;width:18px;height:18px;cursor:pointer;">
-      
+      ${checkboxHtml}
       <span class="material-symbols-outlined transaksi">receipt_long</span>
       <div class="info-transaksi">
         <div class="no-harga-wrapper">
@@ -89,7 +96,7 @@ function renderTransactions(transactions) {
         </div>
       </div>
       <div class="button-hapus-transaksi">
-        <button class="btn-hapus-transaksi" data-permissions="owner, admin" onclick="event.stopPropagation(); deleteTransaction('${trx.transaction_id}')">
+        <button class="btn-hapus-transaksi" data-permissions="owner,admin" onclick="event.stopPropagation(); deleteTransaction('${trx.transaction_id}')">
           <span class="material-symbols-outlined">delete</span>
         </button>
       </div>
@@ -104,7 +111,10 @@ function renderTransactions(transactions) {
     wrapper.appendChild(card);
   });
 
-  setupBulkDelete();
+  // Hanya setup bulk delete jika bukan cashier
+  if (role !== 'cashier') {
+    setupBulkDelete();
+  }
 }
 
 // View transaction detail
@@ -252,6 +262,9 @@ const transaksiFilters = {
 
 // TAMBAH: Setup bulk delete
 function setupBulkDelete() {
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+  if (role === 'cashier') return; // Tidak perlu setup apapun untuk cashier
+
   const container = document.querySelector('.card-transaksi-wrapper');
   const header = document.querySelector('.bar-pencarian-kasir');
   
