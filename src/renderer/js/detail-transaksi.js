@@ -163,23 +163,11 @@ async function fetchTransactionById(transactionId) {
   }
 }
 
-function renderDetailTransaksi() {
-  const selectedTxId = localStorage.getItem('selected_transaction_id');
-  
-  if (!selectedTxId) {
-    console.error('Transaction ID tidak ditemukan di localStorage');
-    return;
-  }
-
-  // Fetch transaction dari API by ID
-  fetchTransactionById(selectedTxId).then(trx => {
-    if (!trx || !trx.items) {
-      console.error('Transaction data tidak ditemukan');
-      return;
-    }
-
-    // Simpan ke localStorage untuk digunakan di print
-    localStorage.setItem('last_transaction', JSON.stringify(trx));
+async function renderDetailTransaksi() {
+  // --- JALUR DARI PROSES PEMBAYARAN ---
+  const lastTrxStr = localStorage.getItem('last_transaction');
+  if (lastTrxStr) {
+    const trx = JSON.parse(lastTrxStr);
 
     // Nomor transaksi
     document.querySelectorAll('.jenis-pembayaran-transaksi')[0].querySelector('p').textContent =
@@ -197,7 +185,7 @@ function renderDetailTransaksi() {
     const itemDiv = document.querySelector('.item-pembelian-transaksi');
     itemDiv.innerHTML = `<h4>Item pembelian</h4>`;
     let totalDiskonItem = 0;
-    trx.items.forEach(item => {
+    (trx.items || []).forEach(item => {
       const harga = Number(item.price || 0);
       const qty = Number(item.quantity || item.qty || 0);
       let discountAmount = Number(item.discount_amount || item._discountAmount || 0);
@@ -249,10 +237,140 @@ function renderDetailTransaksi() {
     const tunaiDivs = document.querySelectorAll('.wrap-tunai .wrap-info-harga');
     if (tunaiDivs[0]) tunaiDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(trx.received || trx.received_amount);
     if (tunaiDivs[1]) tunaiDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(trx.change || trx.change_amount);
-    
+
     // Render preview struk
     setTimeout(() => renderReceiptPreview(), 500);
+
+    return; // STOP di sini, tidak fetch dari API
+  }
+
+  // --- JALUR DARI RIWAYAT TRANSAKSI ---
+  const selectedTxId = localStorage.getItem('selected_transaction_id');
+  if (!selectedTxId) {
+    console.error('Transaction ID tidak ditemukan di localStorage');
+    return;
+  }
+
+  // Fetch transaksi dan data toko secara paralel
+  const [trx, storeData] = await Promise.all([
+    fetchTransactionById(selectedTxId),
+    fetchStoreData()
+  ]);
+
+  if (!trx || !trx.items) {
+    console.error('Transaction data tidak ditemukan');
+    return;
+  }
+
+  // Ambil tax_percentage dari store
+  const taxPercentage = Number(storeData?.tax_percentage || 10);
+
+  // Hitung ulang subtotal, diskon, tax, grand total
+  let grossSubtotal = 0, discountTotal = 0;
+  trx.items.forEach(item => {
+    const harga = Number(item.price || 0);
+    const qty = Number(item.quantity || item.qty || 0);
+    let discountAmount = Number(item.discount_amount || item._discountAmount || 0);
+
+    if (item.discount_type === 'percentage' && item.discount_value > 0) {
+      discountAmount = harga * qty * (item.discount_value / 100);
+    } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
+      discountAmount = Math.min(item.discount_value, harga * qty);
+    } else if (item.discount_type === 'buyxgety' && item.buy_qty > 0 && item.free_qty > 0) {
+      const x = Number(item.buy_qty);
+      const y = Number(item.free_qty);
+      const groupQty = x + y;
+      const paidQty = Math.floor(qty / groupQty) * x + (qty % groupQty);
+      discountAmount = (qty - paidQty) * harga;
+    }
+
+    grossSubtotal += harga * qty;
+    discountTotal += discountAmount;
+    item._discountAmount = discountAmount;
   });
+
+  const netSubtotal = grossSubtotal - discountTotal;
+  const tax = netSubtotal * (taxPercentage / 100);
+  const grandTotal = netSubtotal + tax;
+
+  // Nominal bayar dan kembalian (jika ada di trx, gunakan, jika tidak, fallback 0)
+  const received = Number(trx.received_amount || trx.received || 0);
+  const change = Math.max(0, received - grandTotal);
+
+  // Simpan ke localStorage untuk konsistensi print struk
+  const trxToSave = {
+    ...trx,
+    _grossSubtotal: grossSubtotal,
+    _discountTotal: discountTotal,
+    _netSubtotal: netSubtotal,
+    _tax: tax,
+    _grandTotal: grandTotal,
+    tax_percentage: taxPercentage,
+    received,
+    change
+  };
+  localStorage.setItem('last_transaction', JSON.stringify(trxToSave));
+
+  // --- Render ke UI ---
+  document.querySelectorAll('.jenis-pembayaran-transaksi')[0].querySelector('p').textContent =
+    trx.idFull || trx.idShort || trx.id || '-';
+
+  document.querySelectorAll('.jenis-pembayaran-transaksi')[1].querySelector('p').textContent =
+    trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-';
+
+  document.querySelectorAll('.jenis-pembayaran-transaksi')[2].querySelector('p').textContent =
+    trx.method || trx.payment_method || '-';
+
+  // Item pembelian
+  const itemDiv = document.querySelector('.item-pembelian-transaksi');
+  itemDiv.innerHTML = `<h4>Item pembelian</h4>`;
+  trx.items.forEach(item => {
+    const harga = Number(item.price || 0);
+    const qty = Number(item.quantity || item.qty || 0);
+    let discountAmount = Number(item._discountAmount || 0);
+
+    let qtyDibayar = qty;
+    let bonusQty = 0;
+    if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
+      const x = Number(item.buy_qty);
+      const y = Number(item.free_qty);
+      const groupQty = x + y;
+      const paidQty = Math.floor(qty / groupQty) * x + (qty % groupQty);
+      bonusQty = qty - paidQty;
+      qtyDibayar = paidQty;
+    }
+
+    let diskonText = '';
+    if (discountAmount > 0) {
+      diskonText = `<p style="color:green;">Diskon: ${formatRupiah(discountAmount)}</p>`;
+    }
+
+    itemDiv.innerHTML += `
+      <p>${item.name || '-'}</p>
+      <p>${formatRupiah(harga)} x ${qtyDibayar}</p>
+      <p class="sku">SKU: ${item.sku || '-'}</p>
+      ${bonusQty > 0 ? `<p style="color:#10b981;">Bonus: ${bonusQty}</p>` : ''}
+      ${diskonText}
+    `;
+  });
+
+  // Harga transaksi
+  const hargaDivs = document.querySelectorAll('.wrap-info-harga');
+  if (hargaDivs[0]) hargaDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(grossSubtotal);
+  if (hargaDivs[1]) hargaDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(discountTotal);
+  if (hargaDivs[2]) {
+    hargaDivs[2].querySelector('h4.label').textContent = `PPN (${taxPercentage.toFixed(1)}%)`;
+    hargaDivs[2].querySelector('h4:nth-child(2)').textContent = formatRupiah(tax);
+  }
+  if (hargaDivs[3]) hargaDivs[3].querySelector('h4:nth-child(2)').textContent = formatRupiah(grandTotal);
+
+  // Tunai diterima & kembalian
+  const tunaiDivs = document.querySelectorAll('.wrap-tunai .wrap-info-harga');
+  if (tunaiDivs[0]) tunaiDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(received);
+  if (tunaiDivs[1]) tunaiDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(change);
+
+  // Render preview struk
+  setTimeout(() => renderReceiptPreview(), 500);
 }
 
 async function deleteTransactionAndGoToKasir() {
@@ -294,9 +412,20 @@ async function deleteTransactionAndGoToKasir() {
 
 document.addEventListener('DOMContentLoaded', renderDetailTransaksi);
 document.getElementById('btn-delete').addEventListener('click', deleteTransactionAndGoToKasir);
-document.getElementById('btn-selesai' && 'btn-back-kasir').onclick = function() {
+document.getElementById('btn-selesai').onclick = function() {
   localStorage.removeItem('pos_cart');
   localStorage.removeItem('pending_transaction');
+  localStorage.removeItem('last_transaction');
   localStorage.setItem('current_page', 'kasir');
   window.location.href = 'index.html';
 };
+
+document.getElementById('btn-back-kasir').addEventListener('click', function (e) {
+  e.preventDefault();
+
+  // Hapus data transaksi sementara agar tidak bentrok jika kembali ke kasir
+  localStorage.removeItem('last_transaction');
+  localStorage.removeItem('pending_transaction');
+  localStorage.setItem('current_page', 'kasir');
+  window.location.href = 'index.html';
+});

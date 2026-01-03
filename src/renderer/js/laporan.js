@@ -1061,3 +1061,16 @@ function kasMasukNextPage() {
     kasMasukPage++;
     renderKasMasukTerbaru();
 }
+
+// ===== ROLE CHECK =====
+function isAdminOrOwner() {
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+  return role === 'admin' || role === 'owner';
+}
+
+// Contoh penggunaan sebelum fetch report:
+if (isAdminOrOwner()) {
+  // fetch report endpoint
+  fetchLaporanKeuangan();
+  // ...dst
+}

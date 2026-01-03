@@ -857,3 +857,39 @@ window.addEventListener("message", async (event) => {
     alert("Gagal mencetak: " + res.error);
   }
 });
+
+// Barcode dispatch helper — pastikan scan tidak hilang walau kasir.js di-load belakangan
+window._barcodePending = window._barcodePending || [];
+window._barcodeHandler = window._barcodeHandler || null;
+
+window.registerBarcodeHandler = function (fn) {
+    if (typeof fn !== 'function') return;
+    window._barcodeHandler = fn;
+    // proses pending
+    while (window._barcodePending.length) {
+        const code = window._barcodePending.shift();
+        try { fn(code); } catch (e) { console.error('barcode handler error', e); }
+    }
+};
+
+window._dispatchBarcode = function (code) {
+    if (!code) return;
+    // prioritas: registered handler, legacy onBarcodeScanned, legacy onBarcodeScannedKasir
+    if (typeof window._barcodeHandler === 'function') {
+        try { window._barcodeHandler(code); return; } catch (e) { console.error(e); }
+    }
+    if (typeof window.onBarcodeScanned === 'function' && window.onBarcodeScanned !== window._dispatchBarcode) {
+        try { window.onBarcodeScanned(code); return; } catch (e) { console.error(e); }
+    }
+    if (typeof window.onBarcodeScannedKasir === 'function') {
+        try { window.onBarcodeScannedKasir(code); return; } catch (e) { console.error(e); }
+    }
+    // simpan sementara jika belum ada handler
+    window._barcodePending.push(code);
+};
+
+// backward compatible alias: native code may call window.onBarcodeScanned(...)
+window.onBarcodeScanned = window._dispatchBarcode;
+window.onNativeBarcode = window._dispatchBarcode;
+
+// Jika ada integrasi native yang memanggil fungsi internal, pastikan memanggil window._dispatchBarcode(barcode)

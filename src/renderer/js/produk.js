@@ -174,8 +174,12 @@ async function initProduk() {
                 <button class="barcode-produk" title="Preview Barcode" onclick="previewBarcodeProduk('${product.barcode || product.barcode || ''}', '${product.name || ''}')">
                   <span class="material-symbols-outlined">qr_code</span>
                 </button>
-                <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
-                <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
+                <button class="edit-produk" data-permissions="owner,admin" onclick="loadPage('editProduk', {id: ${product.id}})">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="hapus-produk" data-permissions="owner,admin" onclick="hapusProduk(${product.id})">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
               </div>
             </div>
           </div>
@@ -539,12 +543,15 @@ window.renderProdukPage = async function renderProdukPage() {
                 <p class="harga-produk">Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</p>
               </div>
               <div class="button-produk-wrapper">
-<button class="barcode-produk" title="Preview Barcode"
-  onclick="previewBarcodeProduk('${product.barcode}','${product.name}')">
-  <span class="material-symbols-outlined">qr_code</span>
-</button>
-                <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
-                <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
+                <button class="barcode-produk" title="Preview Barcode" onclick="previewBarcodeProduk('${product.barcode || product.barcode || ''}', '${product.name || ''}')">
+                  <span class="material-symbols-outlined">qr_code</span>
+                </button>
+                <button class="edit-produk" data-permissions="owner,admin" onclick="loadPage('editProduk', {id: ${product.id}})">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="hapus-produk" data-permissions="owner,admin" onclick="hapusProduk(${product.id})">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
               </div>
             </div>
           </div>
@@ -632,12 +639,15 @@ async function cariProduk(q, category = '') {
                 <p class="harga-produk">Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</p>
               </div>
               <div class="button-produk-wrapper">
-<button class="barcode-produk" title="Preview Barcode"
-  onclick="previewBarcodeProduk('${product.barcode}','${product.name}')">
-  <span class="material-symbols-outlined">qr_code</span>
-</button>
-                <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
-                <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
+                <button class="barcode-produk" title="Preview Barcode" onclick="previewBarcodeProduk('${product.barcode}','${product.name}')">
+                  <span class="material-symbols-outlined">qr_code</span>
+                </button>
+                <button class="edit-produk" data-permissions="owner,admin" onclick="loadPage('editProduk', {id: ${product.id}})">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="hapus-produk" data-permissions="owner,admin" onclick="hapusProduk(${product.id})">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1017,8 +1027,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <button class="barcode-produk" title="Preview Barcode" onclick="previewBarcodeProduk('${product.barcode || product.barcode || ''}', '${product.name || ''}')">
                   <span class="material-symbols-outlined">qr_code</span>
                 </button>
-                <button class="edit-produk" onclick="loadPage('editProduk', {id: ${product.id}})"><span class="material-symbols-outlined">edit</span></button>
-                <button class="hapus-produk" onclick="hapusProduk(${product.id})"><span class="material-symbols-outlined">delete</span></button>
+                <button class="edit-produk" data-permissions="owner,admin" onclick="loadPage('editProduk', {id: ${product.id}})">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button class="hapus-produk" data-permissions="owner,admin" onclick="hapusProduk(${product.id})">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
               </div>
             </div>
           </div>

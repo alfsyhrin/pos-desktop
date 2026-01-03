@@ -204,3 +204,6 @@ window.addToKasirCart = function(product) {
 window.getKasirCart = function() {
   return JSON.parse(localStorage.getItem('pos_cart') || '[]');
 };
+
+// expose global
+window.addToCartFrontend = window.addToCartFrontend || addToCartFrontend;
