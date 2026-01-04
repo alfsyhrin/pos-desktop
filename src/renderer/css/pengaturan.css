@@ -794,3 +794,10 @@ body.role-owner .informasi-owner-bisnis {
   width: 90%;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
+
+
+.link-data-user {
+  text-decoration: none;
+  background: none;
+  border: none;
+}
