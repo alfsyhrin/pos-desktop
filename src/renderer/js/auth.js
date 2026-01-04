@@ -40,6 +40,9 @@ async function logout() {
     await window.apiRequest('/auth/logout', { method: 'POST' });
   } catch (err) {}
   localStorage.clear();
+  sessionStorage && sessionStorage.clear && sessionStorage.clear();
+
+  // Navigasi ke login.html (di direktori yang sama dengan index.html)
   window.location.href = 'login.html';
 }
 

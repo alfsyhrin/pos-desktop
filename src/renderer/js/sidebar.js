@@ -52,53 +52,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (emailEl) emailEl.textContent = '-';
   }
 
-  // logout handler (robust with fallbacks to avoid 404)
-  async function doLogout() {
-    try {
-      if (typeof window.apiRequest === 'function') {
-        await window.apiRequest('/auth/logout', { method: 'POST' });
-      } else {
-        await fetch('/api/auth/logout', { method: 'POST' }).catch(()=>{});
-      }
-    } catch (e) {
-      console.warn('sidebar.js: logout request failed (continuing)', e);
-    }
-
-    // clear local data
-    localStorage.clear();
-    sessionStorage.clear();
-
-    // Try SPA/router navigation first if available
-    if (window.router && typeof window.router.navigate === 'function') {
-      try { window.router.navigate('/login'); return; } catch {}
-    }
-    if (typeof window.navigateTo === 'function') {
-      try { window.navigateTo('login'); return; } catch {}
-    }
-
-    // Fallbacks for direct redirects (try several likely paths)
-    const candidates = [
-      'login.html',
-      './pages/login.html',
-      '../pages/login.html',
-      '/login.html',
-      '/'
-    ];
-    for (const p of candidates) {
-      try {
-        window.location.href = p;
-        return;
-      } catch (e) { /* ignore and try next */ }
-    }
-
-    // final fallback: reload (will likely show login if app clears auth)
-    window.location.reload();
-  }
-
   if (logoutEl) {
     logoutEl.addEventListener('click', (ev) => {
       ev.preventDefault();
-      doLogout();
+      // Gunakan fungsi logout dari auth.js
+      if (typeof window.logout === 'function') {
+        window.logout();
+      } else {
+        console.error('sidebar.js: window.logout not available');
+      }
     });
   } else {
     console.warn('sidebar.js: logout element not found');
