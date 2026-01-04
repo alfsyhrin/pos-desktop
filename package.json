@@ -13,13 +13,11 @@
     "productName": "PiPos",
     "win": {
       "target": "nsis",
-      "icon": "build/Pipos.ico",
-      "sign": false
+      "icon": "build/Pipos.ico"
     },
     "mac": {
       "target": "dmg",
-      "category": "public.app-category.business",
-      "sign": false
+      "category": "public.app-category.business"
     },
     "nsis": {
       "oneClick": false,
@@ -41,5 +39,7 @@
     "node-thermal-printer": "^4.5.0",
     "sqlite": "^5.1.1",
     "xlsx": "^0.18.5"
-  }
+  },
+  "description": "Aplikasi PiPos Desktop",
+  "author": "PT. Kamunara Group International"
 }
