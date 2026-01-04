@@ -535,6 +535,20 @@
                   <span class="section-count" id="selectedCount"></span>
               </div>
               <div class="export-cards" id="exportCards">
+                    <!-- Tambahkan di atas kartu lain -->
+                <div class="export-card" data-id="all">
+                <div class="export-card-icon">
+                    <span class="material-symbols-outlined">backup_table</span>
+                </div>
+                <div class="export-card-content">
+                    <div class="export-card-title">Semua Data</div>
+                    <div class="export-card-desc">Export seluruh data (karyawan, produk, transaksi, item transaksi) sekaligus dalam satu file ZIP</div>
+                </div>
+                <div class="export-card-checkbox">
+                    <span class="material-symbols-outlined">check</span>
+                </div>
+                </div>
+
                   <!-- Karyawan -->
                   <div class="export-card" data-id="karyawan">
                       <div class="export-card-icon">
@@ -664,6 +678,11 @@
                       <span class="file-type-ext">.xlsx</span>
                   </button>
               </div>
+              <!-- Tambahkan setelah .file-types -->
+<div class="zip-option" style="margin: 18px 0 0 0; display: flex; align-items: center; gap: 8px;">
+  <input type="checkbox" id="zipExport" style="width:18px;height:18px;">
+  <label for="zipExport" style="font-size:15px;cursor:pointer;">Kompres hasil export ke format <b>ZIP</b></label>
+</div>
           </section>
   
           <!-- Section 3: Export Button -->
@@ -686,8 +705,8 @@
           <span id="toastMessage"></span>
       </div>
     </div>
-
-    <script>
+    <script src="../js/backup.js"></script>
+    <!-- <script>
         // State
         let selectedData = [];
         let selectedFileType = 'csv';
@@ -810,6 +829,6 @@
 
         // Initialize
         updateUI();
-    </script>
+    </script> -->
 </body>
 </html>
