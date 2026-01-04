@@ -262,10 +262,10 @@ async function renderDetailTransaksi() {
     return;
   }
 
-  // Ambil tax_percentage dari store
-  const taxPercentage = Number(storeData?.tax_percentage || 10);
+  // Gunakan tax_percentage dari response API, fallback ke store
+  const taxPercentage = Number(trx.tax_percentage || storeData?.tax_percentage || 10);
 
-  // Hitung ulang subtotal, diskon, tax, grand total
+  // Hitung ulang subtotal, diskon, tax, grand total dari data API
   let grossSubtotal = 0, discountTotal = 0;
   trx.items.forEach(item => {
     const harga = Number(item.price || 0);
@@ -289,11 +289,22 @@ async function renderDetailTransaksi() {
     item._discountAmount = discountAmount;
   });
 
+  // Jika ada diskon transaksi level dari API, tambahkan ke discountTotal
+  if (trx.jenis_diskon && trx.nilai_diskon > 0) {
+    if (trx.jenis_diskon === 'percentage') {
+      const trxDiscount = grossSubtotal * (trx.nilai_diskon / 100);
+      discountTotal += trxDiscount;
+    } else if (trx.jenis_diskon === 'nominal') {
+      discountTotal += Number(trx.nilai_diskon);
+    }
+    // buyxgety sudah dihitung di atas per item
+  }
+
   const netSubtotal = grossSubtotal - discountTotal;
   const tax = netSubtotal * (taxPercentage / 100);
   const grandTotal = netSubtotal + tax;
 
-  // Nominal bayar dan kembalian (jika ada di trx, gunakan, jika tidak, fallback 0)
+  // Nominal bayar dan kembalian dari response API
   const received = Number(trx.received_amount || trx.received || 0);
   const change = Math.max(0, received - grandTotal);
 
