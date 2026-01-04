@@ -233,3 +233,113 @@ nav span.material-symbols-outlined {
   overflow: hidden;
   overflow-y: auto;
 }
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal content */
+.modal-content {
+  background: var(--card-color);
+  color: var(--foreground-color);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  font-weight: var(--weight-bold);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: var(--weight-bold);
+}
+
+.modal-buttons .btn-yes {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.modal-buttons .btn-no {
+  background: var(--muted-color);
+  color: var(--foreground-color);
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal content */
+.modal-content {
+  background: var(--card-color);
+  color: var(--foreground-color);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  font-weight: var(--weight-bold);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: var(--weight-bold);
+}
+
+.modal-buttons .btn-yes {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.modal-buttons .btn-no {
+  background: var(--muted-color);
+  color: var(--foreground-color);
+}
