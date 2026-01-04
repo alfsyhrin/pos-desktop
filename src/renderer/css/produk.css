@@ -198,7 +198,7 @@ button.btn-active {
 /* Awal Card Produk Wrapper */
 .card-produk-wrapper {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   margin-top: 16px;
   margin-right: 16px;
@@ -266,7 +266,7 @@ button.btn-active {
   overflow: hidden;
   overflow-y: auto;
   width: 100%;
-  max-height: 25.3vh;
+  max-height: 40vh;
   display: flex;
   flex-direction: column;
   gap: 8px;

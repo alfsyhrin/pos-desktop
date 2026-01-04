@@ -29,19 +29,19 @@
         <div id="tab-keuangan" class="tab-content active">
             <!-- Generate Daily Report Button (NEW) -->
             <div class="generate-daily-section" style="margin-bottom:1rem;">
-              <button id="btn-generate-daily" class="export-btn export-pdf">
+              <button id="btn-generate-daily" class="export-btn export-pdf" style="margin-bottom: 10px;">
                 <span class="material-symbols-outlined">add_task</span>
                 Generate Laporan Harian
               </button>
-              <span id="generate-daily-status" style="margin-left:1rem;color:#328E6E;font-weight:bold;"></span>
+              <span id="generate-daily-status" style="color:var(--hijau);font-weight:bold;"></span>
             </div>
 
             <div class="daily-report-section" style="margin-top:2rem;">
-  <h3>Laporan Harian</h3>
+  <h3 class="judul-laporan-harian">Laporan Harian</h3>
   <div style="margin-bottom:8px;">
-    <input type="date" id="dailyStart" style="margin-right:8px;">
-    <input type="date" id="dailyEnd" style="margin-right:8px;">
-    <button id="btnFetchDailyList">Tampilkan</button>
+    <input type="date" id="dailyStart" style="margin-right:8px;" class="input-tanggal-harian">
+    <input type="date" id="dailyEnd" style="margin-right:8px;" class="input-tanggal-harian">
+    <button id="btnFetchDailyList" class="button-tanggal-harian">Tampilkan</button>
   </div>
   <div class="table-container">
     <table>

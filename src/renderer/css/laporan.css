@@ -961,3 +961,35 @@ tbody tr:last-child td {
 #dailyReportList td, #dailyReportList th {
   vertical-align: middle;
 }
+
+.judul-laporan-harian {
+    margin-bottom: 10px;
+}
+
+.input-tanggal-harian {
+    background-color: var(--card-color);
+    color: var(--foreground-color);
+    border: 1px solid var(--border-color);
+    padding: 13px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-weight: var(--weight-bold);
+}
+
+.button-tanggal-harian {
+    background-color: var(--primary-color);
+    color: var(--foreground-color);
+    border: none;
+    padding: 13px;
+    border-radius: 5px;
+    font-weight: var(--weight-bold);
+    cursor: pointer;
+}
+
+.table-container {
+    border-radius: 5px;
+}
+
+.table-container table {
+    margin-bottom: 16px;
+}
