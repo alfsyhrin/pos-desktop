@@ -55,6 +55,13 @@ function showTab(tabName) {
     if (tabName === 'karyawan') {
         renderLaporanKaryawan();
     }
+    document.getElementById('tab-' + tabName).classList.add('active');
+
+  if (tabName === 'dashboard') {
+    renderDashboard().then(() => {
+      initDashboardCharts(); // init saat sudah tampil
+    });
+  }
     // ...tab lain tetap seperti sebelumnya
 }
 
@@ -762,6 +769,7 @@ async function fetchKaryawanData() {
 document.addEventListener('DOMContentLoaded', () => {
   window.updateHeaderStoreName();
   renderDashboard();
+  initDashboardCharts();
   renderLaporanKeuangan();
   renderLaporanProduk();
   renderLaporanKaryawan();

@@ -1,3 +1,10 @@
+.chart-wrapper canvas,
+.donut-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
 /* Awal Header */
 header.header-laporan {
   background-color: var(--card-color);
