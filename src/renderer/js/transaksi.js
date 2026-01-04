@@ -82,7 +82,8 @@ function renderTransactions(transactions) {
     }
 
     card.innerHTML = `
-      ${checkboxHtml}
+      <input type="checkbox" class="trx-checkbox" data-id="${trx.transaction_id}" style="width:18px;height:18px;cursor:pointer;margin-right: 10px;accent-color: var(--primary-color);">
+      
       <span class="material-symbols-outlined transaksi">receipt_long</span>
       <div class="info-transaksi">
         <div class="no-harga-wrapper">

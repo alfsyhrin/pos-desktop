@@ -41,7 +41,7 @@ function formatRelativeTime(isoString) {
 }
 
 let logPage = 1;
-const logLimit = 10;
+const logLimit = 6;
 let logPages = 1;
 let logTotal = 0;
 
@@ -91,11 +91,11 @@ window.renderActivityLogs = async function renderActivityLogs(page = 1) {
 function renderPagination(container) {
   const pagDiv = document.createElement('div');
   pagDiv.className = 'pagination-log';
-  pagDiv.style = 'display:flex;justify-content:center;align-items:center;margin:18px 0 0 0;gap:8px;';
+  pagDiv.style = 'display:flex;justify-content:center;align-items:center;margin:0 0 0 0;gap:8px;';
   pagDiv.innerHTML = `
-    <button id="log-prev" ${logPage <= 1 ? 'disabled' : ''} style="padding:4px 12px;">&laquo; Sebelumnya</button>
-    <span>Halaman ${logPage} dari ${logPages} (${logTotal} log)</span>
-    <button id="log-next" ${logPage >= logPages ? 'disabled' : ''} style="padding:4px 12px;">Berikutnya &raquo;</button>
+    <button id="log-prev" class="previous-page"${logPage <= 1 ? 'disabled' : ''}><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+    <span>${logPage} - ${logPages} (${logTotal})</span>
+    <button id="log-next" class="next-page" ${logPage >= logPages ? 'disabled' : ''}><span class="material-symbols-outlined">arrow_forward_ios</span></button>
   `;
   container.appendChild(pagDiv);
 

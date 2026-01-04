@@ -91,11 +91,29 @@ header.header-logaktivitas p {
   font-size: 12px;
 }
 
+.pagination-log button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--card-color);
+  padding: 3px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+}
+
 .pagination-log button[disabled] {
-  opacity: 0.5;
   cursor: not-allowed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .pagination-log span {
   font-weight: bold;
-  color: #E43636;
+  color: var(--primary-color);
+}
+
+.pagination-log #log-prev.previous-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
