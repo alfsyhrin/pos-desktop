@@ -949,3 +949,15 @@ tbody tr:last-child td {
     background: #E43636;
     color: #fff;
 }
+
+/* Zebra striping */
+#dailyReportList tr:nth-child(even) {
+  background: var(--muted-color);
+}
+#dailyReportList tr:hover {
+  background: #232323;
+  color: #fff;
+}
+#dailyReportList td, #dailyReportList th {
+  vertical-align: middle;
+}

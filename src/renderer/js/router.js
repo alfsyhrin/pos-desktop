@@ -58,6 +58,8 @@ function loadPage(page, params = {}) {
         setTimeout(() => window.initEditProdukPage?.(), 200);
       } else if (page === 'aktivitas' && window.renderActivityLogs) {
         setTimeout(() => window.renderActivityLogs(1), 100);
+      } else if (page === 'laporan' && window.initLaporanPage) {
+        setTimeout(() => window.initLaporanPage(), 100);
       }
 
       // Update header

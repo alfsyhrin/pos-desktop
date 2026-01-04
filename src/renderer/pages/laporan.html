@@ -35,6 +35,34 @@
               </button>
               <span id="generate-daily-status" style="margin-left:1rem;color:#328E6E;font-weight:bold;"></span>
             </div>
+
+            <div class="daily-report-section" style="margin-top:2rem;">
+  <h3>Laporan Harian</h3>
+  <div style="margin-bottom:8px;">
+    <input type="date" id="dailyStart" style="margin-right:8px;">
+    <input type="date" id="dailyEnd" style="margin-right:8px;">
+    <button id="btnFetchDailyList">Tampilkan</button>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Transaksi</th>
+          <th>Pendapatan</th>
+          <th>Diskon</th>
+          <th>Pendapatan Bersih</th>
+          <th>Modal/HPP</th>
+          <th>Laba Bersih</th>
+          <th>Margin</th>
+        </tr>
+      </thead>
+      <tbody id="dailyReportList">
+        <tr><td colspan="8" style="text-align:center;color:#888;">Belum ada data</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
     
             <!-- Export Buttons -->
             <div class="export-section">

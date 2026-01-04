@@ -47,7 +47,9 @@ function showTab(tabName) {
         renderLaporanProduk();
     }
     if (tabName === 'dashboard') {
-        renderDashboard();
+        renderDashboard().then(() => {
+            initDashboardCharts(); // Panggil hanya setelah tab dashboard aktif dan canvas sudah ada
+        });
     }
     if (tabName === 'keuangan') {
         renderLaporanKeuangan();
@@ -111,6 +113,7 @@ const topSellersData = [
 // ===== RENDER FUNCTIONS =====
 function renderTopProducts() {
     const container = document.getElementById('top-products');
+    if (!container) return; // <-- Tambahan agar tidak error
     container.innerHTML = (window.topProductsData || []).map((product, index) => {
         let rankClass = 'normal';
         if (index === 0) rankClass = 'gold';
@@ -765,19 +768,38 @@ async function fetchKaryawanData() {
     return json.data || {};
 }
 
+// Ambil laporan harian untuk tanggal tertentu
+async function fetchLaporanHarian(date) {
+  const storeId = localStorage.getItem('store_id');
+  const token = localStorage.getItem('token');
+  const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}/reports/daily?date=${date}`, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  return await res.json();
+}
+
+// Ambil list laporan harian untuk rentang tanggal
+async function fetchListLaporanHarian(start, end) {
+  const storeId = localStorage.getItem('store_id');
+  const token = localStorage.getItem('token');
+  const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}/reports/daily/list?start=${start}&end=${end}`, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  return await res.json();
+}
+
 // ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', () => {
-  window.updateHeaderStoreName();
-  renderDashboard();
-  initDashboardCharts();
-  renderLaporanKeuangan();
-  renderLaporanProduk();
-  renderLaporanKaryawan();
-  renderTopProducts();
-  renderLowStockProducts();
-  renderEmployeePerformance();
-  renderTopSellers();
-});
+// document.addEventListener('DOMContentLoaded', () => {
+//   window.updateHeaderStoreName();
+//   renderDashboard();
+//   renderLaporanKeuangan();
+//   renderLaporanProduk();
+//   renderLaporanKaryawan();
+//   renderTopProducts();
+//   renderLowStockProducts();
+//   renderEmployeePerformance();
+//   renderTopSellers();
+// });
 
 async function renderLaporanKeuangan() {
     const data = await fetchLaporanKeuangan(currentFilters.keuangan);
@@ -1081,4 +1103,65 @@ if (isAdminOrOwner()) {
   // fetch report endpoint
   fetchLaporanKeuangan();
   // ...dst
+}
+
+window.initLaporanPage = function() {
+  // Inisialisasi tombol generate laporan harian
+  const btn = document.getElementById('btn-generate-daily');
+  if (btn) {
+    btn.onclick = generateDailyReport;
+    checkDailyReportExists();
+  }
+
+  // Render semua bagian laporan
+  renderDashboard();
+  renderLaporanKeuangan();
+  renderLaporanProduk();
+  renderLaporanKaryawan();
+  renderTopProducts();
+  renderLowStockProducts();
+  renderEmployeePerformance();
+  renderTopSellers();
+  setupDailyReportListUI();
+};
+
+function renderListLaporanHarian(list) {
+  const tbody = document.getElementById('dailyReportList');
+  if (!tbody) return;
+  if (!list || list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#888;">Tidak ada data laporan harian.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(item => `
+    <tr>
+      <td>${item.report_date ? new Date(item.report_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+      <td>${item.total_transactions ?? '-'}</td>
+      <td>${formatCurrency(item.total_income ?? 0)}</td>
+      <td>${formatCurrency(item.total_discount ?? 0)}</td>
+      <td>${formatCurrency(item.net_revenue ?? 0)}</td>
+      <td>${formatCurrency(item.total_hpp ?? 0)}</td>
+      <td>${formatCurrency(item.net_profit ?? 0)}</td>
+      <td>${item.margin ?? '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function setupDailyReportListUI() {
+  const btn = document.getElementById('btnFetchDailyList');
+  if (!btn) return;
+  btn.onclick = async function() {
+  const start = document.getElementById('dailyStart').value;
+  const end = document.getElementById('dailyEnd').value;
+  if (!start || !end) {
+    alert('Pilih tanggal awal dan akhir!');
+    return;
+  }
+  const res = await fetchListLaporanHarian(start, end);
+  // PERBAIKI DI SINI:
+  let list = [];
+  if (res.success && res.data && Array.isArray(res.data.items)) {
+    list = res.data.items;
+  }
+  renderListLaporanHarian(list);
+};
 }
