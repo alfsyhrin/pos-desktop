@@ -23,32 +23,54 @@ async function fetchStoreData() {
 
 // TAMBAH: Generate template struk ESC/POS
 function generateReceiptTemplate(storeData, trx) {
+  const W = 32; // paper width in characters for 48mm/57.5mm printer
+  const lineEq = '='.repeat(W) + '\n';
+  const lineDash = '─'.repeat(W) + '\n';
+
+  function centerText(text) {
+    const t = String(text || '');
+    if (t.length >= W) return t;
+    const pad = Math.floor((W - t.length) / 2);
+    return ' '.repeat(pad) + t;
+  }
+
+  function wrapText(text) {
+    const words = String(text || '').split(/\s+/);
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      if ((cur + ' ' + w).trim().length <= W) cur = (cur + ' ' + w).trim();
+      else { if (cur) lines.push(cur); cur = w; }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  function lineKV(label, value) {
+    const v = String(formatRupiah(value));
+    const pad = Math.max(1, W - label.length - v.length);
+    return label + ' '.repeat(pad) + v + '\n';
+  }
+
   let receipt = '';
-  
-  // Header: Nama Toko
-  receipt += `${'='.repeat(42)}\n`;
-  receipt += `${(storeData?.name || 'TOKO SAYA').toUpperCase().padStart(21 + (storeData?.name || 'TOKO SAYA').length / 2)}\n`;
-  
-  // Informasi toko
-  if (storeData?.address) {
-    const addr = storeData.address;
-    receipt += `${addr.substring(0, 42)}\n`;
-  }
-  if (storeData?.phone) {
-    receipt += `Telp: ${storeData.phone}\n`;
-  }
-  receipt += `${'='.repeat(42)}\n\n`;
-  
-  // Nomor & Tanggal Transaksi
+
+  // Header
+  receipt += lineEq;
+  receipt += centerText((storeData?.name || 'TOKO SAYA').toUpperCase()) + '\n';
+  if (storeData?.address) wrapText(storeData.address).forEach(l => receipt += l + '\n');
+  if (storeData?.phone) receipt += 'Telp: ' + storeData.phone + '\n';
+  receipt += lineEq + '\n';
+
+  // Trans info
   receipt += `No. Trans : ${trx.idFull || trx.id || '-'}\n`;
-  receipt += `Tgl/Jam  : ${trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-'}\n`;
+  receipt += `Tgl/Jam  : ${trx.createdAt ? formatDateToTZ(trx.createdAt) : '-'}\n`;
   receipt += `Metode   : ${trx.method || trx.payment_method || 'Tunai'}\n`;
-  receipt += `${'='.repeat(42)}\n\n`;
-  
-  // Items dengan format: Nama Qty x Harga = Total
-  receipt += `DAFTAR BARANG:\n`;
-  receipt += `${'─'.repeat(42)}\n`;
-  
+  receipt += lineEq + '\n';
+
+  // Items
+  receipt += 'DAFTAR BARANG:\n';
+  receipt += lineDash;
+
   let totalDiskonItem = 0;
   (trx.items || []).forEach(item => {
     const harga = Number(item.price || 0);
@@ -56,59 +78,53 @@ function generateReceiptTemplate(storeData, trx) {
     const subtotal = harga * qty;
     const discount = Number(item.discount_amount || item._discountAmount || 0);
     totalDiskonItem += discount;
-    
-    // Nama item
-    receipt += `${(item.name || '-').substring(0, 42)}\n`;
-    
-    // Qty, harga, subtotal
-    const qtyPart = `${qty}x`;
-    const hargaPart = formatRupiah(harga);
-    const totalPart = formatRupiah(subtotal);
-    receipt += `${qtyPart.padEnd(8)} ${hargaPart.padEnd(15)} ${totalPart}\n`;
-    
-    // SKU
-    if (item.sku) {
-      receipt += `SKU: ${item.sku}\n`;
-    }
-    
-    // Diskon item jika ada
-    if (discount > 0) {
-      receipt += `  Diskon: -${formatRupiah(discount)}\n`;
-    }
-    
-    receipt += `\n`;
+
+    wrapText(item.name || '-').forEach(l => receipt += l + '\n');
+
+    const left = `${qty}x ${formatRupiah(harga)}`;
+    const right = formatRupiah(subtotal);
+    const spaces = Math.max(1, W - left.length - right.length);
+    receipt += left + ' '.repeat(spaces) + right + '\n';
+
+    if (item.sku) receipt += `SKU: ${item.sku}\n`;
+    if (discount > 0) receipt += `  Diskon: -${formatRupiah(discount)}\n`;
+
+    receipt += '\n';
   });
-  
-  receipt += `${'='.repeat(42)}\n`;
-  
-  // Totals
+
+  receipt += lineEq;
+
+  // Totals (use calculated fields if present)
   const subtotal = Number(trx._grossSubtotal || trx.total || 0);
   const totalDiskon = Number(trx._discountTotal || trx.discount_total || totalDiskonItem);
   const tax = Number(trx._tax || trx.tax || 0);
   const taxPercent = Number(trx.tax_percentage || (subtotal ? (tax / subtotal * 100) : 10));
   const grandTotal = Number(trx._grandTotal || trx.grand_total || (subtotal - totalDiskon + tax));
-  
-  receipt += `Sub Total      : ${formatRupiah(subtotal).padStart(25)}\n`;
-  receipt += `Total Diskon   : -${formatRupiah(totalDiskon).padStart(24)}\n`;
-  receipt += `PPN (${taxPercent.toFixed(1)}%)       : ${formatRupiah(tax).padStart(25)}\n`;
-  receipt += `${'─'.repeat(42)}\n`;
-  receipt += `GRAND TOTAL    : ${formatRupiah(grandTotal).padStart(25)}\n`;
-  receipt += `${'='.repeat(42)}\n\n`;
-  
-  // Pembayaran
-  receipt += `Tunai Diterima : ${formatRupiah(trx.received || trx.received_amount || 0).padStart(25)}\n`;
-  receipt += `Kembalian      : ${formatRupiah(trx.change || trx.change_amount || 0).padStart(25)}\n\n`;
-  
-  // Footer: Receipt Template dari database
-  if (storeData?.receipt_template) {
-    receipt += `${'='.repeat(42)}\n`;
-    receipt += `${storeData.receipt_template}\n`;
-    receipt += `${'='.repeat(42)}\n`;
-  } else {
-    receipt += `Terima Kasih\n`;
-    receipt += `Selamat Datang Kembali\n`;
+
+  receipt += lineKV('Sub Total      :', subtotal);
+  // show negative sign for discount
+  const diskonDisplay = totalDiskon > 0 ? -Math.abs(totalDiskon) : 0;
+  receipt += lineKV('Total Diskon   :', diskonDisplay);
+  const taxLabel = `PPN (${taxPercent.toFixed(1)}%) :`;
+  {
+    const v = formatRupiah(tax);
+    const pad = Math.max(1, W - taxLabel.length - v.length);
+    receipt += taxLabel + ' '.repeat(pad) + v + '\n';
   }
-  
+  receipt += lineDash;
+  receipt += lineKV('GRAND TOTAL    :', grandTotal);
+  receipt += lineEq + '\n';
+
+  // Payment
+  receipt += lineKV('Tunai Diterima :', Number(trx.received || trx.received_amount || 0));
+  receipt += lineKV('Kembalian      :', Number(trx.change || trx.change_amount || 0));
+  receipt += '\n';
+
+  // Footer
+  const footer = storeData?.receipt_template || 'Terima Kasih\nSelamat Datang Kembali';
+  wrapText(footer).forEach(l => receipt += centerText(l) + '\n');
+  receipt += lineEq;
+
   return receipt;
 }
 
@@ -175,7 +191,7 @@ async function renderDetailTransaksi() {
 
     // Tanggal & waktu
     document.querySelectorAll('.jenis-pembayaran-transaksi')[1].querySelector('p').textContent =
-      trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-';
+      trx.createdAt ? formatDateToTZ(trx.createdAt) : '-';
 
     // Metode pembayaran
     document.querySelectorAll('.jenis-pembayaran-transaksi')[2].querySelector('p').textContent =
@@ -327,7 +343,7 @@ async function renderDetailTransaksi() {
     trx.idFull || trx.idShort || trx.id || '-';
 
   document.querySelectorAll('.jenis-pembayaran-transaksi')[1].querySelector('p').textContent =
-    trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-';
+    trx.createdAt ? formatDateToTZ(trx.createdAt) : '-';
 
   document.querySelectorAll('.jenis-pembayaran-transaksi')[2].querySelector('p').textContent =
     trx.method || trx.payment_method || '-';
@@ -382,6 +398,25 @@ async function renderDetailTransaksi() {
 
   // Render preview struk
   setTimeout(() => renderReceiptPreview(), 500);
+}
+
+// helper: format date string to specific timezone (default WIT)
+function formatDateToTZ(dateInput, timeZone = localStorage.getItem('preferred_timezone') || 'Asia/Jayapura') {
+  try {
+    const d = dateInput ? new Date(dateInput) : new Date();
+    return new Intl.DateTimeFormat('id-ID', {
+      timeZone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(d);
+  } catch (e) {
+    // fallback to local string
+    return dateInput ? new Date(dateInput).toLocaleString('id-ID') : new Date().toLocaleString('id-ID');
+  }
 }
 
 async function deleteTransactionAndGoToKasir() {
@@ -440,3 +475,107 @@ document.getElementById('btn-back-kasir').addEventListener('click', function (e)
   localStorage.setItem('current_page', 'kasir');
   window.location.href = 'index.html';
 });
+
+// Tambahkan fungsi global yang dipanggil dari detail-transaksi.html
+async function sendPrintRequest(printType = 'usb', bluetoothAddress = null) {
+  try {
+    const raw = localStorage.getItem('last_transaction') || '{}';
+    const trx = JSON.parse(raw || '{}');
+
+    if (!trx || Object.keys(trx).length === 0) {
+      console.warn('sendPrintRequest: no last_transaction found — aborting silently');
+      return;
+    }
+
+    // fallback store data
+    let storeData = await fetchStoreData().catch(() => null);
+    if (!storeData) {
+      try { storeData = JSON.parse(localStorage.getItem('store_data') || localStorage.getItem('store') || '{}'); } catch (e) { storeData = {}; }
+    }
+
+    // normalize/calculations
+    const items = (trx.items || []).map(it => {
+      const price = Number(it.price || it.lineTotal || 0);
+      const qty = Number(it.quantity || it.qty || it.qty || 0) || 0;
+      const discount_amount = Number(it.discount_amount || it._discountAmount || 0);
+      return {
+        name: it.name || '-',
+        sku: it.sku || '',
+        qty,
+        price,
+        discount_amount,
+        lineTotal: Number(it.lineTotal || price * qty || 0)
+      };
+    });
+
+    const subTotal = Number(trx._grossSubtotal ?? trx.subtotal ?? trx.total ?? items.reduce((s,i) => s + (i.price * i.qty), 0) );
+    const discount = Number(trx._discountTotal ?? trx.discount_total ?? items.reduce((s,i) => s + (i.discount_amount || 0), 0));
+    const tax = Number(trx._tax ?? trx.tax ?? 0);
+    const taxPercent = Number(trx.tax_percentage ?? storeData?.tax_percentage ?? 10);
+    const grandTotal = Number(trx._grandTotal ?? trx.grand_total ?? (subTotal - discount + tax));
+    const cash = Number(trx.received ?? trx.received_amount ?? 0);
+    const change = Number(trx.change ?? trx.change_amount ?? Math.max(0, cash - grandTotal));
+
+    // Ensure trx has normalized fields (persist for future)
+    trx._grossSubtotal = subTotal;
+    trx._discountTotal = discount;
+    trx._tax = tax;
+    trx._grandTotal = grandTotal;
+    trx.received = cash;
+    trx.change = change;
+    localStorage.setItem('last_transaction', JSON.stringify(trx));
+
+    // Generate receiptText (preview exact)
+    const receiptText = generateReceiptTemplate(storeData || {}, trx);
+
+    // Build payload with BOTH receiptText and structured fields
+    const payload = {
+      receiptText,
+      printType,
+      bluetoothAddress,
+      printerName: undefined,
+
+      // Structured fallback data (main.js uses these if needed)
+      txId: trx.idFull || trx.idShort || trx.transaction_id || trx.id || '-',
+      txDate: trx.createdAt ? formatDateToTZ(trx.createdAt) : (trx.created_at ? formatDateToTZ(trx.created_at) : formatDateToTZ(new Date())),
+      method: trx.method || trx.payment_method || 'cash',
+      items,
+      subTotal,
+      discount,
+      tax,
+      taxPercent,
+      grandTotal,
+      cash,
+      change,
+      cashier_name: trx.cashier_name || trx.created_by || 'Admin',
+      store: {
+        name: storeData?.name || localStorage.getItem('store_name') || 'CV BETARAK INDONESIA 1',
+        address: storeData?.address || localStorage.getItem('store_address') || '',
+        phone: storeData?.phone || localStorage.getItem('store_phone') || ''
+      },
+      storeData
+    };
+
+    console.log('sendPrintRequest: payload prepared', {
+      txId: payload.txId,
+      itemsCount: payload.items.length,
+      subTotal: payload.subTotal,
+      discount: payload.discount,
+      tax: payload.tax,
+      grandTotal: payload.grandTotal
+    });
+
+    // Use preload API
+    if (window.printerAPI && typeof window.printerAPI.printReceipt === 'function') {
+      const res = await window.printerAPI.printReceipt(payload);
+      console.log('print result', res);
+    } else if (window.electron?.ipcRenderer?.invoke) {
+      const res = await window.electron.ipcRenderer.invoke('print-receipt', payload);
+      console.log('print result (ipcRenderer)', res);
+    } else {
+      console.warn('No print bridge available (printerAPI/ipcRenderer)');
+    }
+  } catch (err) {
+    console.error('sendPrintRequest error:', err);
+  }
+}

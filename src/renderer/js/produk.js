@@ -486,6 +486,7 @@ window.renderProdukPage = async function renderProdukPage() {
   try {
     const res = await window.apiRequest(`/stores/${storeId}/products`);
     const products = extractProductsFromResponse(res);
+    window.__lastProducts = products; // <-- update data export
     listProdukEl.innerHTML = '';
 
     // update statistik dasar (total & kategori) berdasarkan products
@@ -564,6 +565,18 @@ window.renderProdukPage = async function renderProdukPage() {
   } catch (err) {
     console.error('Gagal memuat daftar produk:', err);
     listProdukEl.innerHTML = '<p style="color:red;">Gagal memuat produk.</p>';
+  }
+
+  // PASANG EVENT LISTENER EXPORT DI SINI!
+  const btnExport = document.getElementById('btnExportStokOpname');
+  if (btnExport) {
+    btnExport.onclick = function() {
+      if (!window.__lastProducts || window.__lastProducts.length === 0) {
+        alert('Produk belum dimuat');
+        return;
+      }
+      exportStokOpnameExcel(window.__lastProducts);
+    };
   }
 };
 // ...existing code...
@@ -1046,6 +1059,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Gagal memuat daftar produk:', err);
     listProdukEl.innerHTML = '<p style="color:red;">Gagal memuat produk.</p>';
   }
+
+  // PASANG EVENT LISTENER EXPORT DI SINI!
+  // const btnExport = document.getElementById('btnExportStokOpname');
+  // if (btnExport) {
+  //   btnExport.onclick = function() {
+  //     if (!window.__lastProducts || window.__lastProducts.length === 0) {
+  //       alert('Produk belum dimuat');
+  //       return;
+  //     }
+  //     exportStokOpnameExcel(window.__lastProducts);
+  //   };
+  // }
 });
 
 window.previewBarcodeProduk = function(barcode, name) {
@@ -1074,3 +1099,87 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btn) btn.style.display = 'none';
   }
 });
+
+function exportStokOpnameExcel(products) {
+  if (!Array.isArray(products) || products.length === 0) {
+    alert('Data produk kosong');
+    return;
+  }
+
+  const rows = products.map((p, index) => ({
+    'ID Produk': p.id,
+    'Nama Produk': p.name,
+    'SKU': p.sku,
+    'Barcode': p.barcode,
+    'Kategori': p.category,
+    'Harga Modal': p.costPrice ?? p.cost_price ?? 0,
+    'Harga Jual': p.sellPrice ?? p.price ?? 0,
+    'Stok Sistem': p.stock ?? 0,
+    'Stok Fisik': '', // diisi manual
+    'Selisih': '',    // =I2-H2
+    'Nilai Selisih': '', // =J2*F2
+    'Status': (p.isActive ?? p.is_active) ? 'Aktif' : 'Nonaktif',
+    'Promo': p.promoType ?? p.jenis_diskon ?? '-',
+    'Updated At': p.updatedAt ? new Date(p.updatedAt).toLocaleString('id-ID') : ''
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+
+  // Tambahkan formula Excel pada baris pertama data (baris 2, karena header di baris 1)
+  worksheet['J2'] = { f: 'I2-H2' };   // Selisih
+  worksheet['K2'] = { f: 'J2*F2' };   // Nilai Selisih
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Stok Opname');
+
+  XLSX.writeFile(
+    workbook,
+    `stok-opname-${new Date().toISOString().slice(0, 10)}.xlsx`
+  );
+}
+
+// Pastikan window.__lastProducts selalu update setiap render produk
+function updateLastProducts(products) {
+  window.__lastProducts = Array.isArray(products) ? products : [];
+}
+
+// Patch renderProdukPage agar selalu update window.__lastProducts
+// const _oldRenderProdukPage = window.renderProdukPage;
+// window.renderProdukPage = async function() {
+//   await _oldRenderProdukPage.apply(this, arguments);
+//   // Ambil data produk dari DOM (atau fetch ulang jika perlu)
+//   const storeId = localStorage.getItem('store_id');
+//   if (!storeId) return;
+//   try {
+//     const res = await window.apiRequest(`/stores/${storeId}/products`);
+//     const products = extractProductsFromResponse(res);
+//     updateLastProducts(products);
+//   } catch (e) {
+//     updateLastProducts([]);
+//   }
+// };
+
+// Event listener tombol export
+// document.addEventListener('DOMContentLoaded', function() {
+//   const btnExport = document.getElementById('btnExportStokOpname');
+//   if (btnExport) {
+//     btnExport.addEventListener('click', function() {
+//       if (!window.__lastProducts || window.__lastProducts.length === 0) {
+//         alert('Produk belum dimuat');
+//         return;
+//       }
+//       exportStokOpnameExcel(window.__lastProducts);
+//     });
+//   }
+// });
+
+const btnExport = document.getElementById('btnExportStokOpname');
+if (btnExport) {
+  btnExport.onclick = function() {
+    if (!window.__lastProducts || window.__lastProducts.length === 0) {
+      alert('Produk belum dimuat');
+      return;
+    }
+    exportStokOpnameExcel(window.__lastProducts);
+  };
+}

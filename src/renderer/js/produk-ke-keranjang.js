@@ -1,6 +1,34 @@
 /* =========================
+
    ====== KERANJANG FRONTEND ======
 ========================= */
+
+function applyBuyXGetY(item) {
+  if (item.discount_type !== 'buyxgety') {
+    item.buy_quantity = item.quantity;
+    item.bonus_quantity = 0;
+    return item;
+  }
+
+  const buyQty = Number(item.buy_qty || 0);
+  const freeQty = Number(item.free_qty || 0);
+  const beli = Number(item.buy_quantity || item.quantity || 0);
+
+  if (buyQty <= 0 || freeQty <= 0) {
+    item.buy_quantity = beli;
+    item.bonus_quantity = 0;
+    return item;
+  }
+
+  const bonus = Math.floor(beli / buyQty) * freeQty;
+
+  item.buy_quantity = beli;
+  item.bonus_quantity = bonus;
+  item.quantity = beli + bonus; // 🔥 keluar stok
+
+  return item;
+}
+
 let cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
 
 function normalizeId(id) {
@@ -45,7 +73,9 @@ function updateKeranjangView() {
     if (item.discount_type === 'bundle' && item.bundle_qty && item.bundle_value) {
       diskonLabel = `Promo: ${item.bundle_qty} pcs Rp ${Number(item.bundle_value).toLocaleString('id-ID')}`;
     }
-    const totalItem = hargaSetelahDiskon * item.quantity;
+    const bayarQty = Number(item.buy_quantity || item.quantity || 0);
+const totalItem = hargaSetelahDiskon * bayarQty;
+
     subtotal += totalItem;
 
     const el = document.createElement('div');
@@ -103,26 +133,32 @@ function addToCartFrontend({
   const pStock = Number(stock || 0);
 
   let idx = cart.findIndex(item => normalizeId(item.id) === normId);
-  if (idx !== -1) {
-    // increase quantity but not beyond stock
-    const newQty = (cart[idx].quantity || 0) + 1;
-    cart[idx].quantity = pStock > 0 ? Math.min(newQty, pStock) : newQty;
-  } else {
-    cart.push({
-      id: normId,
-      name: String(name || ''),
-      price: pPrice,
-      sku: sku || '',
-      stock: pStock,
-      quantity: 1,
-      discount_type,
-      discount_value,
-      buy_qty,
-      free_qty,
-      bundle_qty,
-      bundle_value
-    });
-  }
+if (idx !== -1) {
+  cart[idx].buy_quantity = (cart[idx].buy_quantity || 0) + 1;
+  applyBuyXGetY(cart[idx]);
+} else {
+  const item = {
+    id: normId,
+    name: String(name || ''),
+    price: pPrice,
+    sku: sku || '',
+    stock: pStock,
+
+    buy_quantity: 1,
+    bonus_quantity: 0,
+    quantity: 1,
+
+    discount_type,
+    discount_value,
+    buy_qty,
+    free_qty,
+    bundle_qty,
+    bundle_value
+  };
+  applyBuyXGetY(item);
+  cart.push(item);
+}
+
   saveCart();
   if (typeof updateKeranjangView === 'function') updateKeranjangView();
   // optional global toast
@@ -154,20 +190,32 @@ document.addEventListener('click', function (e) {
 
 // Event tombol +, -, hapus di cart
 document.addEventListener('click', function (e) {
-  if (e.target.classList.contains('increase-qty')) {
-    const idx = parseInt(e.target.dataset.idx);
-    cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
-    if (cart[idx] && cart[idx].quantity < (cart[idx].stock || Infinity)) cart[idx].quantity += 1;
-    saveCart();
-    updateKeranjangView();
+if (e.target.classList.contains('increase-qty')) {
+  const idx = parseInt(e.target.dataset.idx);
+  cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
+
+  if (cart[idx]) {
+    cart[idx].buy_quantity += 1;
+    applyBuyXGetY(cart[idx]);
   }
-  if (e.target.classList.contains('decrease-qty')) {
-    const idx = parseInt(e.target.dataset.idx);
-    cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
-    if (cart[idx] && cart[idx].quantity > 1) cart[idx].quantity -= 1;
-    saveCart();
-    updateKeranjangView();
+
+  saveCart();
+  updateKeranjangView();
+}
+
+if (e.target.classList.contains('decrease-qty')) {
+  const idx = parseInt(e.target.dataset.idx);
+  cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
+
+  if (cart[idx] && cart[idx].buy_quantity > 1) {
+    cart[idx].buy_quantity -= 1;
+    applyBuyXGetY(cart[idx]);
   }
+
+  saveCart();
+  updateKeranjangView();
+}
+
   if (e.target.classList.contains('remove-item')) {
     const idx = parseInt(e.target.dataset.idx);
     cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');

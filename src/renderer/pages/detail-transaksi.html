@@ -114,177 +114,42 @@
   <div class="toast" id="toast">
     <span id="toast-message"></span>
   </div>
-  <script src="../../main/main.js"></script>
+  <!-- <script src="../../main/main.js"></script> -->
   <script src="../js/detail-transaksi.js"></script>
   <script>
-  function parseRupiah(str) {
-    if (!str) return 0;
-    return Number(String(str).replace(/[^\d]/g, "")) || 0;
-  }
+  // HANYA wire tombol ke sendPrintRequest dari detail-transaksi.js
+  document.getElementById('btn-print-usb').addEventListener('click', () => {
+    sendPrintRequest('usb');
+  });
 
-  async function handlePrint(printType = 'usb', bluetoothAddress = null) {
-    console.log("printerAPI in handler:", window.printerAPI); // debug
-
-    if (!window.printerAPI || !window.printerAPI.printReceipt) {
-      alert("printerAPI belum tersedia di window");
-      return;
-    }
-
-    // Get transaction data from localStorage (from API fetch)
-    const trx = JSON.parse(localStorage.getItem('last_transaction') || '{}');
-    if (!trx || !trx.items) {
-      alert("Data transaksi tidak ditemukan!");
-      return;
-    }
-
-    const store = {
-      name: document.getElementById("store-name")?.value || "TOKO SAYA",
-      address: document.getElementById("store-address")?.value || "",
-      phone: document.getElementById("store-phone")?.value || "",
-    };
-
-    const payload = {
-      txId: trx.idFull || trx.idShort || trx.id || '',
-      txDate: trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '',
-      method: trx.method || 'Tunai',
-      items: trx.items.map(item => ({
-        name: item.name || '',
-        qty: item.qty || item.quantity || 1,
-        price: Number(item.price || 0),
-        sku: item.sku || ''
-      })),
-      subTotal: Number(trx.total || 0),
-      discount: Number((trx.total || 0) - (trx.grand_total || 0)),
-      tax: Number(trx.tax || 0),
-      grandTotal: Number(trx.grand_total || 0),
-      cash: Number(trx.received || trx.received_amount || 0),
-      change: Number(trx.change || trx.change_amount || 0),
-      store,
-      printType,
-      bluetoothAddress,
-    };
-
-    const btnId = printType === 'bluetooth' ? 'btn-print-bluetooth' : 'btn-print-usb';
-    const btn = document.getElementById(btnId);
-    const oldText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="material-symbols-outlined">print</span> Mencetak...';
-
+  // Refresh printer status
+  document.getElementById('btn-refresh').addEventListener('click', async () => {
+    const indicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const printerNameText = document.getElementById('printer-name-text');
+    
+    indicator.className = 'status-indicator checking';
+    statusText.textContent = 'Memeriksa printer...';
+    printerNameText.textContent = 'Mendeteksi printer yang tersedia';
+    
     try {
-      const result = await window.printerAPI.printReceipt(payload);
-      console.log("print result:", result);
-      if (!result.success) {
-        alert("Gagal mencetak: " + (result.error || "Unknown error"));
+      const res = await window.printerAPI.checkStatus();
+      if (res.success && res.connected) {
+        indicator.className = 'status-indicator online';
+        statusText.textContent = 'Printer terhubung';
+        printerNameText.textContent = res.message || 'WOYA via USB';
       } else {
-        // Show success message and redirect to kasir page
-        alert("Struk berhasil dicetak!");
-        // Set the page to kasir and redirect to index.html
-        localStorage.setItem('current_page', 'kasir');
-        window.location.href = '../pages/index.html';
+        indicator.className = 'status-indicator offline';
+        statusText.textContent = 'Printer tidak terhubung';
+        printerNameText.textContent = res.hint || res.message || 'Periksa kabel / driver printer';
       }
     } catch (e) {
-      alert("Error IPC: " + e.message);
-      console.error(e);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = oldText;
-    }
-  }
-
-  async function handleBluetoothPrint() {
-    // Show the Bluetooth modal
-    const modal = document.getElementById('bluetooth-modal');
-    modal.classList.add('show');
-  }
-
-  function closeBluetoothModal() {
-    const modal = document.getElementById('bluetooth-modal');
-    modal.classList.remove('show');
-    // Clear the input
-    document.getElementById('bluetooth-address').value = '';
-  }
-
-  async function confirmBluetoothPrint() {
-    const bluetoothAddress = document.getElementById('bluetooth-address').value.trim();
-    if (!bluetoothAddress) {
-      alert("Alamat Bluetooth diperlukan untuk pencetakan Bluetooth");
-      return;
-    }
-
-    // Basic validation for Bluetooth address format
-    const bluetoothRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
-    if (!bluetoothRegex.test(bluetoothAddress)) {
-      alert("Format alamat Bluetooth tidak valid. Gunakan format XX:XX:XX:XX:XX:XX");
-      return;
-    }
-
-    // Close modal
-    closeBluetoothModal();
-
-    // Proceed with printing
-    await handlePrint('bluetooth', bluetoothAddress);
-  }
-
-  document.getElementById("btn-print-usb").addEventListener("click", () => handlePrint('usb'));
-  document.getElementById("btn-print-bluetooth").addEventListener("click", handleBluetoothPrint);
-  document.getElementById("btn-close-bluetooth-modal").addEventListener("click", closeBluetoothModal);
-  document.getElementById("btn-confirm-bluetooth").addEventListener("click", confirmBluetoothPrint);
-  document.getElementById("btn-detect-bluetooth").addEventListener("click", detectBluetoothPrinters);
-
-  // Close modal when clicking outside
-  document.getElementById("bluetooth-modal").addEventListener("click", (e) => {
-    if (e.target.id === "bluetooth-modal") {
-      closeBluetoothModal();
+      indicator.className = 'status-indicator offline';
+      statusText.textContent = 'Error saat memeriksa';
+      printerNameText.textContent = e.message;
     }
   });
-
-  // Allow Enter key to submit
-  document.getElementById("bluetooth-address").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      confirmBluetoothPrint();
-    }
-  });
-  const statusIndicator = document.getElementById("status-indicator");
-const statusText = document.getElementById("status-text");
-const printerNameText = document.getElementById("printer-name-text");
-const btnRefresh = document.getElementById("btn-refresh");
-
-async function updatePrinterStatus() {
-  statusIndicator.className = "status-indicator checking";
-  statusText.textContent = "Memeriksa printer...";
-  printerNameText.textContent = "Mendeteksi printer yang tersedia";
-
-  try {
-    const res = await window.printerAPI.checkStatus();
-
-    if (!res.success) {
-      statusIndicator.className = "status-indicator offline";
-      statusText.textContent = "Gagal memeriksa printer";
-      printerNameText.textContent = res.detail || res.message || "-";
-      return;
-    }
-
-    if (res.connected) {
-      statusIndicator.className = "status-indicator online";
-      statusText.textContent = "Printer terhubung";
-      printerNameText.textContent = res.message || "WOYA via USB";
-    } else {
-      statusIndicator.className = "status-indicator offline";
-      statusText.textContent = "Printer tidak terhubung";
-      printerNameText.textContent =
-        res.hint || res.detail || res.message || "Periksa kabel / driver printer";
-    }
-  } catch (e) {
-    statusIndicator.className = "status-indicator offline";
-    statusText.textContent = "Error saat memeriksa";
-    printerNameText.textContent = e.message || String(e);
-  }
-}
-
-btnRefresh.addEventListener("click", updatePrinterStatus);
-window.addEventListener("DOMContentLoaded", updatePrinterStatus);
-
-</script>
+  </script>
   <script src="../js/theme.js"></script>
 
 

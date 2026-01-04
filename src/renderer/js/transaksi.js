@@ -31,8 +31,34 @@ async function fetchTransactions({ search = '', page = 1, limit = 20 } = {}) {
   }
 }
 
-// Render transactions to the page
+// View transaction detail
+function viewTransactionDetail(transactionId) {
+  console.log('Opening transaction detail for id:', transactionId);
+  // Cari di cache window.currentTransactions (di-set oleh renderTransactions)
+  const trx = (window.currentTransactions || []).find(t =>
+    String(t.transaction_id) === String(transactionId) ||
+    String(t.idFull) === String(transactionId) ||
+    String(t.id || t.idShort) === String(transactionId)
+  );
+
+  if (trx) {
+    // Simpan transaksi lengkap ke localStorage agar detail-transaksi pakai data ini langsung
+    localStorage.setItem('last_transaction', JSON.stringify(trx));
+    localStorage.setItem('selected_transaction_id', String(transactionId));
+    // Jangan remove last_transaction
+    window.location.href = 'detail-transaksi.html';
+    return;
+  }
+
+  // Jika tidak ditemukan di cache, tetap simpan id dan navigasi — detail akan tampil kosong tapi tidak error
+  localStorage.setItem('selected_transaction_id', String(transactionId));
+  window.location.href = 'detail-transaksi.html';
+}
+
+// Simpan reference ke transactions yang sedang ditampilkan
 function renderTransactions(transactions) {
+  window.currentTransactions = transactions; // Simpan ke global
+  
   const wrapper = document.querySelector('.card-transaksi-wrapper');
   if (!wrapper) return;
 
@@ -68,18 +94,13 @@ function renderTransactions(transactions) {
     const card = document.createElement('div');
     card.className = 'card-transaksi';
     card.style.position = 'relative';
+    card.setAttribute('data-transaction-id', trx.transaction_id); // Tambah atribut ini
 
     const createdAt = trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-';
     const total = Number(trx.total || 0);
     const method = trx.method || 'Tunai';
     const itemCount = trx.items ? trx.items.length : 0;
     const idShort = trx.idShort || trx.idFull || trx.transaction_id || '-';
-
-    // Hanya tampilkan checkbox jika bukan cashier
-    let checkboxHtml = '';
-    if (role !== 'cashier') {
-      checkboxHtml = `<input type="checkbox" class="trx-checkbox" data-id="${trx.transaction_id}" style="position:absolute;top:10px;left:10px;width:18px;height:18px;cursor:pointer;">`;
-    }
 
     card.innerHTML = `
       <input type="checkbox" class="trx-checkbox" data-id="${trx.transaction_id}" style="width:18px;height:18px;cursor:pointer;margin-right: 10px;accent-color: var(--primary-color);">
@@ -112,16 +133,9 @@ function renderTransactions(transactions) {
     wrapper.appendChild(card);
   });
 
-  // Hanya setup bulk delete jika bukan cashier
   if (role !== 'cashier') {
     setupBulkDelete();
   }
-}
-
-// View transaction detail
-function viewTransactionDetail(transactionId) {
-  localStorage.setItem('selected_transaction_id', transactionId);
-  window.location.href = 'detail-transaksi.html';
 }
 
 // Delete transaction

@@ -55,12 +55,12 @@ function formatRupiah(num) {
    FUNGSI BANTU: Cetak dengan Windows Printer (Fallback) - FORMAT BARU
 ================================ */
 async function printWithWindowsPrinter(payload) {
-  console.log("=== MENCETAK DENGAN WINDOWS PRINTER (FORMAT BARU) ===");
+  console.log("=== MENCETAK DENGAN WINDOWS PRINTER (FORMAT TEMPLATE) ===");
   
   const {
-    txId,
-    txDate,
-    method,
+    txId = '-',
+    txDate = '-',
+    method = 'cash',
     items = [],
     subTotal = 0,
     discount = 0,
@@ -70,35 +70,103 @@ async function printWithWindowsPrinter(payload) {
     cash = 0,
     change = 0,
     store = {},
-    storeData = {},
+    cashier_name = 'Admin'
   } = payload;
 
-  // Format tanggal seperti template
-  let formattedDate = "-";
-  let formattedTime = "";
+  // Build struk text - SESUAI TEMPLATE THERMAL PRINTER
+  let receiptText = '';
   
-  if (txDate && txDate !== '-') {
-    try {
-      const dateObj = new Date(txDate);
-      if (!isNaN(dateObj.getTime())) {
-        const day = dateObj.getDate().toString().padStart(2, '0');
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        const month = monthNames[dateObj.getMonth()];
-        const year = dateObj.getFullYear();
-        
-        const hours = dateObj.getHours().toString().padStart(2, '0');
-        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-        const seconds = dateObj.getSeconds().toString().padStart(2, '0');
-        
-        formattedDate = `${day} ${month} ${year}`;
-        formattedTime = `${hours}:${minutes}:${seconds}`;
-      }
-    } catch (e) {
-      console.error("Error parsing date:", e);
+  // Header - Garis atas
+  receiptText += '='.repeat(17) + '\n';
+  
+  // Nama toko
+  const storeName = (store?.name || 'CV BETARAK INDONESIA 1').toUpperCase();
+  receiptText += storeName + '\n';
+  
+  // Alamat toko (potong maksimal 42 karakter per baris)
+  if (store?.address) {
+    let addr = store.address;
+    if (addr.length > 42) {
+      receiptText += addr.substring(0, 42) + '\n';
+    } else {
+      receiptText += addr + '\n';
     }
   }
+  
+  // Telepon toko
+  if (store?.phone) {
+    receiptText += 'Telp: ' + store.phone + '\n';
+  }
+  
+  // Garis pemisah
+  receiptText += '='.repeat(17) + '\n';
+  
+  // Nomor transaksi, tanggal, metode
+  receiptText += 'No. Trans : ' + txId + '\n';
+  receiptText += 'Tgl/Jam   : ' + txDate + '\n';
+  receiptText += 'Metode    : ' + method + '\n';
+  
+  // Garis pemisah
+  receiptText += '='.repeat(17) + '\n';
+  
+  // Header DAFTAR BARANG
+  receiptText += 'DAFTAR BARANG:\n';
+  receiptText += '-'.repeat(17) + '\n';
+  
+  // Items
+  items.forEach(it => {
+    const itemName = (it.name || '-').substring(0, 42);
+    const itemQty = it.qty || 1;
+    const itemPrice = it.price || 0;
+    const itemDiscount = it.discount_amount || 0;
+    const itemSubtotal = itemQty * itemPrice;
+    
+    // Nama item
+    receiptText += itemName + '\n';
+    
+    // Qty x Harga = Total (format: 1x     Rp 10.000      Rp 10.000)
+    const qtyStr = itemQty + 'x';
+    const priceStr = formatRupiah(itemPrice);
+    const subtotalStr = formatRupiah(itemSubtotal);
+    
+    // Format: Qty x Harga = Subtotal
+    receiptText += qtyStr.padEnd(6) + priceStr.padStart(15) + subtotalStr.padStart(20) + '\n';
+    
+    // SKU
+    if (it.sku) {
+      receiptText += 'SKU: ' + it.sku + '\n';
+    }
+    
+    // Diskon
+    if (itemDiscount > 0) {
+      receiptText += '  Diskon: -' + formatRupiah(itemDiscount) + '\n';
+    }
+  });
+  
+  // Garis pemisah
+  receiptText += '='.repeat(17) + '\n';
+  
+  // Totals
+  receiptText += 'Sub Total      : ' + formatRupiah(subTotal).padStart(20) + '\n';
+  receiptText += 'Total Diskon   : ' + (discount > 0 ? '-' + formatRupiah(discount) : '-').padStart(20) + '\n';
+  receiptText += 'PPN (' + taxPercent.toFixed(1) + '%)  : ' + formatRupiah(tax).padStart(20) + '\n';
+  receiptText += '\n';
+  receiptText += 'GRAND TOTAL    : ' + formatRupiah(grandTotal).padStart(20) + '\n';
+  
+  // Garis pemisah
+  receiptText += '='.repeat(17) + '\n';
+  
+  // Pembayaran
+  receiptText += 'Tunai Diterima : ' + formatRupiah(cash).padStart(20) + '\n';
+  receiptText += 'Kembalian      : ' + formatRupiah(change).padStart(20) + '\n';
+  
+  // Garis pemisah & footer
+  receiptText += '='.repeat(17) + '\n';
+  receiptText += 'Terima Kasih telah berbelanja di\n';
+  receiptText += storeName + ' :)\n';
+  receiptText += '='.repeat(17) + '\n';
 
-  // Bangun HTML untuk struk - FORMAT BARU
+  // HTML untuk Windows printer
   let htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -108,181 +176,31 @@ async function printWithWindowsPrinter(payload) {
         @page { margin: 0; size: 80mm auto; }
         body { 
           font-family: 'Courier New', monospace; 
-          font-size: 14px; 
+          font-size: 13px; 
           width: 80mm; 
           margin: 0; 
-          padding: 10px;
-          line-height: 1.2;
+          padding: 5mm;
+          line-height: 1.3;
         }
-        .store-name { 
-          text-align: center; 
-          font-weight: bold; 
-          font-size: 16px; 
-          margin-bottom: 5px;
-          text-transform: uppercase;
-        }
-        .store-info { 
-          text-align: center; 
-          margin-bottom: 5px;
-          font-size: 12px;
-        }
-        .divider { 
-          border-bottom: 1px dashed #000; 
-          margin: 8px 0; 
-        }
-        .receipt-header { 
-          text-align: center; 
-          font-weight: bold; 
-          font-size: 15px;
-          margin: 10px 0;
-        }
-        .transaction-info { 
-          font-size: 12px;
-          margin: 5px 0;
-        }
-        .items-header { 
-          font-weight: bold; 
-          margin: 10px 0 5px 0;
-        }
-        .item-row { 
-          margin: 8px 0;
-        }
-        .item-name { 
-          font-weight: bold;
-        }
-        .item-details { 
-          margin-left: 5px;
-        }
-        .price-row { 
-          display: flex; 
-          justify-content: space-between; 
-          margin: 3px 0;
-        }
-        .payment-row { 
-          display: flex; 
-          justify-content: space-between; 
-          margin: 5px 0;
-        }
-        .footer { 
-          text-align: center; 
-          margin-top: 15px; 
-          font-size: 12px;
+        pre { 
+          font-family: 'Courier New', monospace; 
+          font-size: 13px;
+          margin: 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
         }
       </style>
     </head>
     <body>
-  `;
-
-  // Header Toko - FORMAT BARU
-  htmlContent += `
-    <div class="store-name">${(store?.name || storeData?.name || "TOKO SAYA").toUpperCase()}</div>
-  `;
-  
-  if (store?.address || storeData?.address) {
-    htmlContent += `<div class="store-info">${store?.address || storeData?.address}</div>`;
-  }
-  
-  if (store?.phone || storeData?.phone) {
-    htmlContent += `<div class="store-info">${store?.phone || storeData?.phone}</div>`;
-  }
-  
-  htmlContent += `<div class="divider"></div>`;
-
-  // Header STRUK PEMBAYARAN - FORMAT BARU
-  htmlContent += `<div class="receipt-header">STRUK PEMBAYARAN</div>`;
-
-  // Detail Transaksi - FORMAT BARU
-  htmlContent += `
-    <div class="transaction-info">
-      <div>No : ${txId || "-"}</div>
-      <div>Tg1 : ${formattedDate} ${formattedTime}</div>
-      <div>Kasir : ${payload.cashier_name || "Admin"}</div>
-      <div>Metode : ${method || "cash"}</div>
-    </div>
-    <div class="divider"></div>
-  `;
-
-  // Items - FORMAT BARU
-  htmlContent += `<div class="items-header">ITEM PEMBELIAN</div>`;
-  
-  items.forEach((it) => {
-    const originalPrice = it.price || 0;
-    const qty = it.qty || 0;
-    const discountAmount = it.discount_amount || 0;
-    const subtotal = qty * originalPrice;
-    
-    htmlContent += `
-      <div class="item-row">
-        <div class="item-name">${it.name || "-"}</div>
-    `;
-    
-    // Format: 1 x Rp 20.000 (Diskon 50%)
-    let discountText = "";
-    if (discountAmount > 0) {
-      const discountPercentage = Math.round((discountAmount / subtotal) * 100);
-      discountText = ` (Diskon ${discountPercentage}%)`;
-    }
-    
-    htmlContent += `
-        <div class="item-details">${qty} x ${formatRupiah(originalPrice)}${discountText}</div>
-        <div class="item-details">${formatRupiah(subtotal - discountAmount)}</div>
-      </div>
-    `;
-  });
-
-  htmlContent += `<div class="divider"></div>`;
-
-  // Subtotal, PPN, TOTAL - FORMAT BARU
-  htmlContent += `
-    <div class="price-row">
-      <span>Subtotal :</span>
-      <span>${formatRupiah(subTotal)}</span>
-    </div>
-    <div class="price-row">
-      <span>PPN (${taxPercent}.0%) :</span>
-      <span>${formatRupiah(tax)}</span>
-    </div>
-    <div class="price-row">
-      <span>TOTAL :</span>
-      <span>${formatRupiah(grandTotal)}</span>
-    </div>
-  `;
-
-  htmlContent += `<div class="divider"></div>`;
-
-  // Pembayaran - FORMAT BARU
-  htmlContent += `
-    <div class="payment-row">
-      <span>Tunai :</span>
-      <span>${formatRupiah(cash)}</span>
-    </div>
-    <div class="payment-row">
-      <span>Kembalian :</span>
-      <span>${formatRupiah(change)}</span>
-    </div>
-  `;
-
-  htmlContent += `<div class="divider"></div>`;
-
-  // Footer - FORMAT BARU
-  htmlContent += `
-    <div class="footer">
-      <div>Terima kasih telah berbelanja</div>
-      <div><strong>${(store?.name || storeData?.name || "TOKO SAYA").toUpperCase()}</strong></div>
-    </div>
-  `;
-
-  htmlContent += `
+      <pre>${receiptText}</pre>
     </body>
     </html>
   `;
 
-  // Cetak menggunakan electron-pos-printer
   const data = [
     {
       type: 'html',
-      value: htmlContent,
-      style: 'font-family: "Courier New", monospace;'
+      value: htmlContent
     }
   ];
 
@@ -291,16 +209,16 @@ async function printWithWindowsPrinter(payload) {
     silent: true,
     preview: false,
     copies: 1,
-    pageSize: { height: 100000, width: 80000 }, // 80mm width
+    pageSize: { height: 100000, width: 80000 },
     margin: '0 0 0 0'
   };
 
   try {
     await PosPrinter.print(data, options);
-    console.log("=== WINDOWS PRINTER SUCCESS (FORMAT BARU) ===");
-    return { success: true, message: "Struk berhasil dicetak dengan Windows Printer" };
+    console.log("=== WINDOWS PRINTER SUCCESS ===");
+    return { success: true, message: 'Struk berhasil dicetak dengan Windows Printer' };
   } catch (error) {
-    console.error("Windows printer error:", error);
+    console.error('Windows printer error:', error);
     throw error;
   }
 }
@@ -450,21 +368,11 @@ ipcMain.handle("detect-bluetooth-printers", async () => {
 });
 
 /* ==============================
-   IPC CETAK STRUK (ESC/POS)
-   payload dikirim dari detail-transaksi.js:
-   {
-     txId, txDate, method,
-     items: [{ name, qty, price, sku, discount_amount, discount_type }],
-     subTotal, discount, tax, grandTotal,
-     cash, change,
-     store: { name, address, phone },
-     storeData: { receipt_template, ... },
-     printType: 'usb' | 'bluetooth' | 'windows',
-     bluetoothAddress: 'XX:XX:XX:XX:XX:XX'
-   }
+   IPC CETAK STRUK - MENERIMA DATA ASLI DARI DETAIL-TRANSAKSI.JS
 ================================ */
 ipcMain.handle("print-receipt", async (event, payload) => {
-  console.log("=== MENERIMA PERINTAH CETAK ===");
+  console.log("=== MENERIMA PERINTAH CETAK DENGAN DATA ASLI ===");
+  console.log("Payload:", payload);
   
   try {
     const { printType = 'usb' } = payload;
@@ -524,17 +432,32 @@ function formatRupiah(num) {
    FUNGSI: Cetak dengan ESC/POS (USB/Bluetooth) - SESUAI TEMPLATE
 ================================ */
 async function printWithESCPOS(payload) {
-  console.log("=== MENCETAK DENGAN ESC/POS (SESUAI TEMPLATE) ===");
+  console.log("=== MENCETAK DENGAN ESC/POS (THERMAL PRINTER) ===");
   
-  const { printType = 'usb', bluetoothAddress, storeData, store } = payload;
+  const { 
+    printType = 'usb', 
+    bluetoothAddress,
+    txId = '-',
+    txDate = '-',
+    method = 'cash',
+    items = [],
+    subTotal = 0,
+    discount = 0,
+    tax = 0,
+    taxPercent = 10,
+    grandTotal = 0,
+    cash = 0,
+    change = 0,
+    store = {}
+  } = payload;
 
   let device;
   let printer;
 
-  // Pilih adapter berdasarkan tipe printer
+  // Pilih adapter
   if (printType === 'bluetooth') {
     if (!bluetoothAddress) {
-      throw new Error("Bluetooth address is required for Bluetooth printing");
+      throw new Error("Bluetooth address is required");
     }
     console.log(`Connecting to Bluetooth printer: ${bluetoothAddress}`);
     device = new Bluetooth(bluetoothAddress);
@@ -551,374 +474,110 @@ async function printWithESCPOS(payload) {
     printer = new Printer(device, { encoding: "CP437" });
   }
 
-  const {
-    txId,
-    txDate,
-    method,
-    items = [],
-    subTotal = 0,
-    discount = 0,
-    tax = 0,
-    taxPercent = 10,
-    grandTotal = 0,
-    cash = 0,
-    change = 0,
-  } = payload || {};
-
-  // HEADER: Nama Toko - SESUAI TEMPLATE
-  printer
-    .align("lt")
-    .style("b")
-    .size(1, 1)
-    .text((store?.name || storeData?.name || "TOKO SAYA").toUpperCase())
-    .style("normal")
-    .size(0, 0);
-
-  // Alamat toko
-  if (store?.address || storeData?.address) 
-    printer.text(store.address || storeData.address);
-  
-  // Telepon toko
-  if (store?.phone || storeData?.phone) 
-    printer.text(`Telp: ${store.phone || storeData.phone}`);
-
-  // Garis pemisah
-  printer.text(""); // Baris kosong
-  printer.drawLine();
-
-  // STRUK PEMBAYARAN
-  printer
-    .align("ct")
-    .style("b")
-    .text("STRUK PEMBAYARAN")
-    .style("normal")
-    .align("lt");
-
-  // No transaksi - SESUAI TEMPLATE (No : 236)
-  printer.text(`No : ${txId || "-"}`);
-  
-  // Format tanggal dari payload (harus sudah diformat di detail-transaksi.js)
-  const dateParts = txDate ? txDate.split(' ') : [];
-  let formattedDate = "-";
-  if (dateParts.length >= 2) {
-    formattedDate = `${dateParts[0]} ${dateParts[1]}`;
-  }
-  
-  printer.text(`Tg1 : ${txDate || "-"}`);
-  printer.text(`Kasir : ${payload.cashier_name || "Admin"}`);
-  printer.text(`Metode : ${method || "cash"}`);
-  
-  printer.drawLine();
-  printer.text("");
-
-  // ITEM PEMBELIAN
-  printer.align("lt").style("b").text("ITEM PEMBELIAN").style("normal");
-
-  // Items dengan format seperti template
-  items.forEach((it) => {
-    const originalPrice = it.price || 0;
-    const qty = it.qty || 0;
-    const discountAmount = it.discount_amount || 0;
-    const subtotal = qty * originalPrice;
-    
-    // Nama item
-    printer.text(it.name || "-");
-    
-    // Format: 1 x Rp 20.000 (Diskon 50%)
-    let discountText = "";
-    if (discountAmount > 0 && subtotal > 0) {
-      const discountPercentage = Math.round((discountAmount / subtotal) * 100);
-      discountText = ` (Diskon ${discountPercentage}%)`;
-    }
-    
-    printer.text(`${qty} x ${formatRupiah(originalPrice)}${discountText}`);
-    
-    // Harga setelah diskon
-    printer.text(`${formatRupiah(subtotal - discountAmount)}`);
-    
-    printer.text(""); // Baris kosong antar item
-  });
-
-  // Garis pemisah
-  printer.drawLine();
-  printer.text("");
-
-  // Subtotal - SESUAI TEMPLATE (Subtotal : Rp 10.000)
-  printer.text(`Subtotal : ${formatRupiah(subTotal)}`);
-  
-  // PPN - SESUAI TEMPLATE (PPN (50.0%) : Rp 5.000)
-  printer.text(`PPN (${taxPercent}.0%) : ${formatRupiah(tax)}`);
-  
-  // TOTAL - SESUAI TEMPLATE (TOTAL : Rp 15.000)
-  printer.text(`TOTAL : ${formatRupiah(grandTotal)}`);
-  
-  printer.text(""); // Baris kosong
-  printer.drawLine();
-  printer.text("");
-
-  // Pembayaran - SESUAI TEMPLATE
-  printer.text(`Tunai : ${formatRupiah(cash)}`);
-  printer.text(`Kembalian : ${formatRupiah(change)}`);
-  
-  printer.text(""); // Baris kosong
-  printer.drawLine();
-  printer.text("");
-
-  // Footer - SESUAI TEMPLATE
-  printer.align("ct");
-  printer.text("Terima kasih telah berbelanja");
-  printer.text((store?.name || storeData?.name || "TOKO SAYA").toUpperCase());
-
-  // Feed dan cut
-  printer.feed(4);
-  printer.cut();
-
-  await printer.close();
-  
-  console.log("=== CETAK STRUK BERHASIL (ESC/POS - SESUAI TEMPLATE) ===");
-  return { success: true, message: "Struk berhasil dicetak dengan ESC/POS" };
-}
-
-/* ==============================
-   FUNGSI BANTU: Cetak dengan Windows Printer - SESUAI TEMPLATE
-================================ */
-async function printWithWindowsPrinter(payload) {
-  console.log("=== MENCETAK DENGAN WINDOWS PRINTER (SESUAI TEMPLATE) ===");
-  
-  const {
-    txId,
-    txDate,
-    method,
-    items = [],
-    subTotal = 0,
-    discount = 0,
-    tax = 0,
-    taxPercent = 10,
-    grandTotal = 0,
-    cash = 0,
-    change = 0,
-    store = {},
-    storeData = {},
-  } = payload;
-
-  // Bangun HTML untuk struk - SESUAI TEMPLATE
-  let htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        @page { margin: 0; size: 80mm auto; }
-        body { 
-          font-family: 'Courier New', monospace; 
-          font-size: 14px; 
-          width: 80mm; 
-          margin: 0; 
-          padding: 10px;
-          line-height: 1.2;
-        }
-        .store-name { 
-          text-align: left; 
-          font-weight: bold; 
-          font-size: 16px; 
-          margin-bottom: 5px;
-          text-transform: uppercase;
-        }
-        .store-info { 
-          text-align: left; 
-          margin-bottom: 3px;
-          font-size: 12px;
-        }
-        .divider { 
-          border-bottom: 1px dashed #000; 
-          margin: 5px 0; 
-        }
-        .receipt-header { 
-          text-align: center; 
-          font-weight: bold; 
-          font-size: 15px;
-          margin: 5px 0;
-        }
-        .transaction-info { 
-          font-size: 13px;
-          margin: 3px 0;
-        }
-        .items-header { 
-          font-weight: bold; 
-          margin: 5px 0 3px 0;
-          font-size: 14px;
-        }
-        .item-row { 
-          margin: 5px 0;
-        }
-        .item-name { 
-          font-weight: bold;
-        }
-        .item-details { 
-          margin-left: 5px;
-        }
-        .price-row { 
-          margin: 3px 0;
-        }
-        .payment-row { 
-          margin: 3px 0;
-        }
-        .footer { 
-          text-align: center; 
-          margin-top: 10px; 
-          font-size: 12px;
-        }
-      </style>
-    </head>
-    <body>
-  `;
-
-  // Header Toko - SESUAI TEMPLATE (kiri, bukan tengah)
-  htmlContent += `
-    <div class="store-name">${(store?.name || storeData?.name || "TOKO SAYA").toUpperCase()}</div>
-  `;
-  
-  if (store?.address || storeData?.address) {
-    htmlContent += `<div class="store-info">${store?.address || storeData?.address}</div>`;
-  }
-  
-  if (store?.phone || storeData?.phone) {
-    htmlContent += `<div class="store-info">Telp: ${store?.phone || storeData?.phone}</div>`;
-  }
-  
-  htmlContent += `<div class="divider"></div>`;
-
-  // Header STRUK PEMBAYARAN - SESUAI TEMPLATE
-  htmlContent += `<div class="receipt-header">STRUK PEMBAYARAN</div>`;
-
-  // Detail Transaksi - SESUAI TEMPLATE
-  // Format tanggal dari payload (harus sudah diformat di detail-transaksi.js)
-  const dateParts = txDate ? txDate.split(' ') : [];
-  let formattedDate = "-";
-  if (dateParts.length >= 2) {
-    formattedDate = `${dateParts[0]} ${dateParts[1]}`;
-  }
-  
-  htmlContent += `
-    <div class="transaction-info">
-      <div>No : ${txId || "-"}</div>
-      <div>Tg1 : ${txDate || "-"}</div>
-      <div>Kasir : ${payload.cashier_name || "Admin"}</div>
-      <div>Metode : ${method || "cash"}</div>
-    </div>
-    <div class="divider"></div>
-  `;
-
-  // Items - SESUAI TEMPLATE
-  htmlContent += `<div class="items-header">ITEM PEMBELIAN</div>`;
-  
-  items.forEach((it) => {
-    const originalPrice = it.price || 0;
-    const qty = it.qty || 0;
-    const discountAmount = it.discount_amount || 0;
-    const subtotal = qty * originalPrice;
-    
-    htmlContent += `
-      <div class="item-row">
-        <div class="item-name">${it.name || "-"}</div>
-    `;
-    
-    // Format: 1 x Rp 20.000 (Diskon 50%)
-    let discountText = "";
-    if (discountAmount > 0 && subtotal > 0) {
-      const discountPercentage = Math.round((discountAmount / subtotal) * 100);
-      discountText = ` (Diskon ${discountPercentage}%)`;
-    }
-    
-    htmlContent += `
-        <div class="item-details">${qty} x ${formatRupiah(originalPrice)}${discountText}</div>
-        <div class="item-details">${formatRupiah(subtotal - discountAmount)}</div>
-      </div>
-    `;
-  });
-
-  htmlContent += `<div class="divider"></div>`;
-
-  // Subtotal, PPN, TOTAL - SESUAI TEMPLATE
-  htmlContent += `
-    <div class="price-row">
-      <span>Subtotal : ${formatRupiah(subTotal)}</span>
-    </div>
-    <div class="price-row">
-      <span>PPN (${taxPercent}.0%) : ${formatRupiah(tax)}</span>
-    </div>
-    <div class="price-row">
-      <span>TOTAL : ${formatRupiah(grandTotal)}</span>
-    </div>
-  `;
-
-  htmlContent += `<div class="divider"></div>`;
-
-  // Pembayaran - SESUAI TEMPLATE
-  htmlContent += `
-    <div class="payment-row">
-      <span>Tunai : ${formatRupiah(cash)}</span>
-    </div>
-    <div class="payment-row">
-      <span>Kembalian : ${formatRupiah(change)}</span>
-    </div>
-  `;
-
-  htmlContent += `<div class="divider"></div>`;
-
-  // Footer - SESUAI TEMPLATE
-  htmlContent += `
-    <div class="footer">
-      <div>Terima kasih telah berbelanja</div>
-      <div><strong>${(store?.name || storeData?.name || "TOKO SAYA").toUpperCase()}</strong></div>
-    </div>
-  `;
-
-  htmlContent += `
-    </body>
-    </html>
-  `;
-
-  // Cetak menggunakan electron-pos-printer
-  const data = [
-    {
-      type: 'html',
-      value: htmlContent,
-      style: 'font-family: "Courier New", monospace;'
-    }
-  ];
-
-  const options = {
-    printerName: payload.printerName || undefined,
-    silent: true,
-    preview: false,
-    copies: 1,
-    pageSize: { height: 100000, width: 80000 }, // 80mm width
-    margin: '0 0 0 0'
-  };
-
   try {
-    await PosPrinter.print(data, options);
-    console.log("=== WINDOWS PRINTER SUCCESS (SESUAI TEMPLATE) ===");
-    return { success: true, message: "Struk berhasil dicetak dengan Windows Printer" };
-  } catch (error) {
-    console.error("Windows printer error:", error);
-    throw error;
+    // Header - Garis atas
+    printer.text('='.repeat(17));
+    
+    // Nama toko
+    const storeName = (store?.name || 'CV BETARAK INDONESIA 1').toUpperCase();
+    printer.text(storeName);
+    
+    // Alamat toko
+    if (store?.address) {
+      let addr = store.address;
+      if (addr.length > 42) {
+        printer.text(addr.substring(0, 42));
+      } else {
+        printer.text(addr);
+      }
+    }
+    
+    // Telepon
+    if (store?.phone) {
+      printer.text('Telp: ' + store.phone);
+    }
+    
+    // Garis pemisah
+    printer.text('='.repeat(17));
+    
+    // Nomor transaksi, tanggal, metode
+    printer.text('No. Trans : ' + txId);
+    printer.text('Tgl/Jam   : ' + txDate);
+    printer.text('Metode    : ' + method);
+    
+    // Garis pemisah
+    printer.text('='.repeat(17));
+    
+    // Header DAFTAR BARANG
+    printer.text('DAFTAR BARANG:');
+    printer.text('-'.repeat(17));
+    
+    // Items
+    items.forEach(it => {
+      const itemName = (it.name || '-').substring(0, 42);
+      const itemQty = it.qty || 1;
+      const itemPrice = it.price || 0;
+      const itemDiscount = it.discount_amount || 0;
+      const itemSubtotal = itemQty * itemPrice;
+      
+      // Nama item
+      printer.text(itemName);
+      
+      // Qty x Harga = Total
+      const qtyStr = itemQty + 'x';
+      const priceStr = formatRupiah(itemPrice);
+      const subtotalStr = formatRupiah(itemSubtotal);
+      
+      printer.text(qtyStr.padEnd(6) + priceStr.padStart(15) + subtotalStr.padStart(20));
+      
+      // SKU
+      if (it.sku) {
+        printer.text('SKU: ' + it.sku);
+      }
+      
+      // Diskon
+      if (itemDiscount > 0) {
+        printer.text('  Diskon: -' + formatRupiah(itemDiscount));
+      }
+    });
+    
+    // Garis pemisah
+    printer.text('='.repeat(17));
+    
+    // Totals
+    printer.text('Sub Total      : ' + formatRupiah(subTotal).padStart(20));
+    printer.text('Total Diskon   : ' + (discount > 0 ? '-' + formatRupiah(discount) : '-').padStart(20));
+    printer.text('PPN (' + taxPercent.toFixed(1) + '%)  : ' + formatRupiah(tax).padStart(20));
+    printer.text('');
+    printer.text('GRAND TOTAL    : ' + formatRupiah(grandTotal).padStart(20));
+    
+    // Garis pemisah
+    printer.text('='.repeat(17));
+    
+    // Pembayaran
+    printer.text('Tunai Diterima : ' + formatRupiah(cash).padStart(20));
+    printer.text('Kembalian      : ' + formatRupiah(change).padStart(20));
+    
+    // Garis pemisah & footer
+    printer.text('='.repeat(17));
+    printer.text('Terima Kasih telah berbelanja di');
+    printer.text(storeName + ' :)');
+    printer.text('='.repeat(17));
+    
+    // Feed & cut
+    printer.feed(4);
+    printer.cut();
+    
+    await printer.close();
+    
+    console.log("=== ESC/POS PRINT SUCCESS ===");
+    return { success: true, message: 'Struk berhasil dicetak' };
+  } catch (err) {
+    console.error('ESC/POS Error:', err);
+    await printer.close();
+    throw err;
   }
 }
-
-/* ==============================
-   APP LIFECYCLE
-================================ */
-console.log("App starting...");
-app.whenReady().then(() => {
-  console.log("App ready, creating window...");
-  createWindow();
-});
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
 
 /* ==============================
    IPC CEK STATUS PRINTER
@@ -966,6 +625,102 @@ ipcMain.handle("print-barcode-label", async (event, payload) => {
   }
 });
 
+// NEW helper: print raw receiptText (used for both Windows and ESC/POS)
+async function printRawReceipt(receiptText, payload = {}) {
+  const { printType = 'usb', bluetoothAddress, printerName } = payload;
+
+  // WINDOWS: wrap in <pre> and print with electron-pos-printer
+  if (printType === 'windows') {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @page { margin: 0; size: 80mm auto; }
+          body { font-family: 'Courier New', monospace; font-size: 13px; width: 80mm; margin:0; padding:6px; line-height:1.3; }
+          pre { font-family: 'Courier New', monospace; font-size:13px; margin:0; white-space:pre-wrap; }
+        </style>
+      </head>
+      <body><pre>${receiptText.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre></body>
+      </html>
+    `;
+    const data = [{ type: 'html', value: htmlContent }];
+    const options = {
+      printerName: printerName || undefined,
+      silent: true,
+      preview: false,
+      copies: 1,
+      margin: '0 0 0 0'
+    };
+    await PosPrinter.print(data, options);
+    return { success: true, message: 'Printed via Windows printer' };
+  }
+
+  // ESC/POS (USB or Bluetooth): send per-line
+  let device;
+  let printer;
+  try {
+    if (printType === 'bluetooth') {
+      if (!Bluetooth) throw new Error('Bluetooth adapter not available on this build');
+      if (!bluetoothAddress) throw new Error('Bluetooth address required');
+      device = new Bluetooth(bluetoothAddress);
+      await new Promise((res, rej) => device.open(err => (err ? rej(err) : res())));
+    } else {
+      device = new USB();
+      await new Promise((res, rej) => device.open(err => (err ? rej(err) : res())));
+    }
+    printer = new Printer(device, { encoding: 'CP437' });
+
+    // Print each line exactly as in receiptText
+    const lines = receiptText.split(/\r?\n/);
+    for (const line of lines) {
+      // ensure no control chars; ESC/POS will handle width
+      printer.text(line);
+    }
+    printer.feed(4);
+    printer.cut();
+    await printer.close();
+    return { success: true, message: 'Printed via ESC/POS' };
+  } catch (err) {
+    try { if (printer) await printer.close(); } catch (e) {}
+    throw err;
+  } finally {
+    try { if (device && typeof device.close === 'function') device.close(); } catch (e) {}
+  }
+}
+
+// MODIFY ipcMain handler to prefer payload.receiptText
+ipcMain.handle("print-receipt", async (event, payload) => {
+  console.log("=== print-receipt payload received ===");
+  try {
+    if (payload && payload.receiptText) {
+      // print the exact receipt text from renderer (guarantees preview == print)
+      return await printRawReceipt(payload.receiptText, payload);
+    }
+
+    // fallback: existing logic (keep previous behavior)
+    const { printType = 'usb' } = payload;
+    if (printType === 'windows') {
+      return await printWithWindowsPrinter(payload);
+    }
+    try {
+      return await printWithESCPOS(payload);
+    } catch (escposError) {
+      try {
+        const result = await printWithWindowsPrinter(payload);
+        result.fallbackUsed = true;
+        result.originalError = escposError.message;
+        return result;
+      } catch (windowsError) {
+        return { success: false, error: `ESC/POS Error: ${escposError.message}, Windows Error: ${windowsError.message}` };
+      }
+    }
+  } catch (err) {
+    console.error('PRINT ERROR:', err);
+    return { success: false, error: err.message };
+  }
+});
 // window.addEventListener('online', () => {
 //   showToast('Koneksi internet tersedia. Sinkronisasi data...');
 //   syncAllData();

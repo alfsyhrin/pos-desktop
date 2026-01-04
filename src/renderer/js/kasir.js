@@ -333,6 +333,33 @@ function renderCart(items = null) {
 
 // Hapus listener addToCartAPI duplikat — produk-ke-keranjang.js sudah menangani tombol .btn-add-cart
 // Jika ada listener lama yang memanggil addToCartAPI / getProductIdBySKU, hapus atau komentar.
+function applyBuyXGetYQuantity(item) {
+  if (item.discount_type !== 'buyxgety') {
+    item.buy_quantity = item.quantity;
+    item.bonus_quantity = 0;
+    return item;
+  }
+
+  const buyQty = Number(item.buy_qty || 0);
+  const freeQty = Number(item.free_qty || 0);
+  const buyCount = Number(item.quantity || 0);
+
+  if (buyQty <= 0 || freeQty <= 0) {
+    item.buy_quantity = buyCount;
+    item.bonus_quantity = 0;
+    return item;
+  }
+
+  const setCount = Math.floor(buyCount / buyQty);
+  const bonus = setCount * freeQty;
+
+  item.buy_quantity = buyCount;       // dibayar
+  item.bonus_quantity = bonus;        // gratis
+  item.quantity = buyCount + bonus;   // 🔥 keluar stok
+
+  return item;
+}
+
 
 // ===== Proses Pembayaran =====
 // Hapus/replace definisi fungsi duplikat/keliru dan gunakan mapping body yang sesuai backend
@@ -373,14 +400,22 @@ async function completeTransaction() {
   }
 
   // Hitung total_cost dari cart
-  const total_cost = cart.reduce((sum, item) => {
-    let harga = Number(item.price || 0);
-    if (item.discount_type && item.discount_value) {
-      if (item.discount_type === 'percentage') harga = Math.round(harga * (1 - item.discount_value / 100));
-      else if (item.discount_type === 'amount' || item.discount_type === 'nominal') harga = Math.max(0, harga - Number(item.discount_value || 0));
-    }
-    return sum + harga * Number(item.quantity || 0);
-  }, 0);
+const total_cost = cart.reduce((sum, item) => {
+  let harga = Number(item.price || 0);
+
+  if (item.discount_type === 'percentage' && item.discount_value) {
+    harga = Math.round(harga * (1 - item.discount_value / 100));
+  } else if (
+    (item.discount_type === 'amount' || item.discount_type === 'nominal') &&
+    item.discount_value
+  ) {
+    harga = Math.max(0, harga - Number(item.discount_value || 0));
+  }
+
+  const qtyBayar = Number(item.buy_quantity || item.quantity || 0);
+  return sum + harga * qtyBayar;
+}, 0);
+
 
   // Simpan data cart ke localStorage untuk proses-pembayaran.html
   const cartData = {
