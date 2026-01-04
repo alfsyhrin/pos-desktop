@@ -13,7 +13,6 @@ pnpm-debug.log*
 dist/
 out/
 release/
-build/
 
 # ===============================
 # Environment Variables
