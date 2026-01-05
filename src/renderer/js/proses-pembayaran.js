@@ -246,8 +246,6 @@ const items = pendingData.cart.map(item => {
 
 
 // Event tombol Bayar - create transaction and redirect to detail-transaksi.html
-// Event tombol Bayar - create transaction and redirect to detail-transaksi.html
-// Event tombol Bayar - create transaction and redirect to detail-transaksi.html
 function inisialisasiBayar(pendingData) {
   const bayarBtn = document.querySelector('.wrap-button-proses-pembayaran a');
   if (!bayarBtn) return;
@@ -269,139 +267,21 @@ function inisialisasiBayar(pendingData) {
     try {
       const transaction = await createTransaction(pendingData, receivedAmount);
 
-      // ======================= DEBUG =======================
-      console.log('🔍 DEBUG pendingData sebelum save:', {
-        tax_percentage: pendingData.tax_percentage,
-        _tax: pendingData._tax,
-        _grandTotal: pendingData._grandTotal,
-        cartLength: pendingData.cart?.length
-      });
-      
-      console.log('🔍 DEBUG transaction dari API:', {
-        tax_percentage: transaction.tax_percentage,
-        tax: transaction.tax,
-        grandTotal: transaction.grandTotal
-      });
-      // ======================= END DEBUG =======================
-
-      // SIMPAN DENGAN CARA YANG LEBIH AMAN:
-      // JANGAN gunakan spread operator untuk field yang penting
+      // Save to localStorage for detail-transaksi.js
+      // Ambil nilai yang sudah dihitung di pendingData
       const trxToSave = {
-        // Data penting dari API
-        id: transaction.id,
-        transaction_id: transaction.transaction_id,
-        idFull: transaction.idFull,
-        idShort: transaction.idShort,
-        createdAt: transaction.createdAt,
-        storeData: transaction.storeData,
-        
-        // SEMUA DATA PERHITUNGAN HARUS dari pendingData (LOKAL)
-        storeId: pendingData.storeId,
-        userId: pendingData.userId,
-        
-        // TAX PERCENTAGE - PASTIKAN DARI pendingData
-        tax_percentage: pendingData.tax_percentage || 10,
-        taxPercentage: pendingData.tax_percentage || 10,
-        
-        // DATA PERHITUNGAN LOKAL
+        ...transaction,
         _grossSubtotal: pendingData._grossSubtotal || 0,
         _discountTotal: pendingData._discountTotal || 0,
         _netSubtotal: pendingData._netSubtotal || 0,
         _tax: pendingData._tax || 0,
         _grandTotal: pendingData._grandTotal || 0,
-        
-        // Untuk kompatibilitas (non-underscore fields)
-        grossSubtotal: pendingData._grossSubtotal || 0,
-        netSubtotal: pendingData._netSubtotal || 0,
-        tax: pendingData._tax || 0,
-        grandTotal: pendingData._grandTotal || 0,
-        discountTotal: pendingData._discountTotal || 0,
-        
-        // Data pembayaran
+        tax_percentage: pendingData.tax_percentage || 10,
         received: receivedAmount,
-        change: changeAmount,
-        received_amount: receivedAmount.toFixed(2),
-        change_amount: changeAmount.toFixed(2),
-        payment_method: "cash",
-        method: "cash",
-        
-        // Cart items - SIMPAN LENGKAP dengan field perhitungan
-        cart: pendingData.cart ? pendingData.cart.map(item => {
-          const mappedItem = {
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            sku: item.sku,
-            stock: item.stock,
-            quantity: item.quantity || item.buy_quantity || 1,
-            buy_quantity: item.buy_quantity || item.quantity || 1,
-            bonus_quantity: item.bonus_quantity || 0,
-            
-            // Field diskon
-            discount_type: item.discount_type,
-            discount_value: item.discount_value || 0,
-            buy_qty: item.buy_qty,
-            free_qty: item.free_qty,
-            
-            // Field perhitungan dari renderPendingTransaction
-            _buyQty: item._buyQty,
-            _bonusQty: item._bonusQty,
-            _discountAmount: item._discountAmount,
-            _grossItem: item._grossItem
-          };
-          
-          console.log('📦 Cart item mapped:', {
-            name: mappedItem.name,
-            _buyQty: mappedItem._buyQty,
-            _bonusQty: mappedItem._bonusQty,
-            _discountAmount: mappedItem._discountAmount
-          });
-          
-          return mappedItem;
-        }) : [],
-        
-        // Items untuk kompatibilitas API structure
-        items: pendingData.cart ? pendingData.cart.map(item => ({
-          product_id: item.id,
-          name: item.name,
-          price: item.price,
-          sku: item.sku,
-          quantity: item.quantity || item.buy_quantity || 1,
-          discount_type: item.discount_type,
-          discount_value: item.discount_value || 0,
-          buy_qty: item.buy_qty,
-          free_qty: item.free_qty,
-          _buyQty: item._buyQty,
-          _bonusQty: item._bonusQty,
-          _discountAmount: item._discountAmount
-        })) : []
+        change: Math.max(0, receivedAmount - (pendingData._grandTotal || 0))
       };
 
-      // ======================= DEBUG SETELAH MAPPING =======================
-      console.log('💾 Data yang akan disimpan ke last_transaction:', {
-        tax_percentage: trxToSave.tax_percentage,
-        taxPercentage: trxToSave.taxPercentage,
-        _tax: trxToSave._tax,
-        _grandTotal: trxToSave._grandTotal,
-        received: trxToSave.received,
-        change: trxToSave.change,
-        cartLength: trxToSave.cart?.length,
-        itemsLength: trxToSave.items?.length
-      });
-      
-      // Simpan juga ke console untuk inspeksi manual
-      console.log('📋 FULL trxToSave:', JSON.stringify(trxToSave, null, 2));
-      // ======================= END DEBUG =======================
-
       localStorage.setItem('last_transaction', JSON.stringify(trxToSave));
-      
-      // VERIFIKASI: Baca kembali dari localStorage
-      const savedData = JSON.parse(localStorage.getItem('last_transaction'));
-      console.log('✅ Data yang tersimpan di localStorage:', {
-        tax_percentage: savedData?.tax_percentage,
-        _tax: savedData?._tax,
-        success: savedData?.tax_percentage === pendingData.tax_percentage
-      });
 
       // Clear pending transaction
       localStorage.removeItem('pending_transaction');
