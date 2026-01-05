@@ -167,7 +167,7 @@ async function renderProdukKasir(q = '', category = '') {
       ? `<img src="${imageUrl}" alt="Gambar Produk" class="gambar-produk-kasir"
           style="width:100%;height:150px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
           onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
-      : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+      : `<span class="material-symbols-outlined card-icon" style="font-size:70px;color:#b91c1c;background:#e4363638;width:100%;height:150px;border-radius:8px;display:flex;justify-content:center;align-items:center;">shopping_bag</span>`;
 
     const card = document.createElement('div');
     card.className = 'card-produk-kasir';
@@ -464,7 +464,7 @@ products.forEach(product => {
     ? `<img src="${imageUrl}" alt="Gambar Produk" class="gambar-produk-kasir"
         style="width:100%;height:150px;object-fit:cover;border-radius:8px;background:var(--foreground-color);"
         onerror="this.outerHTML='<span class=&quot;material-symbols-outlined card-icon&quot; style=&quot;font-size:30px;color:#b91c1c;background:#e4363638;&quot;>shopping_bag</span>';">`
-    : `<span class="material-symbols-outlined card-icon" style="font-size:30px;color:#b91c1c;background:#e4363638;">shopping_bag</span>`;
+    : `<span class="material-symbols-outlined card-icon" style="font-size:70px;color:#b91c1c;background:#e4363638;width:100%;height:150px;border-radius:8px;display:flex;justify-content:center;align-items:center;">shopping_bag</span>`;
 
   const card = document.createElement('div');
   card.className = 'card-produk-kasir';
