@@ -1,13 +1,7 @@
-/* =========================
-
-   ====== KERANJANG FRONTEND ======
-========================= */
-
+// Function to apply Buy X Get Y logic
 function applyBuyXGetY(item) {
   if (item.discount_type !== 'buyxgety') {
-    item.buy_quantity = item.quantity;
-    item.bonus_quantity = 0;
-    return item;
+    return item; // Skip BuyXGetY logic for products that don't have this discount
   }
 
   const buyQty = Number(item.buy_qty || 0);
@@ -15,34 +9,31 @@ function applyBuyXGetY(item) {
   const beli = Number(item.buy_quantity || item.quantity || 0);
 
   if (buyQty <= 0 || freeQty <= 0) {
-    item.buy_quantity = beli;
-    item.bonus_quantity = 0;
     return item;
   }
 
   const bonus = Math.floor(beli / buyQty) * freeQty;
-
-  item.buy_quantity = beli;
   item.bonus_quantity = bonus;
-  item.quantity = beli + bonus; // 🔥 keluar stok
+  item.quantity = beli + bonus; // Total quantity = beli + bonus
 
   return item;
 }
 
 let cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
 
+// Normalize product id
 function normalizeId(id) {
   if (id === undefined || id === null || isNaN(Number(id))) return null;
   return Number(id);
 }
 
-// Update tampilan keranjang
+// Update the cart view
 function updateKeranjangView() {
   const itemsContainer = document.getElementById('keranjang-items');
   const emptyView = document.getElementById('keranjang-empty');
   if (!itemsContainer) return;
 
-  // Selalu ambil cart dari localStorage agar sinkron
+  // Always sync the cart from localStorage
   cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
 
   itemsContainer.innerHTML = '';
@@ -57,6 +48,8 @@ function updateKeranjangView() {
   cart.forEach((item, idx) => {
     let diskonLabel = '';
     let hargaSetelahDiskon = Number(item.price);
+
+    // Applying discount logic
     if (item.discount_type && item.discount_value) {
       if (item.discount_type === 'percentage') {
         diskonLabel = `Diskon: ${item.discount_value}%`;
@@ -66,16 +59,22 @@ function updateKeranjangView() {
         hargaSetelahDiskon = Math.max(0, item.price - item.discount_value);
       }
     }
-    // Info bundle/buyxgety
+
+    // Info promo bundle/buyxgety
     if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
       diskonLabel = `Promo: Beli ${item.buy_qty} Gratis ${item.free_qty}`;
     }
     if (item.discount_type === 'bundle' && item.bundle_qty && item.bundle_value) {
       diskonLabel = `Promo: ${item.bundle_qty} pcs Rp ${Number(item.bundle_value).toLocaleString('id-ID')}`;
     }
-    const bayarQty = Number(item.buy_quantity || item.quantity || 0);
-const totalItem = hargaSetelahDiskon * bayarQty;
 
+    // Calculate total price for the item
+    // For products with buyxgety, use buy_quantity for calculation (not quantity which includes free items)
+    const bayarQty = item.discount_type === 'buyxgety' ? 
+      Number(item.buy_quantity || 0) : 
+      Number(item.quantity || 0);
+    
+    const totalItem = hargaSetelahDiskon * bayarQty;
     subtotal += totalItem;
 
     const el = document.createElement('div');
@@ -99,7 +98,7 @@ const totalItem = hargaSetelahDiskon * bayarQty;
   updateSubtotalTotal(subtotal);
 }
 
-// Update subtotal dan total
+// Update subtotal and total
 function updateSubtotalTotal(subtotal) {
   const subtotalEl = document.querySelector('.wrap-subtotal p');
   const totalEl = document.querySelector('.wrap-total p');
@@ -107,12 +106,12 @@ function updateSubtotalTotal(subtotal) {
   if (totalEl) totalEl.textContent = subtotal.toLocaleString('id-ID');
 }
 
-// setelah update cart, simpan
+// Save cart to localStorage
 function saveCart() {
   localStorage.setItem('pos_cart', JSON.stringify(cart));
 }
 
-// Tambah produk ke cart (frontend) — memastikan normalisasi id & sync localStorage
+// Add product to cart
 function addToCartFrontend({
   id, name, price, sku, stock,
   discount_type = null, discount_value = 0,
@@ -125,7 +124,7 @@ function addToCartFrontend({
     return;
   }
 
-  // Selalu sync cart dari localStorage!
+  // Always sync cart from localStorage
   cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
 
   // Convert types
@@ -133,31 +132,36 @@ function addToCartFrontend({
   const pStock = Number(stock || 0);
 
   let idx = cart.findIndex(item => normalizeId(item.id) === normId);
-if (idx !== -1) {
-  cart[idx].buy_quantity = (cart[idx].buy_quantity || 0) + 1;
-  applyBuyXGetY(cart[idx]);
-} else {
-  const item = {
-    id: normId,
-    name: String(name || ''),
-    price: pPrice,
-    sku: sku || '',
-    stock: pStock,
-
-    buy_quantity: 1,
-    bonus_quantity: 0,
-    quantity: 1,
-
-    discount_type,
-    discount_value,
-    buy_qty,
-    free_qty,
-    bundle_qty,
-    bundle_value
-  };
-  applyBuyXGetY(item);
-  cart.push(item);
-}
+  if (idx !== -1) {
+    // For products without buyxgety discount, increase quantity normally
+    if (cart[idx].discount_type !== 'buyxgety') {
+      cart[idx].quantity = (cart[idx].quantity || 0) + 1;
+    }
+    // For all products, increase buy_quantity (quantity to pay for)
+    cart[idx].buy_quantity = (cart[idx].buy_quantity || 0) + 1;
+    applyBuyXGetY(cart[idx]); // Apply BuyXGetY if applicable
+  } else {
+    const item = {
+      id: normId,
+      name: String(name || ''),
+      price: pPrice,
+      sku: sku || '',
+      stock: pStock,
+      buy_quantity: 1,
+      bonus_quantity: 0,
+      // For non-buyxgety products, quantity starts at 1
+      // For buyxgety products, quantity will be updated by applyBuyXGetY
+      quantity: discount_type === 'buyxgety' ? 1 : 1,
+      discount_type,
+      discount_value,
+      buy_qty,
+      free_qty,
+      bundle_qty,
+      bundle_value
+    };
+    applyBuyXGetY(item);
+    cart.push(item);
+  }
 
   saveCart();
   if (typeof updateKeranjangView === 'function') updateKeranjangView();
@@ -165,93 +169,63 @@ if (idx !== -1) {
   if (window.showToast) window.showToast('Berhasil ditambahkan ke keranjang!', 'success');
 }
 
-// Event tombol tambah ke keranjang (ambil discount dari data-attr jika tersedia)
+// Event listener for increase/decrease quantity buttons in cart
 document.addEventListener('click', function (e) {
-  const btn = e.target.closest('.btn-add-cart');
-  if (!btn) return;
-  const id = normalizeId(btn.dataset.id);
-  const name = btn.dataset.name;
-  const price = Number(btn.dataset.price);
-  const sku = btn.dataset.sku;
-  const stock = Number(btn.dataset.stock);
-  const discount_type = btn.dataset.discountType || btn.dataset.jenisDiskon || null;
-  const discount_value = Number(btn.dataset.discountValue || btn.dataset.nilaiDiskon || 0);
-  const buy_qty = Number(btn.dataset.buyQty || 0);
-  const free_qty = Number(btn.dataset.freeQty || 0);
-  const bundle_qty = Number(btn.dataset.bundleQty || 0);
-  const bundle_value = Number(btn.dataset.bundleValue || 0);
-  addToCartFrontend({
-    id, name, price, sku, stock,
-    discount_type, discount_value,
-    buy_qty, free_qty,
-    bundle_qty, bundle_value
-  });
-});
+  // Handle increase quantity
+  if (e.target.classList.contains('increase-qty')) {
+    const idx = parseInt(e.target.dataset.idx);
+    cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
 
-// Event tombol +, -, hapus di cart
-document.addEventListener('click', function (e) {
-if (e.target.classList.contains('increase-qty')) {
-  const idx = parseInt(e.target.dataset.idx);
-  cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
+    if (cart[idx]) {
+      // For products without buyxgety discount, increase quantity normally
+      if (cart[idx].discount_type !== 'buyxgety') {
+        cart[idx].quantity = (cart[idx].quantity || 0) + 1;
+      }
+      
+      // Always increase buy_quantity (quantity to pay for)
+      cart[idx].buy_quantity = (cart[idx].buy_quantity || 0) + 1;
+      
+      // Apply BuyXGetY logic if applicable
+      applyBuyXGetY(cart[idx]);
+    }
 
-  if (cart[idx]) {
-    cart[idx].buy_quantity += 1;
-    applyBuyXGetY(cart[idx]);
+    saveCart();
+    updateKeranjangView(); // Update cart view
   }
 
-  saveCart();
-  updateKeranjangView();
-}
+  // Handle decrease quantity
+  if (e.target.classList.contains('decrease-qty')) {
+    const idx = parseInt(e.target.dataset.idx);
+    cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
 
-if (e.target.classList.contains('decrease-qty')) {
-  const idx = parseInt(e.target.dataset.idx);
-  cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
+    if (cart[idx] && cart[idx].buy_quantity > 1) {
+      // For products without buyxgety discount, decrease quantity normally
+      if (cart[idx].discount_type !== 'buyxgety') {
+        cart[idx].quantity = Math.max(1, (cart[idx].quantity || 0) - 1);
+      }
+      
+      // Decrease buy_quantity (quantity to pay for)
+      cart[idx].buy_quantity -= 1;
+      
+      // Apply BuyXGetY logic if applicable
+      applyBuyXGetY(cart[idx]);
+    }
 
-  if (cart[idx] && cart[idx].buy_quantity > 1) {
-    cart[idx].buy_quantity -= 1;
-    applyBuyXGetY(cart[idx]);
+    saveCart();
+    updateKeranjangView(); // Update cart view
   }
 
-  saveCart();
-  updateKeranjangView();
-}
-
+  // Handle remove item
   if (e.target.classList.contains('remove-item')) {
     const idx = parseInt(e.target.dataset.idx);
     cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
-    cart.splice(idx, 1);
+    cart.splice(idx, 1); // Remove product from cart
     saveCart();
-    updateKeranjangView();
+    updateKeranjangView(); // Update cart view
   }
 });
 
-// Inisialisasi tampilan keranjang saat load
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize the cart view on page load
+document.addEventListener('DOMContentLoaded', function() {
   updateKeranjangView();
 });
-
-// Ensure barcode handler and kasir call same single source of truth
-window.addToKasirCart = function(product) {
-  // simple wrapper to reuse addToCartFrontend and keep single cart logic
-  addToCartFrontend({
-    id: product.id,
-    name: product.name,
-    price: product.price ?? product.sellPrice ?? product.price,
-    sku: product.sku,
-    stock: product.stock,
-    discount_type: product.discount_type || product.jenis_diskon || null,
-    discount_value: product.discount_value ?? product.nilai_diskon ?? 0,
-    buy_qty: product.buy_qty ?? 0,
-    free_qty: product.free_qty ?? 0,
-    bundle_qty: product.bundle_qty ?? product.diskon_bundle_min_qty ?? 0,
-    bundle_value: product.bundle_value ?? product.diskon_bundle_value ?? 0
-  });
-};
-
-// Ensure kasir/getters read from localStorage
-window.getKasirCart = function() {
-  return JSON.parse(localStorage.getItem('pos_cart') || '[]');
-};
-
-// expose global
-window.addToCartFrontend = window.addToCartFrontend || addToCartFrontend;
