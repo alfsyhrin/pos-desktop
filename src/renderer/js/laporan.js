@@ -880,11 +880,16 @@ async function renderLaporanProduk() {
 async function renderLaporanKaryawan() {
     const data = await fetchLaporanKaryawan(currentFilters.karyawan);
 
+    // Hitung total penjualan dari setiap cashier
+    const totalPenjualan = (data.cashiers || []).reduce((sum, emp) => {
+        return sum + parseFloat(emp.total_penjualan || 0);
+    }, 0);
+
     // Update stat cards
     const statValues = document.querySelectorAll('#tab-karyawan .stat-value');
     statValues[0].textContent = data.total_karyawan || 0;
     statValues[1].textContent = (data.avg_performance || 0) + '%';
-    statValues[2].textContent = formatCurrency(data.total_penjualan || 0);
+    statValues[2].textContent = formatCurrency(totalPenjualan); // <-- pakai total yang dihitung
     statValues[3].textContent = (data.avg_attendance || 0) + '%';
 
     // Employee performance
@@ -892,20 +897,16 @@ async function renderLaporanKaryawan() {
         name: emp.name,
         position: emp.role,
         performance: emp.total_transaksi || 0,
-        sales: emp.total_penjualan || 0,
+        sales: parseFloat(emp.total_penjualan || 0), // pastikan number
         target: 100
     }));
     renderEmployeePerformance();
 
     // Top sellers
-    window.topSellersData = (data.cashiers || []).map(emp => ({
-        name: emp.name,
-        position: emp.role,
-        totalSales: emp.total_penjualan || 0,
-        transactions: emp.total_transaksi || 0
-    }));
+    window.topSellersData = (data.cashiers || []).sort((a, b) => parseFloat(b.total_penjualan) - parseFloat(a.total_penjualan));
     renderTopSellers();
 }
+
 
 async function generateDailyReport() {
     const storeId = localStorage.getItem('store_id');
