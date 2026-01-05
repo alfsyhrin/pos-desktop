@@ -37,7 +37,10 @@ function createWindow() {
     path.join(__dirname, "../renderer/pages/login.html")
   );
 
-  mainWindow.webContents.openDevTools();
+//   if (!app.isPackaged) { // hanya di dev
+//   mainWindow.webContents.openDevTools();
+// }
+
 }
 
 /* ==============================
