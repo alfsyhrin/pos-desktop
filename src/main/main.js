@@ -370,48 +370,48 @@ ipcMain.handle("detect-bluetooth-printers", async () => {
 /* ==============================
    IPC CETAK STRUK - MENERIMA DATA ASLI DARI DETAIL-TRANSAKSI.JS
 ================================ */
-ipcMain.handle("print-receipt", async (event, payload) => {
-  console.log("=== MENERIMA PERINTAH CETAK DENGAN DATA ASLI ===");
-  console.log("Payload:", payload);
+// ipcMain.handle("print-receipt", async (event, payload) => {
+//   console.log("=== MENERIMA PERINTAH CETAK DENGAN DATA ASLI ===");
+//   console.log("Payload:", payload);
   
-  try {
-    const { printType = 'usb' } = payload;
+//   try {
+//     const { printType = 'usb' } = payload;
     
-    // Jika printType adalah 'windows', gunakan Windows printer
-    if (printType === 'windows') {
-      return await printWithWindowsPrinter(payload);
-    }
+//     // Jika printType adalah 'windows', gunakan Windows printer
+//     if (printType === 'windows') {
+//       return await printWithWindowsPrinter(payload);
+//     }
     
-    // Jika USB/Bluetooth, coba gunakan ESC/POS
-    try {
-      return await printWithESCPOS(payload);
-    } catch (escposError) {
-      console.log("ESC/POS printing failed, trying Windows printer fallback...", escposError.message);
+//     // Jika USB/Bluetooth, coba gunakan ESC/POS
+//     try {
+//       return await printWithESCPOS(payload);
+//     } catch (escposError) {
+//       console.log("ESC/POS printing failed, trying Windows printer fallback...", escposError.message);
       
-      // Fallback ke Windows printer
-      try {
-        const result = await printWithWindowsPrinter(payload);
-        result.fallbackUsed = true;
-        result.originalError = escposError.message;
-        return result;
-      } catch (windowsError) {
-        console.error("Both printing methods failed");
-        return { 
-          success: false, 
-          error: `ESC/POS Error: ${escposError.message}, Windows Error: ${windowsError.message}` 
-        };
-      }
-    }
+//       // Fallback ke Windows printer
+//       try {
+//         const result = await printWithWindowsPrinter(payload);
+//         result.fallbackUsed = true;
+//         result.originalError = escposError.message;
+//         return result;
+//       } catch (windowsError) {
+//         console.error("Both printing methods failed");
+//         return { 
+//           success: false, 
+//           error: `ESC/POS Error: ${escposError.message}, Windows Error: ${windowsError.message}` 
+//         };
+//       }
+//     }
     
-  } catch (err) {
-    console.error("PRINT ERROR DETAIL:", err);
-    return { 
-      success: false, 
-      error: err.message,
-      details: err.stack
-    };
-  }
-});
+//   } catch (err) {
+//     console.error("PRINT ERROR DETAIL:", err);
+//     return { 
+//       success: false, 
+//       error: err.message,
+//       details: err.stack
+//     };
+//   }
+// });
 
 /* ==============================
    HELPER FORMAT RUPIAH sesuai template (dengan titik, bukan koma)
@@ -728,3 +728,23 @@ ipcMain.handle("print-receipt", async (event, payload) => {
 // window.addEventListener('offline', () => {
 //   showToast('Aplikasi berjalan offline.', 'warning');
 // });
+
+/* ==============================
+   APP LIFECYCLE (WAJIB ADA)
+================================ */
+app.whenReady().then(() => {
+  console.log("Electron app ready");
+  createWindow();
+
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});

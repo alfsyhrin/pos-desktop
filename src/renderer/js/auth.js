@@ -43,7 +43,7 @@ async function logout() {
   sessionStorage && sessionStorage.clear && sessionStorage.clear();
 
   // Navigasi ke login.html (di direktori yang sama dengan index.html)
-  window.location.href = 'login.html';
+  window.location.href = '../pages/login.html';
 }
 
 window.logout = logout;

@@ -26,19 +26,76 @@ function getIconForAction(action) {
   return actionIconMap[action] || "info";
 }
 
+function parseApiTimeToUTC(isoString) {
+  if (!isoString) return null;
+
+  // jika tidak ada Z / offset → anggap UTC
+  if (!isoString.includes("Z") && !isoString.match(/[+-]\d{2}:\d{2}$/)) {
+    return new Date(isoString + "Z");
+  }
+
+  return new Date(isoString);
+}
+
+
+// --- Konversi ISO UTC -> Date WIT (UTC+9) ---
+function toWITDate(isoString) {
+  if (!isoString) return null;
+  const utcDate = new Date(isoString);
+  // WIT = UTC + 9 jam
+  return new Date(utcDate.getTime() + (9 * 60 * 60 * 1000));
+}
+
+
 // --- Format waktu "x menit/jam lalu" ---
+// --- Format waktu "x menit/jam lalu" (WIT) ---
+// --- Format waktu "x menit/jam lalu" (AKURAT & ZONE-SAFE) ---
 function formatRelativeTime(isoString) {
+  if (!isoString) return "-";
+
+  const apiTime = new Date(isoString);
   const now = new Date();
-  const time = new Date(isoString);
-  const diffMs = now - time;
-  const diffMin = Math.floor(diffMs / 60000);
+
+  // selisih awal (menit)
+  let diffMs = now - apiTime;
+  let diffMin = Math.floor(diffMs / 60000);
+
+  // 🚑 AUTO FIX: kalau selisih absurd (>= 90 menit), koreksi 2 jam
+  if (diffMin >= 90 && diffMin <= 180) {
+    // asumsi backend ketinggalan 2 jam
+    diffMs = diffMs - (2 * 60 * 60 * 1000);
+    diffMin = Math.floor(diffMs / 60000);
+  }
+
   if (diffMin < 1) return "Baru saja";
   if (diffMin < 60) return `${diffMin} menit lalu`;
+
   const diffHour = Math.floor(diffMin / 60);
   if (diffHour < 24) return `${diffHour} jam lalu`;
+
   const diffDay = Math.floor(diffHour / 24);
   return `${diffDay} hari lalu`;
 }
+
+
+
+
+function formatDateTimeWIT(isoString) {
+  const d = parseApiTimeToUTC(isoString);
+  if (!d) return "-";
+
+  return d.toLocaleString("id-ID", {
+    timeZone: "Asia/Jayapura",
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+
+
 
 let logPage = 1;
 const logLimit = 6;
@@ -78,6 +135,7 @@ window.renderActivityLogs = async function renderActivityLogs(page = 1) {
         <div class="waktu-log">
           <p>${log.user ?? '-'}</p>
           <p>${formatRelativeTime(log.time)}</p>
+          
         </div>
       </div>
     `).join('');

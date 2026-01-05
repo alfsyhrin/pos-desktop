@@ -55,6 +55,30 @@ function viewTransactionDetail(transactionId) {
   window.location.href = 'detail-transaksi.html';
 }
 
+// helper: format date string to specific timezone (default WIT)
+function formatDateToTZ(
+  dateInput,
+  timeZone = localStorage.getItem('preferred_timezone') || 'Asia/Jayapura'
+) {
+  try {
+    const d = dateInput ? new Date(dateInput) : new Date();
+    return new Intl.DateTimeFormat('id-ID', {
+      timeZone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(d);
+  } catch (e) {
+    return dateInput
+      ? new Date(dateInput).toLocaleString('id-ID')
+      : new Date().toLocaleString('id-ID');
+  }
+}
+
+
 // Simpan reference ke transactions yang sedang ditampilkan
 function renderTransactions(transactions) {
   window.currentTransactions = transactions; // Simpan ke global
@@ -96,7 +120,7 @@ function renderTransactions(transactions) {
     card.style.position = 'relative';
     card.setAttribute('data-transaction-id', trx.transaction_id); // Tambah atribut ini
 
-    const createdAt = trx.createdAt ? new Date(trx.createdAt).toLocaleString('id-ID') : '-';
+    const createdAt = trx.createdAt ? formatDateToTZ(trx.createdAt) : '-';
     const total = Number(trx.total || 0);
     const method = trx.method || 'Tunai';
     const itemCount = trx.items ? trx.items.length : 0;

@@ -56,6 +56,8 @@ async function initDashboard() {
   }
 
   renderDashboardStats();
+  renderTodaySales();
+
   window.updateHeaderStoreName(); // TAMBAH BARIS INI
 }
 
@@ -115,6 +117,56 @@ async function renderDashboardStats() {
     if (kategoriCountEl) kategoriCountEl.textContent = '!';
   }
 }
+
+function getUTCDateString(dateInput) {
+  const d = new Date(dateInput);
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function formatRupiah(num) {
+  return "Rp " + Number(num || 0).toLocaleString("id-ID");
+}
+
+async function renderTodaySales() {
+  const storeId = localStorage.getItem("store_id");
+  if (!storeId) return;
+
+  const totalPenjualanEl = document.getElementById("total-penjualan");
+  const totalTransaksiEl = document.getElementById("total-transaksi");
+
+  if (!totalPenjualanEl || !totalTransaksiEl) return;
+
+  try {
+    // ambil cukup banyak agar hari ini pasti masuk
+    const res = await window.apiRequest(
+      `/stores/${storeId}/transactions?page=1&limit=100`
+    );
+
+    const items = res?.data?.items || [];
+    const todayUTC = getUTCDateString(new Date());
+
+    let totalPenjualan = 0;
+    let totalTransaksi = 0;
+
+    items.forEach(trx => {
+      const trxDateUTC = getUTCDateString(trx.createdAt);
+
+      if (trxDateUTC === todayUTC) {
+        totalPenjualan += Number(trx.total || 0);
+        totalTransaksi++;
+      }
+    });
+
+    totalPenjualanEl.textContent = formatRupiah(totalPenjualan);
+    totalTransaksiEl.textContent = totalTransaksi;
+
+  } catch (err) {
+    console.error("Gagal load transaksi dashboard:", err);
+    totalPenjualanEl.textContent = "!";
+    totalTransaksiEl.textContent = "!";
+  }
+}
+
 
 // --- Helper ---
 function formatTanggal(tgl) {
