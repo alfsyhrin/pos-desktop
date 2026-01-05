@@ -28,8 +28,10 @@
         <!-- ===== TAB: LAPORAN KEUANGAN ===== -->
         <div id="tab-keuangan" class="tab-content active">
             <!-- Generate Daily Report Button (NEW) -->
-            <div class="generate-daily-section" style="margin-bottom:1rem;">
-              <button id="btn-generate-daily" class="export-btn export-pdf" style="margin-bottom: 10px;">
+  <h3 class="judul-laporan-harian">Laporan Harian</h3>
+
+            <div class="generate-daily-section" style="margin-bottom:-1rem;">
+              <button id="btn-generate-daily" class="export-btn export-pdf" >
                 <span class="material-symbols-outlined">add_task</span>
                 Generate Laporan Harian
               </button>
@@ -37,7 +39,6 @@
             </div>
 
             <div class="daily-report-section" style="margin-top:2rem;">
-  <h3 class="judul-laporan-harian">Laporan Harian</h3>
   <div style="margin-bottom:8px;">
     <input type="date" id="dailyStart" style="margin-right:8px;" class="input-tanggal-harian">
     <input type="date" id="dailyEnd" style="margin-right:8px;" class="input-tanggal-harian">
@@ -279,7 +280,7 @@
                     </div>
                 </div> -->
             </div>
-<div class="table-pagination" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;">
+<div class="table-pagination" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;margin-bottom:16px;">
     <button id="kas-masuk-prev" class="btn-paging" onclick="kasMasukPrevPage()" disabled>&laquo; Sebelumnya</button>
     <span id="kas-masuk-page-info" style="min-width:90px;text-align:center;font-weight:bold;">Halaman 1</span>
     <button id="kas-masuk-next" class="btn-paging" onclick="kasMasukNextPage()" disabled>Berikutnya &raquo;</button>

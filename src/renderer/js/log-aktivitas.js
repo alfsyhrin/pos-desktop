@@ -98,7 +98,7 @@ function formatDateTimeWIT(isoString) {
 
 
 let logPage = 1;
-const logLimit = 6;
+const logLimit = 10;
 let logPages = 1;
 let logTotal = 0;
 
