@@ -32,6 +32,7 @@ main {
 /* Awal Produk Kasir */
 .produk-kasir {
   flex: 2;
+  
 }
 /* Akhir Produk Kasir */
 
@@ -245,7 +246,7 @@ main {
   margin-top: 16px;
   margin-right: 16px;
   margin-left: 16px;
-  height: 60vh;
+  height: 73vh;
   overflow-y: auto;
 }
 
@@ -254,7 +255,6 @@ main {
   display: flex;
   flex-direction: row;
   gap: 13.5px;
-  /* border: 1px solid #fff; */
   justify-content: flex-start;
   align-items: flex-start;
 }
@@ -274,7 +274,7 @@ main {
   width: calc(33.333% - 9px);
   cursor: pointer;
   transition: transform 0.2s;
-  /* height: 350px; */
+  height: 400px;
 }
 
 .gambar-produk-kasir {
@@ -301,6 +301,7 @@ main {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  overflow-x: auto;
 }
 
 .overflow-judul-produk {

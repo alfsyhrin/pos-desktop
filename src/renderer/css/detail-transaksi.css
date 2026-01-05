@@ -13,6 +13,8 @@ body {
   color: var(--foreground-color);
 }
 
+
+
 header {
   width: 100%;
   background-color: var(--card-color);
@@ -74,8 +76,19 @@ header p {
 
 .main-container {
   max-width: 1400px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
   padding: 20px;
+}
+
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.main-wrapper::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
 }
 
 .jenis-pembayaran-transaksi {
@@ -675,7 +688,6 @@ button.btn-hapus {
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 16px;
-  margin-top: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;

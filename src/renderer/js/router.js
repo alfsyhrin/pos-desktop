@@ -52,7 +52,7 @@ function loadPage(page, params = {}) {
       } else if (page === 'pengaturan' && window.initPengaturan) {
         setTimeout(() => window.initPengaturan(), 100);
       } else if (page === 'produk' && window.initProduk) {
-        setTimeout(() => window.initProduk(), 100);
+        setTimeout(() => window.renderProdukPage(), 100);
       } else if (page === 'editProduk' && params?.id) {
         sessionStorage.setItem('edit_product_id', params.id);
         setTimeout(() => window.initEditProdukPage?.(), 200);
