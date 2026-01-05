@@ -124,9 +124,16 @@ async function login() {
       }
     }
 
-    if (window.showToast) showToast('Login berhasil', 'success');
-    window.location.href = 'index.html';
-  } catch (err) {
+    if (window.showToast) {
+  showToast('Login berhasil', 'success');
+}
+
+// beri jeda sebentar agar toast terlihat
+setTimeout(() => {
+  window.location.href = 'index.html';
+}, 800); // 800 ms bisa disesuaikan
+  } 
+  catch (err) {
     console.error('Login gagal (catch):', err);
 
     // pesan dari error sudah jelas: "Username/email atau password salah"

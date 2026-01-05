@@ -282,7 +282,7 @@ function showStoreSelector(stores) {
       const el = document.createElement('div');
       el.style.padding = '8px';
       el.style.marginBottom = '6px';
-      el.style.background = 'var(--card-color)';
+      el.style.background = 'var(--background-color)';
       el.style.borderRadius = '6px';
       el.style.cursor = 'pointer';
       el.style.color = 'var(--foreground-color)';

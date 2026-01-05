@@ -204,15 +204,23 @@ function showStoreSelectionModal(stores = []) {
     modal.className = 'store-select-modal';
     modal.style = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;';
     const box = document.createElement('div');
-    box.style = 'background:#1b1b1b;padding:20px;border-radius:8px;max-width:600px;width:90%;color:#fff;';
-    box.innerHTML = `<h3>Pilih toko untuk manajemen karyawan</h3><div class="list-stores" style="margin-top:10px;"></div><div style="text-align:right;margin-top:12px;"><button class="cancel-store" style="margin-right:8px;">Batal</button></div>`;
+    box.style = '  background: var(--card-color);padding: 20px;border-radius: 8px;width: 420px;max-height: 70vh; overflow: auto;border: 1px solid var(--border-color);';
+    box.innerHTML = `<h3 style="margin-top: 0; 
+  color: var(--foreground-color);margin-bottom: 10px;">Pilih toko</h3><div class="list-stores" style="margin-top:10px;background-color:var(--card-color);"></div><div style="text-align:right;margin-top:12px;"><button class="cancel-store" style="padding:8px 12px;
+  border-radius: 5px;
+  background-color: var(--primary-color);
+  border: none;
+  color: var(--foreground-color);
+  font-weight: var(--weight-bold);
+  width: 80px;
+  cursor: pointer;">Batal</button></div>`;
     modal.appendChild(box);
     document.body.appendChild(modal);
     const listEl = box.querySelector('.list-stores');
     stores.forEach(s => {
       const btn = document.createElement('button');
       btn.textContent = `${s.id} — ${s.name || s.branch || s.store_name || '-'}`;
-      btn.style = 'display:block;margin:6px 0;padding:8px;border-radius:6px;width:100%;text-align:left;';
+      btn.style = 'font-size:16px;border:none;cursor:pointer;background-color:var(--card-color);color:var(--foreground-color);font-weight:var(--weight-bold);display:block;margin:6px 0;padding:8px;border-radius:6px;width:100%;text-align:left;';
       btn.addEventListener('click', () => {
         localStorage.setItem('store_id', String(s.id));
         document.body.removeChild(modal);
