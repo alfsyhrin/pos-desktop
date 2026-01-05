@@ -212,7 +212,7 @@ async function renderReceiptPreview() {
   const previewContainer = document.getElementById('receipt-preview') || createPreviewContainer();
   
   previewContainer.innerHTML = `
-    <div style="background:#fff;color:#000;padding:20px;border-radius:8px;margin:20px 0;font-family:'Courier New',monospace;white-space:pre-wrap;word-break:break-all;font-size:12px;line-height:1.4;">
+    <div style="display:flex;justify-content:center;align-items:center;background:#fff;color:#000;padding:20px;border-radius:8px;margin:20px 0;font-family:'Courier New',monospace;white-space:pre-wrap;word-break:break-all;font-size:12px;line-height:1.4;">
       ${receiptText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
     </div>
   `;

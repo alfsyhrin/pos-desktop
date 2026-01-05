@@ -10,109 +10,112 @@
   <link rel="stylesheet" href="../css/global.css">
 </head>
 <body>
-  <header>
-    <div class="back-button">
-      <!-- detail-transaksi.html -->
-      <a id="btn-back-kasir">
-        <span class="material-symbols-outlined">arrow_back</span>
-      </a>
-    </div>
-    <div class="judul-header">
-      <h3>Detail Transaksi</h3>
-    </div>
-  </header>
-
-  <div class="main-container">
-    <div class="jenis-pembayaran-transaksi">
-      <h4>No. Transaksi</h4>
-      <p>-</p>
-    </div>
-
-    <div class="jenis-pembayaran-transaksi">
-      <h4>Tanggal & Waktu</h4>
-      <p>-</p>
-    </div>
-
-    <div class="jenis-pembayaran-transaksi">
-      <h4>Metode Pembayaran</h4>
-      <p>-</p>
-    </div>
-
-    <div class="item-pembelian-transaksi">
-      <h4>Item pembelian</h4>
-    </div>
-
-    <div class="harga-transaksi">
-      <div class="wrap-info-harga">
-        <h4 class="label">Sub Total:</h4>
-        <h4>Rp. 0</h4>
+  
+  <div class="main-wrapper">
+    <header>
+      <div class="back-button">
+        <!-- detail-transaksi.html -->
+        <a id="btn-back-kasir">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </a>
       </div>
-      <div class="wrap-info-harga">
-        <h4 class="label">Total Diskon</h4>
-        <h4>Rp. 0</h4>
+      <div class="judul-header">
+        <h3>Detail Transaksi</h3>
       </div>
-      <div class="wrap-info-harga border-bottom">
-        <h4 class="label">PPN (10.0%)</h4>
-        <h4>Rp. 0</h4>
+    </header>
+
+    <div class="main-container">
+      <div class="jenis-pembayaran-transaksi">
+        <h4>No. Transaksi</h4>
+        <p>-</p>
       </div>
-      <div class="wrap-info-harga grand-total">
-        <h4>GRAND TOTAL</h4>
-        <h4>Rp. 0</h4>
+  
+      <div class="jenis-pembayaran-transaksi">
+        <h4>Tanggal & Waktu</h4>
+        <p>-</p>
       </div>
-      <div class="wrap-tunai">
+  
+      <div class="jenis-pembayaran-transaksi">
+        <h4>Metode Pembayaran</h4>
+        <p>-</p>
+      </div>
+  
+      <div class="item-pembelian-transaksi">
+        <h4>Item pembelian</h4>
+      </div>
+  
+      <div class="harga-transaksi">
         <div class="wrap-info-harga">
-          <h4>Tunai Diterima</h4>
+          <h4 class="label">Sub Total:</h4>
           <h4>Rp. 0</h4>
         </div>
         <div class="wrap-info-harga">
-          <h4>Kembalian</h4>
+          <h4 class="label">Total Diskon</h4>
           <h4>Rp. 0</h4>
         </div>
-      </div>
-    </div>
-
-    <div class="printer-status-section">
-      <h4>Printer Thermal - Woya</h4>
-      <div class="printer-status-row">
-        <div class="printer-info">
-          <div class="status-indicator" id="status-indicator"></div>
-          <div class="status-text-wrap">
-            <span class="status-text" id="status-text">Memeriksa printer...</span>
-            <span class="printer-name-text" id="printer-name-text">Mendeteksi printer yang tersedia</span>
+        <div class="wrap-info-harga border-bottom">
+          <h4 class="label">PPN (10.0%)</h4>
+          <h4>Rp. 0</h4>
+        </div>
+        <div class="wrap-info-harga grand-total">
+          <h4>GRAND TOTAL</h4>
+          <h4>Rp. 0</h4>
+        </div>
+        <div class="wrap-tunai">
+          <div class="wrap-info-harga">
+            <h4>Tunai Diterima</h4>
+            <h4>Rp. 0</h4>
+          </div>
+          <div class="wrap-info-harga">
+            <h4>Kembalian</h4>
+            <h4>Rp. 0</h4>
           </div>
         </div>
-        <div class="printer-buttons">
-          <button class="btn-icon refresh" id="btn-refresh" title="Refresh Printer">
-            <span class="material-symbols-outlined">refresh</span>
-          </button>
+      </div>
+  
+      <div class="printer-status-section">
+        <h4>Printer Thermal - Woya</h4>
+        <div class="printer-status-row">
+          <div class="printer-info">
+            <div class="status-indicator" id="status-indicator"></div>
+            <div class="status-text-wrap">
+              <span class="status-text" id="status-text">Memeriksa printer...</span>
+              <span class="printer-name-text" id="printer-name-text">Mendeteksi printer yang tersedia</span>
+            </div>
+          </div>
+          <div class="printer-buttons">
+            <button class="btn-icon refresh" id="btn-refresh" title="Refresh Printer">
+              <span class="material-symbols-outlined">refresh</span>
+            </button>
+          </div>
         </div>
       </div>
+  
+      <div class="wrap-button-proses-transaksi">
+        <button class="btn-print-struk" id="btn-print-usb">
+          <span class="material-symbols-outlined">print</span> Print USB
+        </button>
+        
+        <button class="btn-hapus" id="btn-delete">
+          <span class="material-symbols-outlined">delete</span> Hapus
+        </button>
+  
+        <button class="btn-selesai" id="btn-selesai">
+          <span class="material-symbols-outlined">check_circle</span> Selesaikan Transaksi
+        </button>
+      </div>
+  
+      <!-- TAMBAH: Preview Struk Container -->
+      <div id="receipt-preview" style="margin-top: 20px;"></div>
     </div>
-
-    <div class="wrap-button-proses-transaksi">
-      <button class="btn-print-struk" id="btn-print-usb">
-        <span class="material-symbols-outlined">print</span> Print USB
-      </button>
-      
-      <button class="btn-hapus" id="btn-delete">
-        <span class="material-symbols-outlined">delete</span> Hapus
-      </button>
-
-      <button class="btn-selesai" id="btn-selesai">
-        <span class="material-symbols-outlined">check_circle</span> Selesaikan Transaksi
-      </button>
+  
+    <!-- Print Receipt Container -->
+    <div id="print-receipt-container"></div>
+  
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <span id="toast-message"></span>
     </div>
-
-    <!-- TAMBAH: Preview Struk Container -->
-    <div id="receipt-preview" style="margin-top: 20px;"></div>
-  </div>
-
-  <!-- Print Receipt Container -->
-  <div id="print-receipt-container"></div>
-
-  <!-- Toast -->
-  <div class="toast" id="toast">
-    <span id="toast-message"></span>
   </div>
   <!-- <script src="../../main/main.js"></script> -->
   <script src="../js/detail-transaksi.js"></script>
