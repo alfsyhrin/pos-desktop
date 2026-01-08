@@ -10,7 +10,7 @@
   },
   "build": {
     "appId": "com.pipos.myapp",
-    "productName": "PiPos",
+    "productName": "PiPos - Aplikasi Kasir",
     "win": {
       "target": "nsis",
       "icon": "build/Pipos.ico"
