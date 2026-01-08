@@ -511,3 +511,58 @@ button.btn-active {
 .barcode-produk:hover {
   background-color: #d0e2ff;
 }
+
+.store-selector-modal {
+  display:none; 
+  position:fixed; 
+  inset:0; 
+  background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:9999;
+}
+
+.card-selector-store {
+  background: var(--card-color); 
+  padding: 20px; 
+  border-radius: 8px; 
+  width: 420px; 
+  max-height: 70vh; 
+  overflow: auto;
+  border: 1px solid var(--border-color);
+}
+
+.card-selector-store h3 {
+  margin-top: 0; 
+  color: var(--foreground-color);margin-bottom: 10px;
+}
+
+.wrap-button-selector-store {
+  margin-top: 12px; 
+  display: flex; 
+  gap: 8px; 
+  justify-content: flex-end;
+}
+
+.store-refresh {
+  padding:8px 12px;
+  border-radius: 5px;
+  background-color: var(--primary-color);
+  border: none;
+  color: var(--foreground-color);
+  font-weight: var(--weight-bold);
+  width: 80px;
+  cursor: pointer;
+}
+
+.store-cancel {
+  padding:8px 12px;
+  border-radius: 5px;
+  background-color: var(--primary-color);
+  border: none;
+  color: var(--foreground-color);
+  font-weight: var(--weight-bold);
+  width: 80px;
+  cursor: pointer;
+}
+
+.store-list {
+  background-color: var(--background-color);
+}

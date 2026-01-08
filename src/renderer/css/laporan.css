@@ -250,19 +250,20 @@ body {
 
 /* ===== MAIN STAT CARDS (New Layout) ===== */
 .stat-grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .stat-card-new {
-    background: var(--card-color);
-    padding: 1.25rem 1.5rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
+  background: var(--card-color);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
 }
+
 
 .stat-card-new:hover {
     border-color: var(--primary-color);
@@ -306,7 +307,7 @@ body {
     padding: 1.25rem 1.5rem;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .stat-single .stat-header {
@@ -354,6 +355,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
+    margin-bottom: 16px;
 }
 
 /* ===== DASHBOARD CARDS ===== */
@@ -471,7 +473,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .card {

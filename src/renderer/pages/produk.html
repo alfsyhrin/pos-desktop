@@ -33,13 +33,13 @@
   </div>
 
     <!-- Modal pemilihan toko untuk owner (muncul jika store_id tidak ada) -->
-  <div id="store-selector-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:9999;">
-    <div style="background:var(--card-color); padding:20px; border-radius:8px; width:420px; max-height:70vh; overflow:auto;">
-      <h3 style="margin-top:0; color:var(--foreground-color);">Pilih Toko</h3>
+  <div id="store-selector-modal" class="store-selector-modal">
+    <div class="card-selector-store">
+      <h3>Pilih Toko</h3>
       <div id="store-list"></div>
-      <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
-        <button id="store-refresh" style="padding:8px 12px;">Refresh</button>
-        <button id="store-cancel" style="padding:8px 12px;">Batal</button>
+      <div class="wrap-button-selector-store">
+        <button id="store-refresh" class="store-refresh">Refresh</button>
+        <button id="store-cancel" class="store-cancel">Batal</button>
       </div>
     </div>
   </div>

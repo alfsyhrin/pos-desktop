@@ -269,7 +269,7 @@ body {
   pointer-events: auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
 
   animation: toast-slide-in 0.3s ease-out forwards,
@@ -313,3 +313,4 @@ body {
     transform: translateY(-10px);
   }
 }
+
