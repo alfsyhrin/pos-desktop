@@ -37,9 +37,15 @@
         <small style="color: #999;">* Tidak dapat diubah</small>
       </div>
 
+      <!-- TAMBAH: Harga Modal -->
+      <div class="form-group">
+        <label>Harga Modal</label>
+        <input type="text" id="harga-modal" class="rupiah-input" placeholder="Rp 0">
+      </div>
+
       <div class="form-group">
         <label>Harga Jual</label>
-        <input type="number" id="harga-jual">
+        <input type="text" id="harga-jual" class="rupiah-input" placeholder="Rp 0">
       </div>
 
       <div class="form-group">
@@ -104,5 +110,35 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/edit-produk.js"></script>
+  <script>
+function formatRupiahInput(val) {
+  const num = String(val).replace(/\D/g, '');
+  if (!num) return '';
+  return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function parseRupiahInput(val) {
+  return Number(String(val).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
+}
+function initRupiahInput(input) {
+  if (!input) return;
+  input.type = "text";
+  input.inputMode = "numeric";
+  input.addEventListener('input', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = formatRupiahInput(val);
+  });
+  input.addEventListener('blur', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = formatRupiahInput(val);
+  });
+  input.addEventListener('focus', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = val;
+  });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.rupiah-input').forEach(initRupiahInput);
+});
+</script>
 </body>
 </html>

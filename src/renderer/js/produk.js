@@ -399,8 +399,8 @@ window.tambahProduk = async function tambahProduk() {
   // Ambil semua field dari form
   const namaProduk = (document.getElementById('nama-produk').value || '').trim();
   const barcode = (document.getElementById('product-barcode').value || '').trim();
-  const hargaModal = Number(document.getElementById('harga-modal').value || 0);
-  const hargaJual = Number(document.getElementById('harga-jual').value || 0);
+  const hargaModal = parseRupiahInput(document.getElementById('harga-modal').value);
+  const hargaJual = parseRupiahInput(document.getElementById('harga-jual').value);
   const sku = (document.getElementById('sku').value || '').trim();
   const stok = Number(document.getElementById('stok').value || 0);
   const kategori = document.getElementById('kategori').value;
@@ -704,6 +704,19 @@ window.renderProdukPage = async function renderProdukPage() {
   } finally {
     isRenderingProdukPage = false;
     console.log('✅ renderProdukPage selesai');
+  }
+  
+  // Setelah render produk dan inisialisasi pencarian
+  // Tambahkan event listener tombol export setiap render
+  const btnExport = document.getElementById('btnExportStokOpname');
+  if (btnExport) {
+    btnExport.onclick = function() {
+      if (!window.__lastProducts || window.__lastProducts.length === 0) {
+        alert('Produk belum dimuat');
+        return;
+      }
+      exportStokOpnameExcel(window.__lastProducts);
+    };
   }
 };
 // ...existing code...
@@ -1079,6 +1092,7 @@ function exportStokOpnameExcel(products) {
     return;
   }
 
+  // Siapkan data
   const rows = products.map((p, index) => ({
     'ID Produk': p.id,
     'Nama Produk': p.name,
@@ -1096,15 +1110,57 @@ function exportStokOpnameExcel(products) {
     'Updated At': p.updatedAt ? new Date(p.updatedAt).toLocaleString('id-ID') : ''
   }));
 
+  // Buat worksheet
   const worksheet = XLSX.utils.json_to_sheet(rows);
 
-  // Tambahkan formula Excel pada baris pertama data (baris 2, karena header di baris 1)
-  worksheet['J2'] = { f: 'I2-H2' };   // Selisih
-  worksheet['K2'] = { f: 'J2*F2' };   // Nilai Selisih
+  // Format kolom harga modal & harga jual ke format rupiah
+  for (let i = 2; i <= products.length + 1; i++) {
+    worksheet[`F${i}`].t = 'n';
+    worksheet[`F${i}`].z = '"Rp "#,##0';
+    worksheet[`G${i}`].t = 'n';
+    worksheet[`G${i}`].z = '"Rp "#,##0';
+  }
 
+  // Tambahkan border dan warna header
+  const headerCols = [
+    'A1','B1','C1','D1','E1','F1','G1','H1','I1','J1','K1','L1','M1','N1'
+  ];
+  headerCols.forEach(cell => {
+    if (worksheet[cell]) {
+      worksheet[cell].s = {
+        fill: { fgColor: { rgb: "FFD700" } }, // warna kuning
+        font: { bold: true },
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } }
+        }
+      };
+    }
+  });
+
+  // Tambahkan border ke semua cell data
+  for (let r = 2; r <= products.length + 1; r++) {
+    for (let c = 0; c < headerCols.length; c++) {
+      const col = String.fromCharCode(65 + c); // A, B, C, ...
+      const cell = `${col}${r}`;
+      if (worksheet[cell]) {
+        worksheet[cell].s = {
+          border: {
+            top: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } }
+          }
+        };
+      }
+    }
+  }
+
+  // Buat workbook dan export
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Stok Opname');
-
   XLSX.writeFile(
     workbook,
     `stok-opname-${new Date().toISOString().slice(0, 10)}.xlsx`
@@ -1133,29 +1189,18 @@ function updateLastProducts(products) {
 // };
 
 // Event listener tombol export
-// document.addEventListener('DOMContentLoaded', function() {
-//   const btnExport = document.getElementById('btnExportStokOpname');
-//   if (btnExport) {
-//     btnExport.addEventListener('click', function() {
-//       if (!window.__lastProducts || window.__lastProducts.length === 0) {
-//         alert('Produk belum dimuat');
-//         return;
-//       }
-//       exportStokOpnameExcel(window.__lastProducts);
-//     });
-//   }
-// });
-
-const btnExport = document.getElementById('btnExportStokOpname');
-if (btnExport) {
-  btnExport.onclick = function() {
-    if (!window.__lastProducts || window.__lastProducts.length === 0) {
-      alert('Produk belum dimuat');
-      return;
-    }
-    exportStokOpnameExcel(window.__lastProducts);
-  };
-}
+document.addEventListener('DOMContentLoaded', function() {
+  const btnExport = document.getElementById('btnExportStokOpname');
+  if (btnExport) {
+    btnExport.onclick = function() {
+      if (!window.__lastProducts || window.__lastProducts.length === 0) {
+        alert('Produk belum dimuat');
+        return;
+      }
+      exportStokOpnameExcel(window.__lastProducts);
+    };
+  }
+});
 
 // Kode untuk debugging real-time
 // document.addEventListener('DOMContentLoaded', function() {
@@ -1192,3 +1237,34 @@ if (btnExport) {
 //     document.body.appendChild(debugBtn);
 //   }, 2000);
 // });
+
+// Format angka ke format rupiah (tanpa Rp)
+function formatRupiahInput(val) {
+  const num = String(val).replace(/\D/g, '');
+  if (!num) return '';
+  return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// Ambil nilai numerik dari input rupiah
+function parseRupiahInput(val) {
+  return Number(String(val).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
+}
+
+// Inisialisasi input agar auto-format rupiah
+function initRupiahInput(input) {
+  if (!input) return;
+  input.type = "text";
+  input.inputMode = "numeric";
+  input.addEventListener('input', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = formatRupiahInput(val);
+  });
+  input.addEventListener('blur', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = formatRupiahInput(val);
+  });
+  input.addEventListener('focus', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = val;
+  });
+}

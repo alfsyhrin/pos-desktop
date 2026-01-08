@@ -140,12 +140,12 @@
 
           <div class="form-group">
             <label>Harga Modal</label>
-            <input type="number" id="harga-modal" placeholder="Rp 0">
+            <input type="text" id="harga-modal" class="rupiah-input" placeholder="Rp 0">
           </div>
 
           <div class="form-group">
             <label>Harga Jual</label>
-            <input type="number" id="harga-jual" placeholder="Rp 0">
+            <input type="text" id="harga-jual" class="rupiah-input" placeholder="Rp 0">
           </div>
 
           <div class="form-group">
@@ -198,7 +198,7 @@
           </div>
           <div class="form-group" id="promo-amount-wrapper" style="display:none;">
             <label>Promo Amount (Rp)</label>
-            <input type="number" id="promo-amount" placeholder="Contoh: 2000">
+            <input type="text" id="promo-amount" class="rupiah-input" placeholder="Contoh: 2000">
           </div>
           <div class="form-group" id="buyxgety-wrapper" style="display:none;">
             <label>Beli Qty (X)</label>
@@ -210,7 +210,24 @@
             <label>Bundle Qty</label>
             <input type="number" id="bundle-qty" placeholder="Contoh: 3">
             <label>Bundle Total Price</label>
-            <input type="number" id="bundle-total-price" placeholder="Contoh: 5000">
+            <input type="text" id="bundle-total-price" class="rupiah-input" placeholder="Contoh: 5000">
+          </div>
+        </div>
+
+        <!-- TAMBAH: Setelah section Promo Type, tambahkan Bundle section -->
+        <div class="promo-section" id="bundle-section" style="display:none;">
+          <h4>Pengaturan Bundle</h4>
+          
+          <div class="form-group">
+            <label>Min Qty untuk Bundle</label>
+            <input type="number" id="bundle-qty" placeholder="Contoh: 6" min="1">
+            <small>Minimal jumlah produk agar bundle berlaku</small>
+          </div>
+
+          <div class="form-group">
+            <label>Harga Bundle Total</label>
+            <input type="text" id="bundle-total-price" class="rupiah-input" placeholder="Contoh: 10000" min="0">
+            <small>Total harga untuk min qty yang ditentukan</small>
           </div>
         </div>
       </div>
@@ -248,5 +265,10 @@
 }
   </script>
   <script src="../js/theme.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.rupiah-input').forEach(initRupiahInput);
+});
+</script>
 </body>
 </html>

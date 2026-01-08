@@ -19,6 +19,37 @@ function applyBuyXGetY(item) {
   return item;
 }
 
+// TAMBAH: Function untuk kalkulasi diskon bundle
+function applyBundleDiscount(item) {
+  if (!item.diskon_bundle_min_qty || !item.diskon_bundle_value) {
+    return 0; // Tidak ada bundle
+  }
+
+  const qty = Number(item.quantity || 0);
+  const minQty = Number(item.diskon_bundle_min_qty || 0);
+  const bundlePrice = Number(item.diskon_bundle_value || 0);
+
+  if (qty < minQty) {
+    return 0; // Qty belum mencapai min, tidak apply bundle
+  }
+
+  // Hitung berapa bundle tier yang applicable
+  const bundleCount = Math.floor(qty / minQty);
+  const remainingQty = qty % minQty;
+  
+  // Total harga dengan bundle
+  const bundleTotal = bundleCount * bundlePrice + (remainingQty * item.price);
+  const normalTotal = qty * item.price;
+  
+  // Diskon = selisih harga normal vs bundle
+  const discount = normalTotal - bundleTotal;
+  
+  item.bundle_discount = discount;
+  item.applied_bundle = true;
+  
+  return discount;
+}
+
 let cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
 
 // Normalize product id
@@ -35,8 +66,8 @@ function updateKeranjangView() {
 
   // Always sync the cart from localStorage
   cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
-
   itemsContainer.innerHTML = '';
+  
   if (!cart.length) {
     if (emptyView) emptyView.style.display = 'flex';
     updateSubtotalTotal(0);
@@ -46,48 +77,53 @@ function updateKeranjangView() {
 
   let subtotal = 0;
   cart.forEach((item, idx) => {
+    const qty = Number(item.quantity || 0);
+    const price = Number(item.price || 0);
+    
+    // Hitung diskon sesuai priority
     let diskonLabel = '';
-    let hargaSetelahDiskon = Number(item.price);
+    let hargaSetelahDiskon = price;
+    let totalDiskon = 0;
 
-    // Applying discount logic
-    if (item.discount_type && item.discount_value) {
-      if (item.discount_type === 'percentage') {
-        diskonLabel = `Diskon: ${item.discount_value}%`;
-        hargaSetelahDiskon = Math.round(item.price * (1 - item.discount_value / 100));
-      } else if (item.discount_type === 'amount' || item.discount_type === 'nominal') {
-        diskonLabel = `Diskon: Rp ${Number(item.discount_value).toLocaleString('id-ID')}`;
-        hargaSetelahDiskon = Math.max(0, item.price - item.discount_value);
+    // Priority 1: BUNDLE
+    if (item.diskon_bundle_min_qty && item.diskon_bundle_value) {
+      totalDiskon = applyBundleDiscount(item);
+      if (totalDiskon > 0) {
+        diskonLabel = `Promo Bundle: Rp ${Number(totalDiskon).toLocaleString('id-ID')}`;
       }
     }
-
-    // Info promo bundle/buyxgety
-    if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
+    // Priority 2: BUY X GET Y
+    else if (item.discount_type === 'buyxgety') {
+      applyBuyXGetY(item);
       diskonLabel = `Promo: Beli ${item.buy_qty} Gratis ${item.free_qty}`;
     }
-    if (item.discount_type === 'bundle' && item.bundle_qty && item.bundle_value) {
-      diskonLabel = `Promo: ${item.bundle_qty} pcs Rp ${Number(item.bundle_value).toLocaleString('id-ID')}`;
+    // Priority 3: PERCENTAGE
+    else if (item.discount_type === 'percentage') {
+      diskonLabel = `Diskon: ${item.discount_value}%`;
+      totalDiskon = price * qty * (item.discount_value / 100);
+      hargaSetelahDiskon = price * (1 - item.discount_value / 100);
+    }
+    // Priority 4: NOMINAL
+    else if (item.discount_type === 'nominal') {
+      diskonLabel = `Diskon: Rp ${Number(item.discount_value).toLocaleString('id-ID')}`;
+      totalDiskon = Math.min(item.discount_value, price * qty);
+      hargaSetelahDiskon = price - (totalDiskon / qty);
     }
 
-    // Calculate total price for the item
-    // For products with buyxgety, use buy_quantity for calculation (not quantity which includes free items)
-    const bayarQty = item.discount_type === 'buyxgety' ? 
-      Number(item.buy_quantity || 0) : 
-      Number(item.quantity || 0);
-    
-    const totalItem = hargaSetelahDiskon * bayarQty;
+    const totalItem = (price * qty) - totalDiskon;
     subtotal += totalItem;
 
     const el = document.createElement('div');
     el.className = 'keranjang-item';
     el.innerHTML = `
       <h4>${item.name}</h4>
-      <p>Harga: Rp ${Number(item.price).toLocaleString('id-ID')}</p>
+      <p>Harga: Rp ${Number(price).toLocaleString('id-ID')}</p>
       ${diskonLabel ? `<p class="diskon-info">${diskonLabel}</p>` : ''}
       <div class="actions">
         <h4 class="product-total">Rp ${totalItem.toLocaleString('id-ID')}</h4>
         <div class="product-buttons-wrapper">
           <button class="decrease-qty" data-idx="${idx}">-</button>
-          <span class="product-qty">${item.quantity}</span>
+          <input type="number" class="product-qty-input" data-idx="${idx}" value="${item.quantity}" min="1" style="width: 50px; text-align: center; padding: 4px;">
           <button class="increase-qty" data-idx="${idx}">+</button>
           <button class="remove-item" data-idx="${idx}">✕</button>
         </div>
@@ -116,30 +152,16 @@ function addToCartFrontend({
   id, name, price, sku, stock,
   discount_type = null, discount_value = 0,
   buy_qty = 0, free_qty = 0,
-  bundle_qty = 0, bundle_value = 0
+  diskon_bundle_min_qty = 0,  // ✅ PERBAIKI: gunakan snake_case
+  diskon_bundle_value = 0     // ✅ PERBAIKI: gunakan snake_case
 }) {
-  const normId = normalizeId(id);
-  if (normId === null) {
-    console.warn('addToCartFrontend: invalid id', id);
-    return;
-  }
-
-  // Always sync cart from localStorage
-  cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
-
-  // Convert types
   const pPrice = Number(price || 0);
   const pStock = Number(stock || 0);
+  const normId = normalizeId(id);
 
   let idx = cart.findIndex(item => normalizeId(item.id) === normId);
   if (idx !== -1) {
-    // For products without buyxgety discount, increase quantity normally
-    if (cart[idx].discount_type !== 'buyxgety') {
-      cart[idx].quantity = (cart[idx].quantity || 0) + 1;
-    }
-    // For all products, increase buy_quantity (quantity to pay for)
-    cart[idx].buy_quantity = (cart[idx].buy_quantity || 0) + 1;
-    applyBuyXGetY(cart[idx]); // Apply BuyXGetY if applicable
+    cart[idx].quantity += 1;
   } else {
     const item = {
       id: normId,
@@ -149,15 +171,13 @@ function addToCartFrontend({
       stock: pStock,
       buy_quantity: 1,
       bonus_quantity: 0,
-      // For non-buyxgety products, quantity starts at 1
-      // For buyxgety products, quantity will be updated by applyBuyXGetY
       quantity: discount_type === 'buyxgety' ? 1 : 1,
       discount_type,
       discount_value,
       buy_qty,
       free_qty,
-      bundle_qty,
-      bundle_value
+      diskon_bundle_min_qty,    // ✅ SIMPAN dengan nama yang benar
+      diskon_bundle_value       // ✅ SIMPAN dengan nama yang benar
     };
     applyBuyXGetY(item);
     cart.push(item);
@@ -165,9 +185,36 @@ function addToCartFrontend({
 
   saveCart();
   if (typeof updateKeranjangView === 'function') updateKeranjangView();
-  // optional global toast
   if (window.showToast) window.showToast('Berhasil ditambahkan ke keranjang!', 'success');
 }
+
+// Event listener untuk input quantity langsung
+document.addEventListener('change', function (e) {
+  if (e.target.classList.contains('product-qty-input')) {
+    const idx = parseInt(e.target.dataset.idx);
+    let newQty = parseInt(e.target.value) || 1;
+    
+    cart = JSON.parse(localStorage.getItem('pos_cart') || '[]');
+
+    if (cart[idx]) {
+      // Minimum quantity is 1
+      newQty = Math.max(1, newQty);
+      
+      // Jika product punya buyxgety, update buy_quantity, bukan quantity
+      if (cart[idx].discount_type === 'buyxgety') {
+        cart[idx].buy_quantity = newQty;
+        applyBuyXGetY(cart[idx]); // quantity akan diupdate oleh applyBuyXGetY
+      } else {
+        // Untuk produk normal, update quantity langsung
+        cart[idx].quantity = newQty;
+        cart[idx].buy_quantity = newQty;
+      }
+    }
+
+    saveCart();
+    updateKeranjangView();
+  }
+});
 
 // Event listener for increase/decrease quantity buttons in cart
 document.addEventListener('click', function (e) {

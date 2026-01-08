@@ -178,38 +178,44 @@ async function createTransaction(pendingData, receivedAmount) {
     throw new Error('Missing storeId or token');
   }
 
-const items = pendingData.cart.map(item => {
-  const obj = {
-    product_id: Number(item.id),
-    quantity: Number(item.quantity || 0), // TOTAL keluar
-    notes: item.notes || ""
-  };
+  const items = pendingData.cart.map(item => {
+    const obj = {
+      product_id: Number(item.id),
+      quantity: Number(item.quantity || 0),
+      notes: item.notes || ""
+    };
 
-  if (
-    item.discount_type === 'buyxgety' &&
-    Number(item.buy_qty) > 0 &&
-    Number(item.free_qty) > 0
-  ) {
-    obj.discount_type = 'buyxgety';
-    obj.buy_qty = Number(item.buy_qty);
-    obj.free_qty = Number(item.free_qty);
-    obj.discount_value = 0;
-  }
+    // ✅ TAMBAH: Bundle check
+    if (item.diskon_bundle_min_qty && item.diskon_bundle_value) {
+      obj.discount_type = 'bundle';
+      obj.diskon_bundle_min_qty = Number(item.diskon_bundle_min_qty);
+      obj.diskon_bundle_value = Number(item.diskon_bundle_value);
+      obj.discount_value = 0;
+    }
+    // Priority 2: Buy X Get Y
+    else if (
+      item.discount_type === 'buyxgety' &&
+      Number(item.buy_qty) > 0 &&
+      Number(item.free_qty) > 0
+    ) {
+      obj.discount_type = 'buyxgety';
+      obj.buy_qty = Number(item.buy_qty);
+      obj.free_qty = Number(item.free_qty);
+      obj.discount_value = 0;
+    }
+    // Priority 3: Percentage
+    else if (item.discount_type === 'percentage') {
+      obj.discount_type = 'percentage';
+      obj.discount_value = Number(item.discount_value || 0);
+    }
+    // Priority 4: Nominal
+    else if (item.discount_type === 'nominal') {
+      obj.discount_type = 'nominal';
+      obj.discount_value = Number(item.discount_value || 0);
+    }
 
-  else if (item.discount_type === 'percentage') {
-    obj.discount_type = 'percentage';
-    obj.discount_value = Number(item.discount_value || 0);
-  }
-
-  else if (item.discount_type === 'nominal') {
-    obj.discount_type = 'nominal';
-    obj.discount_value = Number(item.discount_value || 0);
-  }
-
-  return obj;
-});
-
-
+    return obj;
+  });
 
   const body = {
     payment_type: "cash",
@@ -218,7 +224,7 @@ const items = pendingData.cart.map(item => {
     items
   };
 
-  console.info('[CREATE TRANSACTION PAYLOAD]', body);
+  console.info('[CREATE TRANSACTION PAYLOAD]', JSON.stringify(body, null, 2));
 
   const res = await fetch(
     `http://103.126.116.119:8001/api/stores/${storeId}/transactions`,

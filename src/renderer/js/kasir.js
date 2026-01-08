@@ -220,14 +220,10 @@ window.onBarcodeScannedKasir = async function (barcode) {
     const token = localStorage.getItem('token');
     if (!storeId) return showToastKasir('Pilih toko terlebih dahulu!', 'error');
 
-    // Fetch produk by barcode
     const url = `http://103.126.116.119:8001/api/stores/${storeId}/products/barcode/${encodeURIComponent(barcode)}`;
-    console.log('[Kasir] Fetching:', url);
     const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
     const json = await res.json();
-    console.log('[Kasir] Fetch result:', json);
 
-    // Pastikan produk ditemukan dan ID valid
     const p = json?.data;
     const id = p?.id ?? p?.product_id ?? p?.productId ?? null;
     if (!p || !id) {
@@ -235,7 +231,6 @@ window.onBarcodeScannedKasir = async function (barcode) {
       return;
     }
 
-    // Panggil addToCartFrontend dengan data produk hasil fetch
     if (typeof addToCartFrontend === 'function') {
       addToCartFrontend({
         id: Number(id),
@@ -243,12 +238,12 @@ window.onBarcodeScannedKasir = async function (barcode) {
         price: Number(p.sellPrice ?? p.price ?? p.unit_price ?? 0),
         sku: p.sku ?? '',
         stock: Number(p.stock ?? p.quantity ?? 0),
-        discount_type: p.discount_type ?? p.jenis_diskon ?? null,
-        discount_value: Number(p.discount_value ?? p.nilai_diskon ?? 0),
-        buy_qty: Number(p.buyQty ?? 0),
-        free_qty: Number(p.freeQty ?? 0),
-        bundle_qty: Number(p.bundle_min_qty ?? p.diskon_bundle_min_qty ?? 0),
-        bundle_value: Number(p.bundle_total_price ?? p.diskon_bundle_value ?? 0)
+        discount_type: p.jenis_diskon ?? p.discount_type ?? null,  // ✅ snake_case
+        discount_value: Number(p.nilai_diskon ?? p.discount_value ?? 0),  // ✅ snake_case
+        buy_qty: Number(p.buy_qty ?? 0),
+        free_qty: Number(p.free_qty ?? 0),
+        diskon_bundle_min_qty: Number(p.diskon_bundle_min_qty ?? p.bundle_min_qty ?? 0),  // ✅ BENAR
+        diskon_bundle_value: Number(p.diskon_bundle_value ?? p.bundle_total_price ?? 0)   // ✅ BENAR
       });
       showToastKasir('Produk berhasil ditambahkan ke keranjang!', 'success');
     } else {
@@ -259,57 +254,54 @@ window.onBarcodeScannedKasir = async function (barcode) {
   }
 };
 
-function showProductNotFoundModalKasir(barcode) {
-  let modal = document.getElementById('modal-notfound-kasir');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'modal-notfound-kasir';
-    modal.style.position = 'fixed';
-    modal.style.inset = '0';
-    modal.style.background = 'rgba(0,0,0,0.6)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '99999';
-    modal.innerHTML = `
-      <div style="background:#fff; padding:32px 24px; border-radius:12px; max-width:340px; text-align:center;">
-        <span class="material-symbols-outlined" style="font-size:48px;color:#e43636;">warning</span>
-        <h3 style="margin:16px 0 8px 0;">Produk belum ditambahkan</h3>
-        <p style="color:#64748b;font-size:14px;">Barcode: <b>${barcode}</b></p>
-        <div style="margin-top:24px; display:flex; gap:12px; justify-content:center;">
-          <button id="btn-notfound-cancel-kasir" style="padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;">Batal</button>
-          <button id="btn-notfound-add-kasir" style="padding:8px 18px;border-radius:8px;background:#10b981;color:#fff;border:none;">Tambah Produk</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  } else {
-    modal.querySelector('p').innerHTML = `Barcode: <b>${barcode}</b>`;
-    modal.style.display = 'flex';
-  }
-  modal.querySelector('#btn-notfound-cancel-kasir').onclick = () => { modal.style.display = 'none'; };
-  modal.querySelector('#btn-notfound-add-kasir').onclick = () => {
-    window.location.href = `../pages/tambah-produk.html?barcode=${encodeURIComponent(barcode)}`;
-  };
+// PERBAIKI: initializeAddToCartButtons - saat user klik tombol di card
+function initializeAddToCartButtons() {
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('btn-add-cart')) {
+      const button = e.target;
+      
+      const productData = {
+        id: button.dataset.id,
+        name: button.dataset.name,
+        price: Number(button.dataset.price || 0),
+        sku: button.dataset.sku,
+        stock: Number(button.dataset.stock || 0),
+        discount_type: button.dataset.discountType || null,
+        discount_value: Number(button.dataset.discountValue || 0),
+        buy_qty: Number(button.dataset.buyQty || 0),
+        free_qty: Number(button.dataset.freeQty || 0),
+        diskon_bundle_min_qty: Number(button.dataset.bundleQty || 0),      // ✅ PERBAIKI
+        diskon_bundle_value: Number(button.dataset.bundleValue || 0)        // ✅ PERBAIKI
+      };
+
+      if (!productData.id || !productData.name) {
+        console.error('Data produk tidak lengkap:', productData);
+        showToastKasir('Data produk tidak lengkap', 'error');
+        return;
+      }
+
+      if (typeof addToCartFrontend === 'function') {
+        addToCartFrontend(productData);
+        
+        const originalText = button.textContent;
+        const originalBgColor = button.style.backgroundColor;
+        button.textContent = '✓ Ditambahkan';
+        button.style.backgroundColor = '#10b981';
+        button.style.color = '#ffffff';
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.backgroundColor = originalBgColor;
+          button.style.color = '';
+        }, 1000);
+      } else {
+        console.error('Fungsi addToCartFrontend tidak ditemukan');
+        showToastKasir('Sistem keranjang belum siap. Silakan refresh halaman.', 'error');
+      }
+    }
+  });
 }
 
-function showToastKasir(msg, type = 'info') {
-  let toast = document.getElementById('toast-kasir');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast-kasir';
-    toast.className = 'toast';
-    toast.style.position = 'fixed';
-    toast.style.right = '16px';
-    toast.style.bottom = '16px';
-    toast.style.zIndex = '99999';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.className = 'toast ' + type + ' show';
-  if (toast._hideTimeout) clearTimeout(toast._hideTimeout);
-  toast._hideTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
-}
 // ===== Keranjang =====
 // Hapus semua implementasi fetchCart, addToCartAPI, _localCart, getProductIdBySKU dan renderCart yang memanggil API.
 // Ganti dengan wrapper yang menggunakan cart frontend (produk-ke-keranjang.js)
@@ -588,8 +580,8 @@ function initializeAddToCartButtons() {
         discount_value: Number(button.dataset.discountValue || 0),
         buy_qty: Number(button.dataset.buyQty || 0),
         free_qty: Number(button.dataset.freeQty || 0),
-        bundle_qty: Number(button.dataset.bundleQty || 0),
-        bundle_value: Number(button.dataset.bundleValue || 0)
+        diskon_bundle_min_qty: Number(button.dataset.bundleQty || 0),      // ✅ PERBAIKI
+        diskon_bundle_value: Number(button.dataset.bundleValue || 0)        // ✅ PERBAIKI
       };
 
       // Validasi data produk

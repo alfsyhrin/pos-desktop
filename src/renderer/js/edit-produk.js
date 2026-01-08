@@ -32,8 +32,13 @@ window.initEditProdukPage = async function() {
     document.getElementById('product-id').value = produk.id;
     document.getElementById('nama-produk').value = produk.name || '';
     document.getElementById('sku').value = produk.sku || '';
-    document.getElementById('barcode').value = produk.barcode || ''; // ✅ TAMBAH INI
-    document.getElementById('harga-jual').value = produk.price || produk.sellPrice || 0;
+    document.getElementById('barcode').value = produk.barcode || '';
+    document.getElementById('harga-modal').value = formatRupiahInput(
+      Number(String(produk.cost || produk.cost_price || produk.harga_modal || 0).split('.')[0])
+    );
+    document.getElementById('harga-jual').value = formatRupiahInput(
+      Number(String(produk.price || produk.sellPrice || 0).split('.')[0])
+    );
     document.getElementById('stok').value = produk.stock || 0;
     document.getElementById('is-active').value = String(produk.is_active ?? true);
 
@@ -66,7 +71,7 @@ window.initEditProdukPage = async function() {
     return;
   }
 
-  // Handle submit update (perbarui mapping termasuk promo fields)
+  // Handle submit update (perbarui mapping termasuk harga modal)
   const form = document.getElementById('form-edit-produk');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -95,22 +100,33 @@ window.initEditProdukPage = async function() {
       diskon_bundle_value = Number(document.getElementById('bundle-total-price').value || 0);
     }
 
+    // PERBAIKI: Pastikan harga-modal terbaca dengan benar
+    const hargaModalValue = parseRupiahInput(document.getElementById('harga-modal').value);
+    const hargaJualValue = parseRupiahInput(document.getElementById('harga-jual').value);
+
+    console.log('DEBUG harga-modal:', hargaModalValue);
+    console.log('DEBUG harga-jual:', hargaJualValue);
+
     const body = {
       name: document.getElementById('nama-produk').value,
       sku: document.getElementById('sku').value,
-      price: Number(document.getElementById('harga-jual').value),
-      stock: Number(document.getElementById('stok').value),
-      is_active: document.getElementById('is-active').value === 'true',
-      jenis_diskon,
-      nilai_diskon,
-      diskon_bundle_min_qty,
-      diskon_bundle_value,
-      buy_qty,
-      free_qty
+      cost: hargaModalValue,
+      price: hargaJualValue,
+      stock: Number(document.getElementById('stok').value || 0),
+      is_active: document.getElementById('is-active').value === 'true'
     };
 
-    // remove nulls
-    Object.keys(body).forEach(k => { if (body[k] === null) delete body[k]; });
+    // Tambah diskon field HANYA jika ada promo
+    if (jenis_diskon) {
+      body.jenis_diskon = jenis_diskon;
+      body.nilai_diskon = nilai_diskon;
+    }
+    if (diskon_bundle_min_qty) body.diskon_bundle_min_qty = diskon_bundle_min_qty;
+    if (diskon_bundle_value) body.diskon_bundle_value = diskon_bundle_value;
+    if (buy_qty) body.buy_qty = buy_qty;
+    if (free_qty) body.free_qty = free_qty;
+
+    console.log('DEBUG body yang dikirim:', body);
 
     try {
       await window.apiRequest(`/stores/${storeId}/products/${productId}`, {
@@ -126,7 +142,6 @@ window.initEditProdukPage = async function() {
 
       if (window.showToast) showToast('Produk berhasil diupdate!', 'success');
       else alert('Produk berhasil diupdate!');
-      // Setelah sukses tambah/edit produk:
       window.location.href = 'index.html#produk';
     } catch (err) {
       if (window.showToast) showToast('Gagal update produk!', 'error');

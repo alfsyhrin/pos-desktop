@@ -197,15 +197,27 @@ async function renderDetailTransaksi() {
     document.querySelectorAll('.jenis-pembayaran-transaksi')[2].querySelector('p').textContent =
       trx.method || trx.payment_method || '-';
 
-    // Item pembelian & hitung total diskon
+    // Item pembelian & HITUNG ULANG dari scratch
     const itemDiv = document.querySelector('.item-pembelian-transaksi');
     itemDiv.innerHTML = `<h4>Item pembelian</h4>`;
-    let totalDiskonItem = 0;
+    
+    let grossSubtotal = 0;
+    let discountTotal = 0;
+
     (trx.items || []).forEach(item => {
       const harga = Number(item.price || 0);
       const qty = Number(item.quantity || item.qty || 0);
+      
+      // SUBTOTAL HANYA harga x qty
+      grossSubtotal += harga * qty;
+
       let discountAmount = Number(item.discount_amount || item._discountAmount || 0);
-      totalDiskonItem += discountAmount;
+      if (item.discount_type === 'percentage' && item.discount_value > 0) {
+        discountAmount = harga * qty * (item.discount_value / 100);
+      } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
+        discountAmount = Math.min(item.discount_value, harga * qty);
+      }
+      discountTotal += discountAmount;
 
       let qtyDibayar = qty;
       let bonusQty = 0;
@@ -232,27 +244,47 @@ async function renderDetailTransaksi() {
       `;
     });
 
-    // Harga transaksi
+    // Diskon transaksi level
+    if (trx.jenis_diskon && trx.nilai_diskon > 0) {
+      if (trx.jenis_diskon === 'percentage') {
+        discountTotal += grossSubtotal * (trx.nilai_diskon / 100);
+      } else if (trx.jenis_diskon === 'nominal') {
+        discountTotal += Number(trx.nilai_diskon);
+      }
+    }
+
+    // PPN dari (subtotal - diskon)
+    const taxPercentage = Number(trx.tax_percentage || 10);
+    const dasarPajak = grossSubtotal - discountTotal;
+    const tax = dasarPajak * (taxPercentage / 100);
+    const grandTotal = dasarPajak + tax;
+
+    // RENDER KE UI
     const hargaDivs = document.querySelectorAll('.wrap-info-harga');
-
-    const subtotal = Number(trx._grossSubtotal || trx.total || 0);
-    const totalDiskon = Number(trx._discountTotal || trx.discount_total || totalDiskonItem);
-    const tax = Number(trx._tax || trx.tax || 0);
-    const taxPercent = Number(trx.tax_percentage || (subtotal ? (tax / subtotal * 100) : 10));
-    const grandTotal = Number(trx._grandTotal || trx.grand_total || (subtotal - totalDiskon + tax));
-
-    if (hargaDivs[0]) hargaDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(subtotal);
-    if (hargaDivs[1]) hargaDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(totalDiskon);
+    
+    if (hargaDivs[0]) hargaDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(grossSubtotal);
+    if (hargaDivs[1]) hargaDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(discountTotal);
     if (hargaDivs[2]) {
-      hargaDivs[2].querySelector('h4.label').textContent = `PPN (${taxPercent.toFixed(1)}%)`;
+      hargaDivs[2].querySelector('h4.label').textContent = `PPN (${taxPercentage.toFixed(1)}%)`;
       hargaDivs[2].querySelector('h4:nth-child(2)').textContent = formatRupiah(tax);
     }
     if (hargaDivs[3]) hargaDivs[3].querySelector('h4:nth-child(2)').textContent = formatRupiah(grandTotal);
 
     // Tunai diterima & kembalian
     const tunaiDivs = document.querySelectorAll('.wrap-tunai .wrap-info-harga');
-    if (tunaiDivs[0]) tunaiDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(trx.received || trx.received_amount);
-    if (tunaiDivs[1]) tunaiDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(trx.change || trx.change_amount);
+    const received = Number(trx.received || trx.received_amount || 0);
+    const change = Math.max(0, received - grandTotal);
+
+    if (tunaiDivs[0]) tunaiDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(received);
+    if (tunaiDivs[1]) tunaiDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(change);
+
+    // Simpan ulang hasil hitung yang benar
+    trx._grossSubtotal = grossSubtotal;
+    trx._discountTotal = discountTotal;
+    trx._tax = tax;
+    trx._grandTotal = grandTotal;
+    trx.tax_percentage = taxPercentage;
+    localStorage.setItem('last_transaction', JSON.stringify(trx));
 
     // Render preview struk
     setTimeout(() => renderReceiptPreview(), 500);
@@ -281,80 +313,39 @@ async function renderDetailTransaksi() {
   // Gunakan tax_percentage dari response API, fallback ke store
   const taxPercentage = Number(trx.tax_percentage || storeData?.tax_percentage || 10);
 
-  // Hitung ulang subtotal, diskon, tax, grand total dari data API
-  let grossSubtotal = 0, discountTotal = 0;
-  trx.items.forEach(item => {
+  // Nomor transaksi
+  document.querySelectorAll('.jenis-pembayaran-transaksi')[0].querySelector('p').textContent =
+    trx.idFull || trx.idShort || trx.id || '-';
+
+  // Tanggal & waktu
+  document.querySelectorAll('.jenis-pembayaran-transaksi')[1].querySelector('p').textContent =
+    trx.createdAt ? formatDateToTZ(trx.createdAt) : '-';
+
+  // Metode pembayaran
+  document.querySelectorAll('.jenis-pembayaran-transaksi')[2].querySelector('p').textContent =
+    trx.method || trx.payment_method || '-';
+
+  // Item pembelian & hitung ulang dari scratch
+  const itemDiv = document.querySelector('.item-pembelian-transaksi');
+  itemDiv.innerHTML = `<h4>Item pembelian</h4>`;
+  
+  let grossSubtotal = 0;
+  let discountTotal = 0;
+
+  (trx.items || []).forEach(item => {
     const harga = Number(item.price || 0);
     const qty = Number(item.quantity || item.qty || 0);
-    let discountAmount = Number(item.discount_amount || item._discountAmount || 0);
+    
+    // SUBTOTAL HANYA harga x qty
+    grossSubtotal += harga * qty;
 
+    let discountAmount = Number(item.discount_amount || 0);
     if (item.discount_type === 'percentage' && item.discount_value > 0) {
       discountAmount = harga * qty * (item.discount_value / 100);
     } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
       discountAmount = Math.min(item.discount_value, harga * qty);
-    } else if (item.discount_type === 'buyxgety' && item.buy_qty > 0 && item.free_qty > 0) {
-      const x = Number(item.buy_qty);
-      const y = Number(item.free_qty);
-      const groupQty = x + y;
-      const paidQty = Math.floor(qty / groupQty) * x + (qty % groupQty);
-      discountAmount = (qty - paidQty) * harga;
     }
-
-    grossSubtotal += harga * qty;
     discountTotal += discountAmount;
-    item._discountAmount = discountAmount;
-  });
-
-  // Jika ada diskon transaksi level dari API, tambahkan ke discountTotal
-  if (trx.jenis_diskon && trx.nilai_diskon > 0) {
-    if (trx.jenis_diskon === 'percentage') {
-      const trxDiscount = grossSubtotal * (trx.nilai_diskon / 100);
-      discountTotal += trxDiscount;
-    } else if (trx.jenis_diskon === 'nominal') {
-      discountTotal += Number(trx.nilai_diskon);
-    }
-    // buyxgety sudah dihitung di atas per item
-  }
-
-  const netSubtotal = grossSubtotal - discountTotal;
-  const tax = netSubtotal * (taxPercentage / 100);
-  const grandTotal = netSubtotal + tax;
-
-  // Nominal bayar dan kembalian dari response API
-  const received = Number(trx.received_amount || trx.received || 0);
-  const change = Math.max(0, received - grandTotal);
-
-  // Simpan ke localStorage untuk konsistensi print struk
-  const trxToSave = {
-    ...trx,
-    _grossSubtotal: grossSubtotal,
-    _discountTotal: discountTotal,
-    _netSubtotal: netSubtotal,
-    _tax: tax,
-    _grandTotal: grandTotal,
-    tax_percentage: taxPercentage,
-    received,
-    change
-  };
-  localStorage.setItem('last_transaction', JSON.stringify(trxToSave));
-
-  // --- Render ke UI ---
-  document.querySelectorAll('.jenis-pembayaran-transaksi')[0].querySelector('p').textContent =
-    trx.idFull || trx.idShort || trx.id || '-';
-
-  document.querySelectorAll('.jenis-pembayaran-transaksi')[1].querySelector('p').textContent =
-    trx.createdAt ? formatDateToTZ(trx.createdAt) : '-';
-
-  document.querySelectorAll('.jenis-pembayaran-transaksi')[2].querySelector('p').textContent =
-    trx.method || trx.payment_method || '-';
-
-  // Item pembelian
-  const itemDiv = document.querySelector('.item-pembelian-transaksi');
-  itemDiv.innerHTML = `<h4>Item pembelian</h4>`;
-  trx.items.forEach(item => {
-    const harga = Number(item.price || 0);
-    const qty = Number(item.quantity || item.qty || 0);
-    let discountAmount = Number(item._discountAmount || 0);
 
     let qtyDibayar = qty;
     let bonusQty = 0;
@@ -381,8 +372,23 @@ async function renderDetailTransaksi() {
     `;
   });
 
-  // Harga transaksi
+  // Diskon transaksi level
+  if (trx.jenis_diskon && trx.nilai_diskon > 0) {
+    if (trx.jenis_diskon === 'percentage') {
+      discountTotal += grossSubtotal * (trx.nilai_diskon / 100);
+    } else if (trx.jenis_diskon === 'nominal') {
+      discountTotal += Number(trx.nilai_diskon);
+    }
+  }
+
+  // PPN dari (subtotal - diskon)
+  const dasarPajak = grossSubtotal - discountTotal;
+  const tax = dasarPajak * (taxPercentage / 100);
+  const grandTotal = dasarPajak + tax;
+
+  // RENDER KE UI
   const hargaDivs = document.querySelectorAll('.wrap-info-harga');
+  
   if (hargaDivs[0]) hargaDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(grossSubtotal);
   if (hargaDivs[1]) hargaDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(discountTotal);
   if (hargaDivs[2]) {
@@ -393,8 +399,22 @@ async function renderDetailTransaksi() {
 
   // Tunai diterima & kembalian
   const tunaiDivs = document.querySelectorAll('.wrap-tunai .wrap-info-harga');
+  const received = Number(trx.received_amount || trx.received || 0);
+  const change = Math.max(0, received - grandTotal);
+
   if (tunaiDivs[0]) tunaiDivs[0].querySelector('h4:nth-child(2)').textContent = formatRupiah(received);
   if (tunaiDivs[1]) tunaiDivs[1].querySelector('h4:nth-child(2)').textContent = formatRupiah(change);
+
+  // Simpan untuk print
+  const trxToSave = {
+    ...trx,
+    _grossSubtotal: grossSubtotal,
+    _discountTotal: discountTotal,
+    _tax: tax,
+    _grandTotal: grandTotal,
+    tax_percentage: taxPercentage
+  };
+  localStorage.setItem('last_transaction', JSON.stringify(trxToSave));
 
   // Render preview struk
   setTimeout(() => renderReceiptPreview(), 500);
