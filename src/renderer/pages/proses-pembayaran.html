@@ -38,6 +38,7 @@
       <h4 id="total-pembayaran" style="color: var(--primary-color); font-size: 20px;">Rp 0</h4>
     </div>
 
+
     <div class="wrapper-pecahan-uang-pembayaran">
       <button>Rp. 5000</button>
       <button>Rp. 10.000</button>
@@ -47,24 +48,164 @@
       <button>Uang Pas</button>
     </div>
 
+
     <div class="card-tunai-diterima-pembayaran">
       <label for="uang-tunai">Tunai Diterima</label>
       <input type="text" placeholder="Contoh: 15000">
       <p>Tips: Anda bisa input angka tanpa titik. Sistem akan menghitung otomatis</p>
     </div>
 
+
     <div class="card-total-pembayaran">
       <h4>KEMBALIAN</h4>
       <h4 style="color: var(--primary-color); font-size: 20px;">Rp 45.000</h4>
     </div>
 
+    <!-- 🆕 TAMBAHAN: Opsi Cash Drawer -->
+    <div class="card-drawer-options">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="checkbox" id="auto-open-drawer-payment" checked style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="auto-open-drawer-payment" style="cursor: pointer; user-select: none; font-size: 14px; color: var(--text-primary, var(--foreground-color));">
+          <strong>Buka cash drawer otomatis</strong> setelah pembayaran
+        </label>
+      </div>
+      <p style="margin: 8px 0 0 28px; font-size: 12px; color: var(--text-secondary, #666); line-height: 1.4;">
+        Cash drawer akan terbuka otomatis untuk memudahkan penyimpanan uang tunai
+      </p>
+    </div>
+
+
     <div class="wrap-button-proses-pembayaran">
       <button>Batal</button>
-      <a href="../pages/detail-transaksi.html">Bayar</a>
+      <a href="../pages/detail-transaksi.html" id="btn-bayar-link">Bayar</a>
     </div>
   </div>
+
+  <!-- 🆕 TAMBAHAN: Toast Notification -->
+  <div class="toast" id="toast-drawer" style="position: fixed; bottom: 20px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; font-size: 14px; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+    <span id="toast-drawer-message"></span>
+  </div>
+
   <script src="../js/notifications.js"></script>
   <script src="../js/proses-pembayaran.js"></script>
   <script src="../js/theme.js"></script>
+  <script>
+    // ===== 🆕 TAMBAHAN: FUNGSI CASH DRAWER =====
+    
+    // Intercept klik tombol "Bayar"
+    document.getElementById('btn-bayar-link').addEventListener('click', async function(e) {
+      const autoOpenDrawer = document.getElementById('auto-open-drawer-payment').checked;
+      
+      // Jika checkbox tidak dicentang, biarkan link berjalan normal
+      if (!autoOpenDrawer) {
+        return; // Link href akan berjalan
+      }
+      
+      // Jika checkbox dicentang, prevent default dan buka drawer dulu
+      e.preventDefault();
+      
+      const link = this;
+      const originalText = link.textContent;
+      
+      try {
+        // Cek apakah drawerAPI tersedia
+        if (typeof window.drawerAPI !== 'undefined') {
+          // Tampilkan loading
+          link.textContent = 'Membuka Drawer...';
+          link.style.pointerEvents = 'none';
+          link.style.opacity = '0.7';
+          
+          // Buka cash drawer
+          const drawerResult = await window.drawerAPI.openDefault('usb');
+          
+          if (drawerResult.success) {
+            console.log('✅ Cash drawer berhasil dibuka');
+            showToastDrawer('💰 Cash drawer dibuka!', 'success');
+            
+            // Tunggu sebentar lalu redirect
+            setTimeout(() => {
+              window.location.href = link.href;
+            }, 800);
+          } else {
+            console.warn('⚠️ Gagal membuka drawer:', drawerResult.error);
+            showToastDrawer('⚠️ Drawer gagal, melanjutkan...', 'warning');
+            
+            // Tetap redirect meskipun drawer gagal
+            setTimeout(() => {
+              window.location.href = link.href;
+            }, 1000);
+          }
+        } else {
+          // drawerAPI tidak tersedia, langsung redirect
+          console.warn('⚠️ drawerAPI tidak tersedia');
+          window.location.href = link.href;
+        }
+      } catch (error) {
+        console.error('Error membuka drawer:', error);
+        showToastDrawer('⚠️ Error drawer, melanjutkan...', 'warning');
+        
+        // Tetap redirect meskipun error
+        setTimeout(() => {
+          window.location.href = link.href;
+        }, 1000);
+      }
+    });
+
+    // Helper: Show Toast untuk Drawer
+    function showToastDrawer(message, type = 'info') {
+      const toast = document.getElementById('toast-drawer');
+      const toastMessage = document.getElementById('toast-drawer-message');
+      
+      if (!toast || !toastMessage) return;
+      
+      // Set message
+      toastMessage.textContent = message;
+      
+      // Set color based on type
+      toast.style.background = type === 'success' ? '#4CAF50' : 
+                               type === 'error' ? '#f44336' : 
+                               type === 'warning' ? '#ff9800' : '#2196F3';
+      
+      // Show toast
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      
+      // Hide after 2.5 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+      }, 2500);
+    }
+
+    // Load checkbox state from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedState = localStorage.getItem('autoOpenDrawerPayment');
+      if (savedState === null) {
+        localStorage.setItem('autoOpenDrawerPayment', 'true');
+        document.getElementById('auto-open-drawer-payment').checked = true;
+      } else {
+        document.getElementById('auto-open-drawer-payment').checked = savedState === 'true';
+      }
+      
+      // Save checkbox state on change
+      document.getElementById('auto-open-drawer-payment').addEventListener('change', (e) => {
+        localStorage.setItem('autoOpenDrawerPayment', e.target.checked);
+        
+        if (e.target.checked) {
+          showToastDrawer('✅ Cash drawer akan terbuka otomatis', 'success');
+        } else {
+          showToastDrawer('ℹ️ Cash drawer tidak akan terbuka', 'info');
+        }
+      });
+      
+      // Debug info
+      if (typeof window.drawerAPI !== 'undefined') {
+        console.log('💰 Drawer API: Available');
+      } else {
+        console.log('⚠️ Drawer API: Not Available (not Electron app?)');
+      }
+    });
+
+  </script>
 </body>
 </html>

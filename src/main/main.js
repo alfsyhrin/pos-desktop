@@ -52,10 +52,171 @@ function formatRupiah(num) {
 }
 
 /* ==============================
-   FUNGSI BANTU: Cetak dengan Windows Printer (Fallback)
+   🆕 FUNGSI: BUKA CASH DRAWER
+   Mengirim perintah ESC/POS untuk membuka laci uang
 ================================ */
+async function openCashDrawer(options = {}) {
+  console.log("=== MEMBUKA CASH DRAWER ===");
+  
+  const { 
+    printType = 'usb',
+    bluetoothAddress,
+    pin = 0, // pin 0 untuk drawer connector 1 (default), pin 1 untuk connector 2
+    onTime = 120, // durasi pulse on (default 120ms)
+    offTime = 240 // durasi pulse off (default 240ms)
+  } = options;
+
+  let device;
+  let printer;
+
+  try {
+    // Pilih adapter (USB atau Bluetooth)
+    if (printType === 'bluetooth') {
+      if (!Bluetooth) {
+        throw new Error("Bluetooth adapter tidak tersedia");
+      }
+      if (!bluetoothAddress) {
+        throw new Error("Alamat Bluetooth diperlukan");
+      }
+      console.log(`Koneksi ke Bluetooth printer: ${bluetoothAddress}`);
+      device = new Bluetooth(bluetoothAddress);
+      await new Promise((resolve, reject) => {
+        device.open((err) => (err ? reject(err) : resolve()));
+      });
+    } else {
+      console.log("Koneksi ke USB printer...");
+      device = new USB();
+      await new Promise((resolve, reject) => {
+        device.open((err) => (err ? reject(err) : resolve()));
+      });
+    }
+
+    printer = new Printer(device, { encoding: "CP437" });
+
+    // ===== KIRIM PERINTAH BUKA CASH DRAWER =====
+    // ESC p m t1 t2 - Standard ESC/POS command
+    // 0x1B 0x70 [pin] [onTime] [offTime]
+    const ESC = 0x1B;
+    const p = 0x70;
+    
+    // Pastikan nilai dalam range yang valid
+    const pinValue = pin === 1 ? 0x01 : 0x00; // 0x00 untuk pin 2, 0x01 untuk pin 5
+    const onTimeValue = Math.min(Math.max(onTime, 0), 255);
+    const offTimeValue = Math.min(Math.max(offTime, 0), 255);
+    
+    // Kirim perintah ke printer
+    const command = Buffer.from([ESC, p, pinValue, onTimeValue, offTimeValue]);
+    
+    await new Promise((resolve, reject) => {
+      device.write(command, (err) => {
+        if (err) {
+          reject(new Error(`Gagal mengirim perintah: ${err.message}`));
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    console.log(`Cash drawer berhasil dibuka (Pin: ${pin === 1 ? '5' : '2'})`);
+    
+    // Tutup koneksi
+    await printer.close();
+    
+    return { 
+      success: true, 
+      message: 'Cash drawer berhasil dibuka',
+      pin: pin === 1 ? 5 : 2
+    };
+    
+  } catch (err) {
+    console.error('ERROR BUKA CASH DRAWER:', err);
+    
+    // Coba tutup printer jika masih terbuka
+    try {
+      if (printer) await printer.close();
+    } catch (closeErr) {
+      console.error('Error saat menutup printer:', closeErr);
+    }
+    
+    return { 
+      success: false, 
+      error: err.message,
+      details: 'Pastikan cash drawer terhubung ke printer thermal melalui port RJ11/DK'
+    };
+  }
+}
+
 /* ==============================
-   FUNGSI BANTU: Cetak dengan Windows Printer (Fallback) - FORMAT BARU
+   🆕 IPC HANDLER: BUKA CASH DRAWER
+   Dipanggil dari renderer process
+================================ */
+ipcMain.handle("open-cash-drawer", async (event, options = {}) => {
+  console.log("=== MENERIMA PERINTAH BUKA CASH DRAWER ===");
+  console.log("Options:", options);
+  
+  try {
+    const result = await openCashDrawer(options);
+    return result;
+  } catch (err) {
+    console.error("CASH DRAWER ERROR:", err);
+    return { 
+      success: false, 
+      error: err.message,
+      stack: err.stack
+    };
+  }
+});
+
+/* ==============================
+   🆕 FUNGSI: TEST CASH DRAWER
+   Untuk testing apakah cash drawer berfungsi
+================================ */
+ipcMain.handle("test-cash-drawer", async (event, options = {}) => {
+  console.log("=== TEST CASH DRAWER ===");
+  
+  try {
+    // Test dengan berbagai kombinasi pin dan timing
+    const tests = [
+      { pin: 0, onTime: 120, offTime: 240, name: "Pin 2 (Standard)" },
+      { pin: 1, onTime: 120, offTime: 240, name: "Pin 5 (Alternative)" },
+      { pin: 0, onTime: 50, offTime: 200, name: "Pin 2 (Fast)" }
+    ];
+    
+    const results = [];
+    
+    for (const test of tests) {
+      console.log(`Testing: ${test.name}`);
+      const result = await openCashDrawer({
+        ...options,
+        ...test
+      });
+      
+      results.push({
+        ...test,
+        success: result.success,
+        message: result.message || result.error
+      });
+      
+      // Tunggu sebentar antara test
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    return {
+      success: true,
+      results: results
+    };
+    
+  } catch (err) {
+    console.error("TEST CASH DRAWER ERROR:", err);
+    return {
+      success: false,
+      error: err.message
+    };
+  }
+});
+
+/* ==============================
+   FUNGSI BANTU: Cetak dengan Windows Printer (Fallback)
 ================================ */
 async function printWithWindowsPrinter(payload) {
   console.log("=== MENCETAK DENGAN WINDOWS PRINTER (FORMAT TEMPLATE) ===");
@@ -73,7 +234,8 @@ async function printWithWindowsPrinter(payload) {
     cash = 0,
     change = 0,
     store = {},
-    cashier_name = 'Admin'
+    cashier_name = 'Admin',
+    openDrawer = false // 🆕 Parameter untuk buka drawer otomatis
   } = payload;
 
   // Build struk text - SESUAI TEMPLATE THERMAL PRINTER
@@ -219,6 +381,20 @@ async function printWithWindowsPrinter(payload) {
   try {
     await PosPrinter.print(data, options);
     console.log("=== WINDOWS PRINTER SUCCESS ===");
+    
+    // 🆕 Buka cash drawer setelah cetak (jika diminta)
+    if (openDrawer && method === 'cash') {
+      console.log("Membuka cash drawer setelah cetak...");
+      try {
+        await openCashDrawer({
+          printType: payload.printType || 'usb',
+          bluetoothAddress: payload.bluetoothAddress
+        });
+      } catch (drawerErr) {
+        console.warn("Gagal membuka cash drawer:", drawerErr.message);
+      }
+    }
+    
     return { success: true, message: 'Struk berhasil dicetak dengan Windows Printer' };
   } catch (error) {
     console.error('Windows printer error:', error);
@@ -371,52 +547,6 @@ ipcMain.handle("detect-bluetooth-printers", async () => {
 });
 
 /* ==============================
-   IPC CETAK STRUK - MENERIMA DATA ASLI DARI DETAIL-TRANSAKSI.JS
-================================ */
-// ipcMain.handle("print-receipt", async (event, payload) => {
-//   console.log("=== MENERIMA PERINTAH CETAK DENGAN DATA ASLI ===");
-//   console.log("Payload:", payload);
-  
-//   try {
-//     const { printType = 'usb' } = payload;
-    
-//     // Jika printType adalah 'windows', gunakan Windows printer
-//     if (printType === 'windows') {
-//       return await printWithWindowsPrinter(payload);
-//     }
-    
-//     // Jika USB/Bluetooth, coba gunakan ESC/POS
-//     try {
-//       return await printWithESCPOS(payload);
-//     } catch (escposError) {
-//       console.log("ESC/POS printing failed, trying Windows printer fallback...", escposError.message);
-      
-//       // Fallback ke Windows printer
-//       try {
-//         const result = await printWithWindowsPrinter(payload);
-//         result.fallbackUsed = true;
-//         result.originalError = escposError.message;
-//         return result;
-//       } catch (windowsError) {
-//         console.error("Both printing methods failed");
-//         return { 
-//           success: false, 
-//           error: `ESC/POS Error: ${escposError.message}, Windows Error: ${windowsError.message}` 
-//         };
-//       }
-//     }
-    
-//   } catch (err) {
-//     console.error("PRINT ERROR DETAIL:", err);
-//     return { 
-//       success: false, 
-//       error: err.message,
-//       details: err.stack
-//     };
-//   }
-// });
-
-/* ==============================
    HELPER FORMAT RUPIAH sesuai template (dengan titik, bukan koma)
 ================================ */
 function formatRupiah(num) {
@@ -425,12 +555,6 @@ function formatRupiah(num) {
   return "Rp " + num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-/* ==============================
-   FUNGSI: Cetak dengan ESC/POS (USB/Bluetooth)
-================================ */
-/* ==============================
-   FUNGSI: Cetak dengan ESC/POS (USB/Bluetooth) - FORMAT BARU
-================================ */
 /* ==============================
    FUNGSI: Cetak dengan ESC/POS (USB/Bluetooth) - SESUAI TEMPLATE
 ================================ */
@@ -451,7 +575,8 @@ async function printWithESCPOS(payload) {
     grandTotal = 0,
     cash = 0,
     change = 0,
-    store = {}
+    store = {},
+    openDrawer = false // 🆕 Parameter untuk buka drawer otomatis
   } = payload;
 
   let device;
@@ -571,6 +696,31 @@ async function printWithESCPOS(payload) {
     printer.feed(4);
     printer.cut();
     
+    // 🆕 Buka cash drawer setelah cetak (jika diminta dan pembayaran cash)
+    if (openDrawer && method === 'cash') {
+      console.log("Mengirim perintah buka cash drawer...");
+      try {
+        // Kirim perintah ESC p dengan parameter standar
+        const ESC = 0x1B;
+        const p = 0x70;
+        const pin = 0x00; // Pin 2 (default)
+        const onTime = 120; // 120ms
+        const offTime = 240; // 240ms
+        
+        const drawerCommand = Buffer.from([ESC, p, pin, onTime, offTime]);
+        await new Promise((resolve, reject) => {
+          device.write(drawerCommand, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+        
+        console.log("Cash drawer command sent successfully");
+      } catch (drawerErr) {
+        console.warn("Gagal membuka cash drawer:", drawerErr.message);
+      }
+    }
+    
     await printer.close();
     
     console.log("=== ESC/POS PRINT SUCCESS ===");
@@ -582,9 +732,6 @@ async function printWithESCPOS(payload) {
   }
 }
 
-/* ==============================
-   IPC CEK STATUS PRINTER
-================================ */
 const fs = require("fs");
 const os = require("os");
 
@@ -630,7 +777,7 @@ ipcMain.handle("print-barcode-label", async (event, payload) => {
 
 // NEW helper: print raw receiptText (used for both Windows and ESC/POS)
 async function printRawReceipt(receiptText, payload = {}) {
-  const { printType = 'usb', bluetoothAddress, printerName } = payload;
+  const { printType = 'usb', bluetoothAddress, printerName, openDrawer = false, method = 'cash' } = payload;
 
   // WINDOWS: wrap in <pre> and print with electron-pos-printer
   if (printType === 'windows') {
@@ -657,6 +804,16 @@ async function printRawReceipt(receiptText, payload = {}) {
       margin: '0 0 0 0'
     };
     await PosPrinter.print(data, options);
+    
+    // 🆕 Buka drawer setelah cetak (Windows printer)
+    if (openDrawer && method === 'cash') {
+      try {
+        await openCashDrawer({ printType, bluetoothAddress });
+      } catch (drawerErr) {
+        console.warn("Gagal membuka cash drawer:", drawerErr.message);
+      }
+    }
+    
     return { success: true, message: 'Printed via Windows printer' };
   }
 
@@ -683,6 +840,29 @@ async function printRawReceipt(receiptText, payload = {}) {
     }
     printer.feed(4);
     printer.cut();
+    
+    // 🆕 Buka drawer setelah cetak (ESC/POS)
+    if (openDrawer && method === 'cash') {
+      console.log("Mengirim perintah buka cash drawer...");
+      try {
+        const ESC = 0x1B;
+        const p = 0x70;
+        const pin = 0x00;
+        const onTime = 120;
+        const offTime = 240;
+        
+        const drawerCommand = Buffer.from([ESC, p, pin, onTime, offTime]);
+        await new Promise((resolve, reject) => {
+          device.write(drawerCommand, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      } catch (drawerErr) {
+        console.warn("Gagal membuka cash drawer:", drawerErr.message);
+      }
+    }
+    
     await printer.close();
     return { success: true, message: 'Printed via ESC/POS' };
   } catch (err) {
@@ -724,13 +904,6 @@ ipcMain.handle("print-receipt", async (event, payload) => {
     return { success: false, error: err.message };
   }
 });
-// window.addEventListener('online', () => {
-//   showToast('Koneksi internet tersedia. Sinkronisasi data...');
-//   syncAllData();
-// });
-// window.addEventListener('offline', () => {
-//   showToast('Aplikasi berjalan offline.', 'warning');
-// });
 
 /* ==============================
    APP LIFECYCLE (WAJIB ADA)
