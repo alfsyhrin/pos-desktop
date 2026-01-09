@@ -245,28 +245,76 @@ function checkCSSOverflow() {
   }
 }
 
-// Fungsi untuk update statistik
+// Fungsi untuk update statistik - PERBAIKI INI!
 async function updateProdukStats(products, storeId) {
-  const totalProdukEl = document.querySelector('.card-detail-produk .detail-produk-info h5 + p');
-  const kategoriSet = new Set(products.map(p => p.category).filter(Boolean));
-  
-  if (totalProdukEl) totalProdukEl.textContent = products.length;
-  
-  const kategoriCountEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
-    .find(el => el.textContent.trim().toLowerCase() === 'kategori')?.nextElementSibling;
-  if (kategoriCountEl) kategoriCountEl.textContent = kategoriSet.size;
+  // CEK APAKAH HALAMAN INI ADALAH HALAMAN PRODUK (bukan edit-produk)
+  const statsContainer = document.querySelector('.card-detail-produk');
+  if (!statsContainer) {
+    console.warn('⚠️ Stats container tidak ditemukan, skip updateProdukStats');
+    return;
+  }
 
-  // Ambil stok menipis via API terpisah
+  // Cari element dengan selector yang lebih spesifik
+  const statsElements = document.querySelectorAll('.card-detail-produk .detail-produk-info');
+  if (statsElements.length === 0) {
+    console.warn('⚠️ Stats info elements tidak ditemukan');
+    return;
+  }
+
   try {
-    const stokRes = await window.apiRequest(`/stores/${storeId}/products/low-stock?threshold=10`);
-    const stokCount = stokRes?.data?.count ?? 0;
-    const stokEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
-      .find(el => el.textContent.trim().toLowerCase() === 'stok menipis')?.nextElementSibling;
-    if (stokEl) stokEl.textContent = stokCount;
+    // Cari Total Produk
+    const totalProdukEl = Array.from(statsElements).flatMap(el => 
+      Array.from(el.querySelectorAll('h5')).find(h => 
+        h.textContent.toLowerCase().includes('total')
+      )
+    ).find(Boolean)?.nextElementSibling;
+    
+    if (totalProdukEl) {
+      totalProdukEl.textContent = products.length;
+      console.log(`✅ Total Produk updated: ${products.length}`);
+    }
+
+    // Cari Kategori
+    const kategoriSet = new Set(products.map(p => p.category).filter(Boolean));
+    const kategoriEl = Array.from(statsElements).flatMap(el => 
+      Array.from(el.querySelectorAll('h5')).find(h => 
+        h.textContent.toLowerCase().includes('kategori')
+      )
+    ).find(Boolean)?.nextElementSibling;
+    
+    if (kategoriEl) {
+      kategoriEl.textContent = kategoriSet.size;
+      console.log(`✅ Kategori updated: ${kategoriSet.size}`);
+    }
+
+    // Ambil stok menipis via API terpisah
+    try {
+      const stokRes = await window.apiRequest(`/stores/${storeId}/products/low-stock?threshold=10`);
+      const stokCount = stokRes?.data?.count ?? stokRes?.count ?? 0;
+      
+      const stokEl = Array.from(statsElements).flatMap(el => 
+        Array.from(el.querySelectorAll('h5')).find(h => 
+          h.textContent.toLowerCase().includes('stok menipis')
+        )
+      ).find(Boolean)?.nextElementSibling;
+      
+      if (stokEl) {
+        stokEl.textContent = stokCount;
+        console.log(`✅ Stok Menipis updated: ${stokCount}`);
+      }
+    } catch (err) {
+      console.warn('⚠️ Gagal ambil low-stock:', err);
+      const stokEl = Array.from(statsElements).flatMap(el => 
+        Array.from(el.querySelectorAll('h5')).find(h => 
+          h.textContent.toLowerCase().includes('stok menipis')
+        )
+      ).find(Boolean)?.nextElementSibling;
+      
+      if (stokEl) stokEl.textContent = '0';
+    }
   } catch (err) {
-    const stokEl = Array.from(document.querySelectorAll('.card-detail-produk .detail-produk-info h5'))
-      .find(el => el.textContent.trim().toLowerCase() === 'stok menipis')?.nextElementSibling;
-    if (stokEl) stokEl.textContent = '!';
+    console.error('❌ Error dalam updateProdukStats:', err);
+    // Tidak throw error, hanya log saja
   }
 }
 

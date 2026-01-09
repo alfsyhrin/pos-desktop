@@ -63,14 +63,39 @@ document.addEventListener('DOMContentLoaded', () => {
     if (roleLabel) roleLabel.textContent = 'Kasir';
   }
 
+  // Helper untuk menampilkan error di bawah field username
+  function showUsernameError(msg) {
+    let err = document.getElementById('username-error');
+    if (!err) {
+      err = document.createElement('div');
+      err.id = 'username-error';
+      err.style.color = 'red';
+      err.style.fontSize = '0.9em';
+      err.style.marginTop = '2px';
+      const parent = usernameInput?.parentNode;
+      if (parent) parent.appendChild(err);
+    }
+    err.textContent = msg;
+    if (usernameInput) {
+      usernameInput.style.borderColor = 'red';
+      usernameInput.focus();
+    }
+  }
+  function clearUsernameError() {
+    const err = document.getElementById('username-error');
+    if (err) err.remove();
+    if (usernameInput) usernameInput.style.borderColor = '';
+  }
+
   if (!simpanBtn) return;
 
   simpanBtn.addEventListener('click', async () => {
+    clearUsernameError();
+
     const name = nameInput ? nameInput.value.trim() : '';
     const email = emailInput ? emailInput.value.trim() : '';
     const username = usernameInput ? usernameInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value.trim() : '';
-    // Ganti cara ambil role:
     const role = roleInput ? roleInput.value : 'cashier';
     const storeId = localStorage.getItem('store_id');
     const token = localStorage.getItem('token');
@@ -95,23 +120,30 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(body)
       });
       const data = await res.json().catch(()=>null);
-      if (res.ok && data && data.success) {
-        if (window.showToast) {
-          await showToast('Karyawan berhasil ditambah!', 'success');
-          window.location.href = 'index.html';
+
+      if (!res.ok || !data || data.success === false) {
+        // Penanganan error username sudah digunakan
+        if (data?.message && data.message.includes('Username sudah digunakan')) {
+          showUsernameError('Username sudah digunakan, silakan pilih username lain.');
+          if (window.showToast) showToast('Username sudah digunakan, silakan pilih username lain.', 'error');
         } else {
-          alert('Karyawan berhasil ditambah!');
-          window.location.href = 'index.html';
+          const msg = data?.message || res.status || 'Gagal menyimpan user. Silakan coba lagi.';
+          if (window.showToast) showToast(msg, 'error');
+          else alert(msg);
         }
+        return;
+      }
+
+      if (window.showToast) {
+        await showToast('Karyawan berhasil ditambah!', 'success');
+        window.location.href = 'index.html';
       } else {
-        const msg = data?.message || res.status;
-        if (window.showToast) showToast('Gagal tambah karyawan: ' + msg, 'error');
-        else alert('Gagal tambah karyawan: ' + msg);
+        alert('Karyawan berhasil ditambah!');
+        window.location.href = 'index.html';
       }
     } catch (err) {
-      console.error(err);
-      if (window.showToast) showToast('Gagal tambah karyawan: ' + (err.message || err), 'error');
-      else alert('Gagal tambah karyawan: ' + (err.message || err));
+      if (window.showToast) showToast('Terjadi kesalahan jaringan/server.', 'error');
+      else alert('Terjadi kesalahan jaringan/server.');
     } finally {
       simpanBtn.disabled = false;
     }
