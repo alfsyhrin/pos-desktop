@@ -718,6 +718,17 @@ window.renderProdukPage = async function renderProdukPage() {
       exportStokOpnameExcel(window.__lastProducts);
     };
   }
+
+  const btnExportPDF = document.getElementById('btnExportStokOpnamePDF');
+  if (btnExportPDF) {
+    btnExportPDF.onclick = function() {
+      if (!window.__lastProducts || window.__lastProducts.length === 0) {
+        alert('Produk belum dimuat');
+        return;
+      }
+      exportStokOpnamePDF(window.__lastProducts);
+    };
+  }
 };
 // ...existing code...
 
@@ -1167,104 +1178,76 @@ function exportStokOpnameExcel(products) {
   );
 }
 
-// Pastikan window.__lastProducts selalu update setiap render produk
-function updateLastProducts(products) {
-  window.__lastProducts = Array.isArray(products) ? products : [];
+// Tambahkan fungsi export PDF
+function exportStokOpnamePDF(products) {
+  if (!Array.isArray(products) || products.length === 0) {
+    alert('Data produk kosong');
+    return;
+  }
+
+  // Perbaiki akses jsPDF dan autoTable
+  let jsPDF = null;
+  if (window.jspdf && window.jspdf.jsPDF) {
+    jsPDF = window.jspdf.jsPDF;
+  } else if (window.jsPDF) {
+    jsPDF = window.jsPDF;
+  }
+  if (!jsPDF || !(jsPDF.prototype?.autoTable || jsPDF.API?.autoTable)) {
+    alert('jsPDF atau autoTable belum dimuat!');
+    return;
+  }
+
+  const doc = new jsPDF('l', 'mm', 'a4');
+
+  // Header
+  doc.setFontSize(16);
+  doc.text('Daftar Stok Opname Produk', 14, 14);
+
+  // Data untuk tabel
+  const columns = [
+    "ID Produk", "Nama Produk", "SKU", "Barcode", "Kategori",
+    "Harga Modal", "Harga Jual", "Stok Sistem", "Stok Fisik",
+    "Selisih", "Nilai Selisih", "Status", "Promo", "Updated At"
+  ];
+  const rows = products.map(p => [
+    p.id,
+    p.name,
+    p.sku,
+    p.barcode,
+    p.category,
+    "Rp " + (p.costPrice ?? p.cost_price ?? 0).toLocaleString('id-ID'),
+    "Rp " + (p.sellPrice ?? p.price ?? 0).toLocaleString('id-ID'),
+    p.stock ?? 0,
+    "", // Stok Fisik
+    "", // Selisih
+    "", // Nilai Selisih
+    (p.isActive ?? p.is_active) ? 'Aktif' : 'Nonaktif',
+    p.promoType ?? p.jenis_diskon ?? '-',
+    p.updatedAt ? new Date(p.updatedAt).toLocaleString('id-ID') : ''
+  ]);
+
+  // Panggil autoTable
+  doc.autoTable({
+    head: [columns],
+    body: rows,
+    startY: 22,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [229, 57, 53] }, // merah
+    alternateRowStyles: { fillColor: [245, 245, 245] }
+  });
+
+  doc.save(`stok-opname-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
-// Patch renderProdukPage agar selalu update window.__lastProducts
-// const _oldRenderProdukPage = window.renderProdukPage;
-// window.renderProdukPage = async function() {
-//   await _oldRenderProdukPage.apply(this, arguments);
-//   // Ambil data produk dari DOM (atau fetch ulang jika perlu)
-//   const storeId = localStorage.getItem('store_id');
-//   if (!storeId) return;
-//   try {
-//     const res = await window.apiRequest(`/stores/${storeId}/products`);
-//     const products = extractProductsFromResponse(res);
-//     updateLastProducts(products);
-//   } catch (e) {
-//     updateLastProducts([]);
-//   }
-// };
-
-// Event listener tombol export
 document.addEventListener('DOMContentLoaded', function() {
-  const btnExport = document.getElementById('btnExportStokOpname');
-  if (btnExport) {
-    btnExport.onclick = function() {
+  const btnExportPDF = document.getElementById('btnExportStokOpnamePDF');
+  if (btnExportPDF) {
+    btnExportPDF.onclick = function() {
       if (!window.__lastProducts || window.__lastProducts.length === 0) {
         alert('Produk belum dimuat');
         return;
       }
-      exportStokOpnameExcel(window.__lastProducts);
+      exportStokOpnamePDF(window.__lastProducts);
     };
   }
 });
-
-// Kode untuk debugging real-time
-// document.addEventListener('DOMContentLoaded', function() {
-//   console.log('📄 DOM Content Loaded - produk.js v2 (Debug Mode)');
-  
-//   // Tambahkan tombol debug manual
-//   setTimeout(() => {
-//     const debugBtn = document.createElement('button');
-//     debugBtn.textContent = '🔍 Debug Produk';
-//     debugBtn.style.position = 'fixed';
-//     debugBtn.style.bottom = '10px';
-//     debugBtn.style.right = '10px';
-//     debugBtn.style.zIndex = '9999';
-//     debugBtn.style.padding = '8px 12px';
-//     debugBtn.style.background = '#007bff';
-//     debugBtn.style.color = 'white';
-//     debugBtn.style.border = 'none';
-//     debugBtn.style.borderRadius = '4px';
-//     debugBtn.style.cursor = 'pointer';
-    
-//     debugBtn.onclick = function() {
-//       console.log('=== MANUAL DEBUG ===');
-//       const cards = document.querySelectorAll('.card-produk');
-//       console.log(`Jumlah kartu produk di DOM: ${cards.length}`);
-      
-//       cards.forEach((card, i) => {
-//         const name = card.querySelector('h4')?.textContent || 'No name';
-//         console.log(`${i+1}. ${name}`);
-//       });
-      
-//       checkCSSOverflow();
-//     };
-    
-//     document.body.appendChild(debugBtn);
-//   }, 2000);
-// });
-
-// Format angka ke format rupiah (tanpa Rp)
-function formatRupiahInput(val) {
-  const num = String(val).replace(/\D/g, '');
-  if (!num) return '';
-  return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-
-// Ambil nilai numerik dari input rupiah
-function parseRupiahInput(val) {
-  return Number(String(val).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
-}
-
-// Inisialisasi input agar auto-format rupiah
-function initRupiahInput(input) {
-  if (!input) return;
-  input.type = "text";
-  input.inputMode = "numeric";
-  input.addEventListener('input', function () {
-    let val = this.value.replace(/\D/g, '');
-    this.value = formatRupiahInput(val);
-  });
-  input.addEventListener('blur', function () {
-    let val = this.value.replace(/\D/g, '');
-    this.value = formatRupiahInput(val);
-  });
-  input.addEventListener('focus', function () {
-    let val = this.value.replace(/\D/g, '');
-    this.value = val;
-  });
-}
