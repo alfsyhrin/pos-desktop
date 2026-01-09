@@ -463,3 +463,41 @@ window.showStoreSelectionModal = function(stores = []) {
     });
   });
 };
+
+const timeFromInput = document.getElementById('time-from');
+const timeToInput   = document.getElementById('time-to');
+const searchInput   = document.getElementById('search-transaksi');
+
+function filterTransaksi() {
+  const keyword  = searchInput.value.toLowerCase();
+  const timeFrom = timeFromInput.value; // "HH:MM:SS"
+  const timeTo   = timeToInput.value;
+
+  // misal dataTransaksi adalah array transaksi yang sudah kamu load
+  const filtered = dataTransaksi.filter(trx => {
+    // filter teks
+    const cocokTeks =
+      !keyword ||
+      trx.kode.toLowerCase().includes(keyword) ||
+      trx.nama_pelanggan.toLowerCase().includes(keyword);
+
+    // filter waktu
+    if (!timeFrom && !timeTo) return cocokTeks;
+
+    // ambil jam transaksi, anggap format "HH:MM:SS"
+    const jam = trx.jam_transaksi; // sesuaikan dengan struktur datamu
+    if (!jam) return false;
+
+    let okWaktu = true;
+    if (timeFrom) okWaktu = okWaktu && jam >= timeFrom;
+    if (timeTo)   okWaktu = okWaktu && jam <= timeTo;
+
+    return cocokTeks && okWaktu;
+  });
+
+  renderTransaksi(filtered); // fungsi existing yg sudah menampilkan card
+}
+
+searchInput.addEventListener('input', filterTransaksi);
+timeFromInput.addEventListener('change', filterTransaksi);
+timeToInput.addEventListener('change', filterTransaksi);
