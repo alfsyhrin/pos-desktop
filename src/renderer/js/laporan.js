@@ -132,12 +132,7 @@ function renderTopProducts() {
                     <div class="product-qty">${product.sales} terjual</div>
                 </div>
                 <div class="product-actions">
-                    <button onclick="loadPage('editProduk', {id: ${product.id}})" title="Edit Produk">
-                        <span class="material-symbols-outlined">edit</span>
-                    </button>
-                    <button onclick="hapusProduk(${product.id})" title="Hapus Produk">
-                        <span class="material-symbols-outlined">delete</span>
-                    </button>
+                    
                 </div>
             </div>
         `;
@@ -160,12 +155,7 @@ function renderLowStockProducts() {
             </div>
             <span class="stock-badge ${product.status}">${product.status === 'critical' ? 'Kritis' : 'Menipis'}</span>
             <div class="stock-actions">
-                <button onclick="loadPage('editProduk', {id: ${product.id}})" title="Edit Produk">
-                    <span class="material-symbols-outlined">edit</span>
-                </button>
-                <button onclick="hapusProduk(${product.id})" title="Hapus Produk">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
+                
             </div>
         </div>
     `).join('');

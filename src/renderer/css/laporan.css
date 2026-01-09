@@ -589,7 +589,7 @@ tbody tr:last-child td {
 
 .product-item:hover {
     border-color: var(--primary-color);
-    transform: translateX(4px);
+    /* transform: translateX(4px); */
 }
 
 .product-rank {
@@ -659,7 +659,7 @@ tbody tr:last-child td {
 }
 
 .low-stock-item:hover {
-    transform: translateX(4px);
+    /* transform: translateX(4px); */
 }
 
 .stock-icon {

@@ -133,3 +133,89 @@ header.header-transaksi p {
 .button-hapus-transaksi .material-symbols-outlined {
   font-size: 30px;
 }
+
+.filter-waktu-kasir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  margin-left: 16px;
+}
+
+.filter-waktu-kasir label {
+  font-size: 16px;
+  color: var(--paragraph-color);
+}
+
+.filter-waktu-kasir input[type="time"] {
+  background: var(--card-color);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
+  color: var(--foreground-color);
+  font-size: 0.85rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.filter-waktu-kasir input[type="time"]:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 1px var(--secondary-color);
+}
+
+/* Hilangkan panah spinner default beberapa browser */
+.filter-waktu-kasir input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.btn-terapkan {
+  background-color: var(--primary-color);
+  color: var(--foreground-color);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+}
+
+.filter-tanggal-kasir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-tanggal-kasir label {
+  font-size: 16px;
+  color: var(--paragraph-color);
+  font-weight: var(--weight-bold);
+}
+
+.filter-tanggal-kasir input[type="date"] {
+  background: var(--card-color);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
+  color: var(--foreground-color);
+  font-size: 0.85rem;
+  outline: none;
+  transition: var(--transition);
+  /* bantu agar popup datepicker lebih cocok di dark theme */
+  color-scheme: dark;
+}
+
+.filter-tanggal-kasir input[type="date"]:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 1px var(--secondary-color);
+}
+
+/* Icon kalender agar kelihatan di dark mode */
+.filter-tanggal-kasir input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+
+.filter-waktu-kasir p {
+  font-weight: 200;
+}
