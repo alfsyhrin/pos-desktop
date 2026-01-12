@@ -111,10 +111,9 @@ sidebarItems.forEach(item => {
 
     const page = item.dataset.page;
 
-    // khusus logout
-    if (page === 'login') {
-      localStorage.clear();
-      loadPage('login');
+    // Cegah double logout: jika tombol logout, biarkan handler di sidebar.js yang bekerja
+    if (item.dataset.action === 'logout' || page === 'login') {
+      // Jangan lakukan apapun di sini!
       return;
     }
 

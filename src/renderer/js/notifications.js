@@ -45,3 +45,74 @@
     });
   };
 })();
+
+window.showConfirm = function(msg, opts = {}) {
+  return new Promise(resolve => {
+    // Hapus modal lama jika ada
+    let old = document.getElementById('app-confirm-modal');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'app-confirm-modal';
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:100000;
+      background:rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center;
+      animation:fadein .18s;
+    `;
+
+    const box = document.createElement('div');
+    box.style.cssText = `
+      background:#fff;min-width:320px;max-width:90vw;padding:28px 22px 18px 22px;
+      border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);
+      font-family:Inter,system-ui,sans-serif;text-align:center;position:relative;
+      animation:popin .18s;
+    `;
+
+    box.innerHTML = `
+      <div style="font-size:18px;font-weight:600;color:#222;margin-bottom:10px;">
+        Konfirmasi Logout
+      </div>
+      <div style="font-size:15px;color:#444;margin-bottom:22px;">
+        ${msg || 'Yakin ingin logout dari aplikasi?'}
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button id="btn-cancel-logout" style="
+          padding:8px 22px;border:none;border-radius:7px;
+          background:#eee;color:#333;font-weight:500;font-size:14px;cursor:pointer;
+          transition:background .15s;
+        ">Batal</button>
+        <button id="btn-ok-logout" style="
+          padding:8px 22px;border:none;border-radius:7px;
+          background:#d32f2f;color:#fff;font-weight:600;font-size:14px;cursor:pointer;
+          transition:background .15s;
+        ">Logout</button>
+      </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    document.getElementById('btn-cancel-logout').onclick = () => {
+      overlay.remove();
+      resolve(false);
+    };
+    document.getElementById('btn-ok-logout').onclick = () => {
+      overlay.remove();
+      resolve(true);
+    };
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+        resolve(false);
+      }
+    };
+  });
+};
+
+// Optional: animasi
+const style = document.createElement('style');
+style.innerHTML = `
+@keyframes fadein { from { opacity:0 } to { opacity:1 } }
+@keyframes popin { from { transform:scale(.95);opacity:0 } to { transform:scale(1);opacity:1 } }
+`;
+document.head.appendChild(style);

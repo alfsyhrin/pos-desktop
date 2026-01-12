@@ -53,13 +53,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (logoutEl) {
-    logoutEl.addEventListener('click', (ev) => {
+    logoutEl.addEventListener('click', async (ev) => {
       ev.preventDefault();
-      // Gunakan fungsi logout dari auth.js
-      if (typeof window.logout === 'function') {
-        window.logout();
+      if (window.showConfirm) {
+        const ok = await window.showConfirm('Yakin ingin logout dari aplikasi?');
+        if (ok) {
+          if (typeof window.logout === 'function') {
+            window.logout();
+          } else {
+            console.error('sidebar.js: window.logout not available');
+          }
+        }
+      } else if (window.confirm) {
+        if (confirm('Yakin ingin logout dari aplikasi?')) {
+          if (typeof window.logout === 'function') {
+            window.logout();
+          }
+        }
       } else {
-        console.error('sidebar.js: window.logout not available');
+        if (typeof window.logout === 'function') {
+          window.logout();
+        }
       }
     });
   } else {
