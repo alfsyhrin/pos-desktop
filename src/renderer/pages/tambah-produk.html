@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Asap:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/dist/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <link rel="stylesheet" href="../css/tambah-produk.css">
   <link rel="stylesheet" href="../css/global.css">
@@ -256,6 +256,31 @@
   <script src="../js/barcode.js"></script>
   <script src="../js/produk.js"></script>
   <script>
+function formatRupiahInput(val) {
+  const num = String(val).replace(/\D/g, '');
+  if (!num) return '';
+  return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function parseRupiahInput(val) {
+  return Number(String(val).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
+}
+function initRupiahInput(input) {
+  if (!input) return;
+  input.type = "text";
+  input.inputMode = "numeric";
+  input.addEventListener('input', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = formatRupiahInput(val);
+  });
+  input.addEventListener('blur', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = formatRupiahInput(val);
+  });
+  input.addEventListener('focus', function () {
+    let val = this.value.replace(/\D/g, '');
+    this.value = val;
+  });
+}
     function handlePromoChange() {
   const type = document.getElementById('promo-type').value;
   document.getElementById('promo-percent-wrapper').style.display = (type === 'percentage') ? 'block' : 'none';
