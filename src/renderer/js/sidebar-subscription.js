@@ -25,7 +25,7 @@ async function renderSidebarSubscription() {
     const sub = subRes.data || {};
     const plan = sub.plan || '-';
     statusEl.textContent = `${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
-    statusEl.style.color = '#333'; // warna default, bisa diganti sesuai kebutuhan
+    statusEl.style.color = '#fff'; // warna default, bisa diganti sesuai kebutuhan
   } catch (err) {
     statusEl.textContent = 'Paket: Gagal memuat';
     statusEl.style.color = '#ff4136';

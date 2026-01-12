@@ -7,6 +7,7 @@ const routes = {
   kasir: '../pages/kasir.html',
   produk: '../pages/produk.html',
   transaksi: '../pages/transaksi.html',
+  pendingTransaksi: '../pages/pending-transaksi.html',
   karyawan: '../pages/karyawan.html',
   laporan: '../pages/laporan.html',
   pengaturan: '../pages/pengaturan.html',
@@ -47,6 +48,8 @@ function loadPage(page, params = {}) {
       // TAMBAH INI - panggil init function sesuai halaman
       if (page === 'dashboard' && window.initDashboard) {
         setTimeout(() => window.initDashboard(), 100);
+      } else if (page === 'pendingTransaksi' && window.initPendingTransaksi) {
+        setTimeout(() => window.initPendingTransaksi(), 100);
       } else if (page === 'transaksi' && window.initTransaksi) {
         setTimeout(() => window.initTransaksi(), 100);
       } else if (page === 'pengaturan' && window.initPengaturan) {

@@ -1,0 +1,44 @@
+<div class="main-wrapper">
+  <header class="header-dashboard">
+    <h2 id="headerStoreName"></h2>
+    <p>Transaksi</p>
+  </header>
+
+  <div class="bar-pencarian-kasir">
+      <span class="material-symbols-outlined">search</span>
+      <input type="text" id="search-transaksi" placeholder="Cari transaksi...">
+  </div>
+
+  <div class="filter-waktu-kasir">
+      <label for="time-from"></label>
+      <input type="time" id="time-from" step="1">
+
+      <label for="time-to">-</label>
+      <input type="time" id="time-to" step="1">
+
+      <!-- Filter tanggal (hari/bulan/tahun) -->
+      <div class="filter-tanggal-kasir">
+        <label for="date-from"></label>
+        <input type="date" id="date-from">
+
+        <label for="date-to">-</label>
+        <input type="date" id="date-to">
+      </div>
+
+
+      <button class="btn-terapkan">Terapkan</button>
+  </div>
+  
+  <!-- Toolbar bulk delete (akan ditampilkan via JS saat ada checkbox yang dipilih) -->
+  <!-- Ini akan di-inject oleh JS, jadi tidak perlu ditulis manual di sini -->
+  
+  <div class="card-transaksi-wrapper">
+    <!-- Transactions will be loaded here by JavaScript -->
+  </div>
+</div>
+
+<script src="../js/notifications.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/transaksi.js"></script>
+
+

@@ -13,6 +13,17 @@ body {
   color: #fff;
 }
 
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.main-wrapper::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
+
 header {
   width: 100%;
   background-color: var(--card-color);
@@ -72,8 +83,6 @@ header p {
 }
 
 .main-container {
-  max-width: 1400px;
-  margin: 0 auto;
   padding: 20px;
 }
 
@@ -152,6 +161,7 @@ header p {
   font-size: 14px;
   font-weight: var(--weight-bold);
   flex: 1;
+  cursor: pointer;
 }
 
 .wrapper-pecahan-uang-pembayaran button:active {
@@ -169,7 +179,7 @@ header p {
 }
 
 .wrap-button-proses-pembayaran button {
-  background-color: var(--background-color);
+  background-color: var(--primary-color);
   border: 1px solid #333;
   padding: 15px;
   border-radius: 8px;
@@ -181,10 +191,11 @@ header p {
   align-items: center;
   font-weight: var(--weight-bold);
   color: var(--foreground-color);
+  cursor: pointer;
 }
 
 .wrap-button-proses-pembayaran a {
-  background-color: var(--primary-color);
+  background-color: var(--hijau);
   border: 1px solid transparent;
   padding: 15px;
   border-radius: 8px;
@@ -205,4 +216,27 @@ header p {
   background: var(--card-color);
   border-radius: 8px; 
   border: 1px solid var(--border-color);
+}
+
+.card-total-pembayaran.info-pembeli {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.card-total-pembayaran label {
+  font-size: 16px;
+  font-weight: var(--weight-bold);
+  color: var(--foreground-color);
+}
+
+.card-total-pembayaran input {
+  background-color: var(--foreground-color);
+  border: 1px solid #333;
+  border-radius: 8px;
+  width: 100%;
+  background-color: var(--background-color);
+  padding: 10px;
+  margin-top: 6px;
+  color: var(--foreground-color);
 }
