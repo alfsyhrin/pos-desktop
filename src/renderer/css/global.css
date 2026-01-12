@@ -153,6 +153,9 @@ body {
   padding: 4px 8px;
   background-color: var(--primary-color);
   border-radius: 8px;
+  color: #fff;
+  border: none;
+  font-weight: var(--weight-bold);
 }
 /* Akhir Logo Aplikasi */
 

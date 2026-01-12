@@ -24,9 +24,9 @@
   function applySidebarPermissions() {
     const role = getRole();
     // Cashier bisa akses: dashboard, kasir, produk, transaksi, pengaturan
-    const allowedForCashier = ['dashboard','kasir','produk','transaksi','pengaturan'];
+    const allowedForCashier = ['dashboard','kasir','produk','transaksi','pengaturan','pendingTransaksi'];
     // Owner bisa akses: dashboard, produk, transaksi, karyawan, laporan, pengaturan, aktivitas (TIDAK KASIR)
-    const allowedForOwner = ['dashboard','produk','transaksi','karyawan','laporan','pengaturan','aktivitas'];
+    const allowedForOwner = ['dashboard','produk','transaksi','karyawan','laporan','pengaturan','aktivitas','pendingTransaksi'];
     
     document.querySelectorAll('.sidebar-item[data-page]').forEach(a => {
       const page = (a.dataset.page || '').toLowerCase();
