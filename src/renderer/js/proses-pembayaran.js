@@ -56,8 +56,22 @@ function renderPendingTransaction(pendingData) {
     let bonusQty = 0;
     let discountAmount = 0;
 
-    // === BUY X GET Y ===
+    // === DISKON BUNDLE ===
     if (
+      item.diskon_bundle_min_qty &&
+      item.diskon_bundle_value &&
+      qty >= item.diskon_bundle_min_qty
+    ) {
+      const minQty = Number(item.diskon_bundle_min_qty);
+      const bundlePrice = Number(item.diskon_bundle_value);
+      const bundleCount = Math.floor(qty / minQty);
+      const sisa = qty % minQty;
+      const totalBundle = bundleCount * bundlePrice + sisa * harga;
+      const normalTotal = qty * harga;
+      discountAmount = normalTotal - totalBundle;
+    }
+    // === BUY X GET Y ===
+    else if (
       item.discount_type === 'buyxgety' &&
       Number(item.buy_qty) > 0 &&
       Number(item.free_qty) > 0
@@ -68,12 +82,10 @@ function renderPendingTransaction(pendingData) {
       buyQty = qty - bonusQty;
       discountAmount = bonusQty * harga;
     }
-
     // === DISKON PERSENTASE ===
     else if (item.discount_type === 'percentage') {
       discountAmount = harga * qty * (item.discount_value / 100);
     }
-
     // === DISKON NOMINAL ===
     else if (item.discount_type === 'nominal') {
       discountAmount = Math.min(harga * qty, item.discount_value);
@@ -337,6 +349,19 @@ function renderListItemPembayaran(cart) {
   cart.forEach(item => {
     const harga = Number(item.price || 0);
 
+    // === DISKON BUNDLE ===
+    if (item.diskon_bundle_min_qty && item.diskon_bundle_value) {
+      listEl.innerHTML += `
+        <div style="margin-bottom:10px;">
+          <b>${item.name}</b>
+          <div>${formatRupiah(harga)} x ${item.quantity}</div>
+          <div style="color:#10b981;">Bundle: Beli ${item.diskon_bundle_min_qty} hanya Rp${Number(item.diskon_bundle_value).toLocaleString('id-ID')}</div>
+        </div>
+      `;
+      return;
+    }
+
+    // === BUY X GET Y ===
     if (item.discount_type === 'buyxgety') {
       listEl.innerHTML += `
         <div style="margin-bottom:10px;">

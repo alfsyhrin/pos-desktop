@@ -1,34 +1,38 @@
-// Helper fungsi format rupiah (copy dari edit-produk.html)
+// Helper fungsi format rupiah
 function formatRupiahInput(val) {
-  const num = String(val).replace(/\D/g, '');
-  if (!num) return '';
-  return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  // ✅ Parse sebagai float dulu untuk hilangkan trailing zeros
+  const numVal = parseFloat(String(val).replace(/\./g, '').replace(/[^0-9.]/g, ''));
+  
+  if (isNaN(numVal) || numVal === 0) return '';
+  
+  // Format dengan separator ribuan tanpa desimal
+  return Math.round(numVal).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 function parseRupiahInput(val) {
-  return Number(String(val).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
+  // ✅ Hati-hati dengan string yang sudah terpisah dengan titik
+  const numStr = String(val)
+    .replace(/\./g, '')      // Hapus separator ribuan
+    .replace(/[^0-9]/g, ''); // Hapus karakter non-angka
+  
+  return parseInt(numStr, 10) || 0;
 }
 
 window.initEditProdukPage = async function() {
   console.log('📝 [initEditProdukPage] START');
   
-  // ⭐ PERBAIKI: CEK APAKAH INI HALAMAN EDIT-PRODUK
-  // Jika element form tidak ada, berarti bukan halaman edit -> SKIP
   const form = document.getElementById('form-edit-produk');
   if (!form) {
     console.log('ℹ️ [initEditProdukPage] Tidak di halaman edit-produk, skip init');
     return;
   }
   
-  // Tunggu DOM siap
   if (document.readyState === 'loading') {
     await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
   }
   
-  // ⭐ TAMBAH: TUNGGU EKSTRA UNTUK MEMASTIKAN ELEMENT SIAP
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Ambil productId dari berbagai sumber
   const params = window.__editProdukParams || {};
   let productId = params.id;
   
@@ -70,6 +74,8 @@ window.initEditProdukPage = async function() {
     if (amountWrapper) amountWrapper.style.display = (type === 'amount') ? 'block' : 'none';
     if (buyxgetyWrapper) buyxgetyWrapper.style.display = (type === 'buyxgety') ? 'block' : 'none';
     if (bundleWrapper) bundleWrapper.style.display = (type === 'bundle') ? 'block' : 'none';
+    
+    console.log(`🎨 [handlePromoChangeEdit] Promo type: ${type}`);
   };
 
   // Fetch detail produk
@@ -91,8 +97,48 @@ window.initEditProdukPage = async function() {
       throw new Error('Data produk tidak valid');
     }
 
-    // ⭐ PERBAIKI: Query element dengan optional chaining
-    // TIDAK perlu cek lagi, karena sudah cek form ada di awal
+    // ===== NORMALIZE FIELD NAMES & HARGA =====
+    const normalizedProduk = {
+      id: produk.id,
+      name: produk.name,
+      sku: produk.sku,
+      barcode: produk.barcode,
+      // ✅ PENTING: Parse harga sebagai angka, hilangkan trailing zeros
+      costPrice: parseFloat(produk.cost_price || produk.costPrice || 0),
+      sellPrice: parseFloat(produk.price || produk.sellPrice || 0),
+      stock: produk.stock,
+      isActive: produk.is_active ?? produk.isActive ?? 1,
+      
+      // Promo/Diskon fields - DETEKSI OTOMATIS JENIS DISKON
+      promoType: produk.jenis_diskon || produk.promoType || null,
+      promoPercent: parseFloat(produk.nilai_diskon || 0),
+      promoAmount: parseFloat(produk.nilai_diskon || 0),
+      buyQty: produk.buy_qty || produk.buyQty || null,
+      freeQty: produk.free_qty || produk.freeQty || null,
+      bundleQty: produk.diskon_bundle_min_qty || produk.bundleQty || null,
+      bundleTotalPrice: parseFloat(produk.diskon_bundle_value || produk.bundleTotalPrice || 0)
+    };
+
+    // ✅ AUTO-DETECT JENIS DISKON JIKA NULL
+    if (!normalizedProduk.promoType) {
+      if (normalizedProduk.bundleQty && normalizedProduk.bundleQty > 0) {
+        normalizedProduk.promoType = 'bundle';
+        console.log('🔍 Auto-detect: Bundle promo detected');
+      } else if (normalizedProduk.buyQty && normalizedProduk.freeQty) {
+        normalizedProduk.promoType = 'buyxgety';
+        console.log('🔍 Auto-detect: BuyXGetY promo detected');
+      } else if (normalizedProduk.promoPercent && normalizedProduk.promoPercent > 0) {
+        normalizedProduk.promoType = 'percentage';
+        console.log('🔍 Auto-detect: Percentage promo detected');
+      } else if (normalizedProduk.promoAmount && normalizedProduk.promoAmount > 0) {
+        normalizedProduk.promoType = 'amount';
+        console.log('🔍 Auto-detect: Amount promo detected');
+      }
+    }
+
+    console.log('🔄 Normalized produk:', normalizedProduk);
+
+    // Query element dengan optional chaining
     const productIdEl = document.getElementById('product-id');
     const namaProdukEl = document.getElementById('nama-produk');
     const skuEl = document.getElementById('sku');
@@ -103,29 +149,26 @@ window.initEditProdukPage = async function() {
     const isActiveEl = document.getElementById('is-active');
     const promoTypeEl = document.getElementById('promo-type');
 
-    // Set nilai dengan aman (gunakan optional chaining)
-    if (productIdEl) productIdEl.value = produk.id || '';
-    if (namaProdukEl) namaProdukEl.value = produk.name || '';
-    if (skuEl) skuEl.value = produk.sku || '';
-    if (barcodeEl) barcodeEl.value = produk.barcode || '';
+    // Set nilai dengan aman
+    if (productIdEl) productIdEl.value = normalizedProduk.id || '';
+    if (namaProdukEl) namaProdukEl.value = normalizedProduk.name || '';
+    if (skuEl) skuEl.value = normalizedProduk.sku || '';
+    if (barcodeEl) barcodeEl.value = normalizedProduk.barcode || '';
     
-    const costPrice = Number(produk.cost_price || produk.cost || 0);
-    const sellPrice = Number(produk.price || 0);
-    
-    if (hargaModalEl) hargaModalEl.value = formatRupiahInput(costPrice);
-    if (hargaJualEl) hargaJualEl.value = formatRupiahInput(sellPrice);
-    if (stokEl) stokEl.value = produk.stock || 0;
-    if (isActiveEl) isActiveEl.value = String(produk.is_active !== false);
+    if (hargaModalEl) hargaModalEl.value = formatRupiahInput(normalizedProduk.costPrice);
+    if (hargaJualEl) hargaJualEl.value = formatRupiahInput(normalizedProduk.sellPrice);
+    if (stokEl) stokEl.value = normalizedProduk.stock || 0;
+    if (isActiveEl) isActiveEl.value = String(normalizedProduk.isActive !== 0);
 
     // --- POPULATE PROMO/DISKON FIELDS ---
-    const jenis = produk.jenis_diskon || '';
-    const nilai = produk.nilai_diskon ?? 0;
-    const buyQty = produk.buy_qty ?? 0;
-    const freeQty = produk.free_qty ?? 0;
-    const bundleMin = produk.diskon_bundle_min_qty ?? 0;
-    const bundleVal = produk.diskon_bundle_value ?? 0;
+    const promoType = normalizedProduk.promoType || '';
 
-    if (promoTypeEl && jenis) promoTypeEl.value = jenis;
+    console.log(`💾 Setting promo type: "${promoType}"`);
+
+    if (promoTypeEl) {
+      promoTypeEl.value = promoType;
+      console.log(`✅ Promo Type dropdown set to: ${promoType}`);
+    }
     
     const promoPercentEl = document.getElementById('promo-percent');
     const promoAmountEl = document.getElementById('promo-amount');
@@ -134,17 +177,54 @@ window.initEditProdukPage = async function() {
     const bundleQtyEl = document.getElementById('bundle-qty');
     const bundlePriceEl = document.getElementById('bundle-total-price');
 
-    if (jenis === 'percentage' && promoPercentEl) promoPercentEl.value = nilai;
-    if (jenis === 'amount' && promoAmountEl) promoAmountEl.value = nilai;
-    if (jenis === 'buyxgety' && buyQtyEl && freeQtyEl) {
-      buyQtyEl.value = buyQty;
-      freeQtyEl.value = freeQty;
+    // ===== CRITICAL: Populate berdasarkan promoType & data yang tersedia =====
+    if (promoType === 'percentage' && promoPercentEl) {
+      promoPercentEl.value = normalizedProduk.promoPercent || 0;
+      console.log(`✅ Promo Percent set to: ${normalizedProduk.promoPercent}`);
+    } 
+    else if (promoType === 'amount' && promoAmountEl) {
+      promoAmountEl.value = normalizedProduk.promoAmount || 0;
+      console.log(`✅ Promo Amount set to: ${normalizedProduk.promoAmount}`);
+    } 
+    else if (promoType === 'buyxgety') {
+      if (buyQtyEl) {
+        buyQtyEl.value = normalizedProduk.buyQty || 0;
+        console.log(`✅ Buy Qty set to: ${normalizedProduk.buyQty}`);
+      }
+      if (freeQtyEl) {
+        freeQtyEl.value = normalizedProduk.freeQty || 0;
+        console.log(`✅ Free Qty set to: ${normalizedProduk.freeQty}`);
+      }
+    } 
+    else if (promoType === 'bundle') {
+      if (bundleQtyEl) {
+        bundleQtyEl.value = normalizedProduk.bundleQty || 0;
+        console.log(`✅ Bundle Qty set to: ${normalizedProduk.bundleQty}`);
+      }
+      if (bundlePriceEl) {
+        // ✅ Format harga bundle dengan Rupiah
+        bundlePriceEl.value = formatRupiahInput(normalizedProduk.bundleTotalPrice);
+        console.log(`✅ Bundle Total Price set to: ${normalizedProduk.bundleTotalPrice}`);
+      }
     }
-    if (jenis === 'bundle' && bundleQtyEl && bundlePriceEl) {
-      bundleQtyEl.value = bundleMin;
-      bundlePriceEl.value = bundleVal;
+    // Handle bundle tanpa promoType (bundleQty & bundleTotalPrice ada tapi promoType=null)
+    else if (!promoType && normalizedProduk.bundleQty && normalizedProduk.bundleTotalPrice) {
+      console.log(`⚠️ Detected bundle data tanpa promoType, auto-set ke bundle`);
+      if (promoTypeEl) {
+        promoTypeEl.value = 'bundle';
+      }
+      if (bundleQtyEl) {
+        bundleQtyEl.value = normalizedProduk.bundleQty;
+        console.log(`✅ Auto-set Bundle Qty: ${normalizedProduk.bundleQty}`);
+      }
+      if (bundlePriceEl) {
+        // ✅ Format harga bundle dengan Rupiah
+        bundlePriceEl.value = formatRupiahInput(normalizedProduk.bundleTotalPrice);
+        console.log(`✅ Auto-set Bundle Total Price: ${normalizedProduk.bundleTotalPrice}`);
+      }
     }
     
+    // Trigger promo change handler untuk show/hide field yang sesuai
     handlePromoChangeEdit();
 
     console.log('✅ Form populated successfully');
@@ -162,26 +242,26 @@ window.initEditProdukPage = async function() {
   }
 
   // Handle submit update
-  // Form sudah diperiksa di awal, jadi pasti ada
   form.onsubmit = null;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const storeId = localStorage.getItem('store_id');
     const productId = document.getElementById('product-id')?.value;
-    
+
     if (!storeId || !productId) {
-      if (window.showToast) {
-        window.showToast('Store ID atau Product ID hilang', 'error');
-      } else {
-        alert('Store ID atau Product ID hilang');
-      }
+      window.showToast?.('Store ID atau Product ID hilang', 'error');
       return;
     }
 
+    const hargaModalValue = parseRupiahInput(document.getElementById('harga-modal')?.value || '0');
+    const hargaJualValue = parseRupiahInput(document.getElementById('harga-jual')?.value || '0');
+    const barcode = (document.getElementById('barcode')?.value || '').trim();
+
     const promoType = document.getElementById('promo-type')?.value || "";
 
+    // Diskon fields
     let jenis_diskon = null;
     let nilai_diskon = null;
     let diskon_bundle_min_qty = null;
@@ -191,87 +271,124 @@ window.initEditProdukPage = async function() {
 
     if (promoType === "percentage") {
       jenis_diskon = "percentage";
-      nilai_diskon = Number(document.getElementById('promo-percent')?.value || 0);
+      nilai_diskon = parseFloat(document.getElementById('promo-percent')?.value || 0) || null;
     } else if (promoType === "amount") {
       jenis_diskon = "amount";
-      nilai_diskon = Number(document.getElementById('promo-amount')?.value || 0);
+      nilai_diskon = parseRupiahInput(document.getElementById('promo-amount')?.value || '0') || null;
     } else if (promoType === "buyxgety") {
       jenis_diskon = "buyxgety";
-      buy_qty = Number(document.getElementById('buy-qty')?.value || 0);
-      free_qty = Number(document.getElementById('free-qty')?.value || 0);
+      buy_qty = parseInt(document.getElementById('buy-qty')?.value || 0, 10) || null;
+      free_qty = parseInt(document.getElementById('free-qty')?.value || 0, 10) || null;
     } else if (promoType === "bundle") {
       jenis_diskon = "bundle";
-      diskon_bundle_min_qty = Number(document.getElementById('bundle-qty')?.value || 0);
-      diskon_bundle_value = Number(document.getElementById('bundle-total-price')?.value || 0);
+      diskon_bundle_min_qty = parseInt(document.getElementById('bundle-qty')?.value || 0, 10) || null;
+      diskon_bundle_value = parseRupiahInput(document.getElementById('bundle-total-price')?.value || '0') || null;
+      // Validasi wajib
+      if (!diskon_bundle_min_qty || !diskon_bundle_value) {
+        window.showToast?.('Bundle Qty dan Bundle Price wajib diisi dan > 0!', 'warn');
+        return;
+      }
     }
 
-    const hargaModalValue = parseRupiahInput(document.getElementById('harga-modal')?.value || '0');
-    const hargaJualValue = parseRupiahInput(document.getElementById('harga-jual')?.value || '0');
-
+    // Build body
     const body = {
       name: document.getElementById('nama-produk')?.value || '',
       sku: document.getElementById('sku')?.value || '',
+      barcode: barcode,
       cost_price: hargaModalValue,
       price: hargaJualValue,
-      stock: Number(document.getElementById('stok')?.value || 0),
-      is_active: document.getElementById('is-active')?.value === 'true'
+      stock: parseInt(document.getElementById('stok')?.value || 0, 10),
+      is_active: document.getElementById('is-active')?.value === 'true',
+      jenis_diskon: jenis_diskon,
+      nilai_diskon: nilai_diskon,
+      diskon_bundle_min_qty: diskon_bundle_min_qty,
+      diskon_bundle_value: diskon_bundle_value,
+      buy_qty: buy_qty,
+      free_qty: free_qty
     };
 
-    if (jenis_diskon) {
-      body.jenis_diskon = jenis_diskon;
-      body.nilai_diskon = nilai_diskon;
+    // Hapus field diskon jika bukan tipe diskon terkait
+    if (jenis_diskon !== "percentage" && jenis_diskon !== "amount") {
+      delete body.nilai_diskon;
     }
-    if (diskon_bundle_min_qty) body.diskon_bundle_min_qty = diskon_bundle_min_qty;
-    if (diskon_bundle_value) body.diskon_bundle_value = diskon_bundle_value;
-    if (buy_qty) body.buy_qty = buy_qty;
-    if (free_qty) body.free_qty = free_qty;
+    if (jenis_diskon !== "bundle") {
+      delete body.diskon_bundle_min_qty;
+      delete body.diskon_bundle_value;
+    }
+    if (jenis_diskon !== "buyxgety") {
+      delete body.buy_qty;
+      delete body.free_qty;
+    }
+
+    // Pastikan jika jenis_diskon null, field diskon lain juga null
+    if (!jenis_diskon) {
+      body.nilai_diskon = null;
+      body.diskon_bundle_min_qty = null;
+      body.diskon_bundle_value = null;
+      body.buy_qty = null;
+      body.free_qty = null;
+    }
+
+    console.log('📤 Sending body:', JSON.stringify(body, null, 2));
 
     try {
-      await window.apiRequest(`/stores/${storeId}/products/${productId}`, {
+      const response = await window.apiRequest(`/stores/${storeId}/products/${productId}`, {
         method: 'PUT',
         body
       });
+
+      console.log('📤 Response dari server:', response);
 
       const fileInput = document.getElementById('product-image');
       if (fileInput?.files?.length > 0) {
         await uploadGambarProdukEdit(storeId, productId, fileInput.files[0]);
       }
 
-      if (window.showToast) {
-        window.showToast('Produk berhasil diupdate!', 'success');
-      } else {
-        alert('Produk berhasil diupdate!');
-      }
-      
+      window.showToast?.('Produk berhasil diupdate!', 'success');
       setTimeout(() => {
         window.location.href = 'index.html#produk';
       }, 800);
     } catch (err) {
       console.error('❌ Update error:', err);
-      if (window.showToast) {
-        window.showToast('Gagal update produk: ' + err.message, 'error');
-      } else {
-        alert('Gagal update produk: ' + err.message);
-      }
+      window.showToast?.(`Gagal: ${err.message || 'Terjadi kesalahan'}`, 'error');
     }
   });
 };
 
-// ⭐ PERBAIKI: Hanya panggil jika benar-benar di halaman edit
 // Panggil saat DOM ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    // Cek apakah form ada
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.getElementById('form-edit-produk')) {
+        window.initEditProdukPage();
+        
+        // ✅ TAMBAH: Setup event listener untuk promo-type dropdown
+        const promoTypeEl = document.getElementById('promo-type');
+        if (promoTypeEl) {
+          promoTypeEl.addEventListener('change', () => {
+            console.log(`🔄 Promo type changed to: ${promoTypeEl.value}`);
+            if (window.handlePromoChangeEdit) {
+              window.handlePromoChangeEdit();
+            }
+          });
+        }
+      }
+    });
+  } else {
     if (document.getElementById('form-edit-produk')) {
       window.initEditProdukPage();
+      
+      // ✅ TAMBAH: Setup event listener untuk promo-type dropdown
+      const promoTypeEl = document.getElementById('promo-type');
+      if (promoTypeEl) {
+        promoTypeEl.addEventListener('change', () => {
+          console.log(`🔄 Promo type changed to: ${promoTypeEl.value}`);
+          if (window.handlePromoChangeEdit) {
+            window.handlePromoChangeEdit();
+          }
+        });
+      }
     }
-  });
-} else {
-  // DOM sudah ready
-  if (document.getElementById('form-edit-produk')) {
-    window.initEditProdukPage();
   }
-}
 
 async function uploadGambarProdukEdit(storeId, productId, file) {
   if (!file) return;
@@ -290,6 +407,7 @@ async function uploadGambarProdukEdit(storeId, productId, file) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Gagal upload gambar produk');
+    console.log('✅ Upload gambar berhasil');
     return data;
   } catch (err) {
     console.error('❌ Upload gambar error:', err);

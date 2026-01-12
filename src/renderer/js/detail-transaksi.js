@@ -212,13 +212,29 @@ async function renderDetailTransaksi() {
       grossSubtotal += harga * qty;
 
       let discountAmount = Number(item.discount_amount || item._discountAmount || 0);
-      if (item.discount_type === 'percentage' && item.discount_value > 0) {
-        discountAmount = harga * qty * (item.discount_value / 100);
-      } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
-        discountAmount = Math.min(item.discount_value, harga * qty);
-      }
-      discountTotal += discountAmount;
 
+      // === DISKON BUNDLE ===
+      if (item.discount_type === 'bundle' && item.diskon_bundle_min_qty && item.diskon_bundle_value) {
+        const minQty = Number(item.diskon_bundle_min_qty);
+        const bundlePrice = Number(item.diskon_bundle_value);
+        const bundleCount = Math.floor(qty / minQty);
+        const sisa = qty % minQty;
+        const totalBundle = bundleCount * bundlePrice + sisa * harga;
+        const normalTotal = qty * harga;
+        discountAmount = normalTotal - totalBundle;
+
+        itemDiv.innerHTML += `
+          <p>${item.name || '-'}</p>
+          <p>${formatRupiah(harga)} x ${qty}</p>
+          <p class="sku">SKU: ${item.sku || '-'}</p>
+          <p style="color:#10b981;">Bundle: ${minQty} = ${formatRupiah(bundlePrice)}</p>
+          <p style="color:green;">Diskon: ${formatRupiah(discountAmount)}</p>
+        `;
+        discountTotal += discountAmount;
+        return;
+      }
+
+      // === BUY X GET Y ===
       let qtyDibayar = qty;
       let bonusQty = 0;
       if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
@@ -229,6 +245,14 @@ async function renderDetailTransaksi() {
         bonusQty = qty - paidQty;
         qtyDibayar = paidQty;
       }
+
+      // === DISKON PERSENTASE/NOMINAL ===
+      if (item.discount_type === 'percentage' && item.discount_value > 0) {
+        discountAmount = harga * qty * (item.discount_value / 100);
+      } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
+        discountAmount = Math.min(item.discount_value, harga * qty);
+      }
+      discountTotal += discountAmount;
 
       let diskonText = '';
       if (discountAmount > 0) {
@@ -340,13 +364,29 @@ async function renderDetailTransaksi() {
     grossSubtotal += harga * qty;
 
     let discountAmount = Number(item.discount_amount || 0);
-    if (item.discount_type === 'percentage' && item.discount_value > 0) {
-      discountAmount = harga * qty * (item.discount_value / 100);
-    } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
-      discountAmount = Math.min(item.discount_value, harga * qty);
-    }
-    discountTotal += discountAmount;
 
+    // === DISKON BUNDLE ===
+    if (item.discount_type === 'bundle' && item.diskon_bundle_min_qty && item.diskon_bundle_value) {
+      const minQty = Number(item.diskon_bundle_min_qty);
+      const bundlePrice = Number(item.diskon_bundle_value);
+      const bundleCount = Math.floor(qty / minQty);
+      const sisa = qty % minQty;
+      const totalBundle = bundleCount * bundlePrice + sisa * harga;
+      const normalTotal = qty * harga;
+      discountAmount = normalTotal - totalBundle;
+
+      itemDiv.innerHTML += `
+        <p>${item.name || '-'}</p>
+        <p>${formatRupiah(harga)} x ${qty}</p>
+        <p class="sku">SKU: ${item.sku || '-'}</p>
+        <p style="color:#10b981;">Bundle: ${minQty} = ${formatRupiah(bundlePrice)}</p>
+        <p style="color:green;">Diskon: ${formatRupiah(discountAmount)}</p>
+      `;
+      discountTotal += discountAmount;
+      return;
+    }
+
+    // === BUY X GET Y ===
     let qtyDibayar = qty;
     let bonusQty = 0;
     if (item.discount_type === 'buyxgety' && item.buy_qty && item.free_qty) {
@@ -357,6 +397,14 @@ async function renderDetailTransaksi() {
       bonusQty = qty - paidQty;
       qtyDibayar = paidQty;
     }
+
+    // === DISKON PERSENTASE/NOMINAL ===
+    if (item.discount_type === 'percentage' && item.discount_value > 0) {
+      discountAmount = harga * qty * (item.discount_value / 100);
+    } else if (item.discount_type === 'nominal' && item.discount_value > 0) {
+      discountAmount = Math.min(item.discount_value, harga * qty);
+    }
+    discountTotal += discountAmount;
 
     let diskonText = '';
     if (discountAmount > 0) {

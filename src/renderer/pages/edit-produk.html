@@ -96,9 +96,9 @@
 
       <div class="form-group" id="bundle-wrapper" style="display:none;">
         <label>Bundle Qty</label>
-        <input type="number" id="bundle-qty" placeholder="Contoh: 3">
+        <input type="text" id="bundle-qty" placeholder="Contoh: 3" inputmode="numeric">
         <label>Bundle Total Price</label>
-        <input type="number" id="bundle-total-price" placeholder="Contoh: 5000">
+        <input type="text" id="bundle-total-price" class="rupiah-input" placeholder="Rp 0">
       </div>
 
       <div class="action-buttons">
@@ -116,28 +116,41 @@ function formatRupiahInput(val) {
   if (!num) return '';
   return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
+
 function parseRupiahInput(val) {
   return Number(String(val).replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
 }
+
 function initRupiahInput(input) {
   if (!input) return;
   input.type = "text";
   input.inputMode = "numeric";
+  
   input.addEventListener('input', function () {
     let val = this.value.replace(/\D/g, '');
     this.value = formatRupiahInput(val);
   });
+  
   input.addEventListener('blur', function () {
     let val = this.value.replace(/\D/g, '');
     this.value = formatRupiahInput(val);
   });
+  
   input.addEventListener('focus', function () {
+    // Saat focus, tampilkan angka tanpa format
     let val = this.value.replace(/\D/g, '');
     this.value = val;
   });
 }
+
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.rupiah-input').forEach(initRupiahInput);
+  
+  // ✅ TAMBAH: Initialize bundle-total-price jika ada
+  const bundlePriceInput = document.getElementById('bundle-total-price');
+  if (bundlePriceInput) {
+    initRupiahInput(bundlePriceInput);
+  }
 });
 </script>
 </body>

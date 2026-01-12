@@ -153,8 +153,14 @@ async function renderProdukKasir(q = '', category = '') {
       promoLabel = `<span class="badge-diskon diskon-bxgy">Beli ${p.buyQty} Gratis ${p.freeQty}</span>`;
     } else if (p.promoType === 'amount' && p.promoAmount > 0) {
       promoLabel = `<span class="badge-diskon diskon-nominal">Potongan Rp ${Number(p.promoAmount).toLocaleString('id-ID')}</span>`;
-    } else {
-      promoLabel = '';
+    }
+
+    // ✅ Tambah label bundle, cek semua kemungkinan field
+    const isBundle = (p.promoType === 'bundle' || p.jenis_diskon === 'bundle');
+    const bundleQty = p.bundleQty || p.diskon_bundle_min_qty || p.bundle_min_qty || 0;
+    const bundleTotalPrice = p.bundleTotalPrice || p.diskon_bundle_value || p.bundle_total_price || 0;
+    if (isBundle && bundleQty && bundleTotalPrice) {
+      promoLabel += `<span class="badge-diskon diskon-bundle" title="Beli ${bundleQty} hanya Rp${Number(bundleTotalPrice).toLocaleString('id-ID')}">Promo Bundle: Beli ${bundleQty} hanya Rp${Number(bundleTotalPrice).toLocaleString('id-ID')}</span>`;
     }
 
     // Ambil gambar produk seperti di produk.js
@@ -188,12 +194,12 @@ async function renderProdukKasir(q = '', category = '') {
         data-price="${Number(p.sellPrice ?? p.price ?? 0)}"
         data-sku="${p.sku ?? ''}"
         data-stock="${p.stock ?? p.stok ?? 0}"
-        data-discount-type="${p.promoType || ''}"
+        data-discount-type="${p.promoType || p.jenis_diskon || ''}"
         data-discount-value="${p.promoPercent || p.promoAmount || 0}"
-        data-buy-qty="${p.buyQty || 0}"
-        data-free-qty="${p.freeQty || 0}"
-        data-bundle-qty="${p.bundleQty || 0}"
-        data-bundle-value="${p.bundleTotalPrice || 0}">
+        data-buy-qty="${p.buyQty || p.buy_qty || 0}"
+        data-free-qty="${p.freeQty || p.free_qty || 0}"
+        data-bundle-qty="${bundleQty}"
+        data-bundle-value="${bundleTotalPrice}">
         Tambah Ke Keranjang
       </button>
     `;
@@ -446,6 +452,24 @@ async function cariProdukKasir(q, category = '') {
       produkList.innerHTML = '';
       if (!products || products.length === 0) { produkList.innerHTML = '<p>Tidak ada produk ditemukan.</p>'; return; }
 products.forEach(product => {
+  // Ambil info diskon
+  let promoLabel = '';
+  if (product.promoType === 'percentage' && product.promoPercent > 0) {
+    promoLabel = `<span class="badge-diskon diskon-persentase">${product.promoPercent}% OFF</span>`;
+  } else if (product.promoType === 'buyxgety' && product.buyQty && product.freeQty) {
+    promoLabel = `<span class="badge-diskon diskon-bxgy">Beli ${product.buyQty} Gratis ${product.freeQty}</span>`;
+  } else if (product.promoType === 'amount' && product.promoAmount > 0) {
+    promoLabel = `<span class="badge-diskon diskon-nominal">Potongan Rp ${Number(product.promoAmount).toLocaleString('id-ID')}</span>`;
+  }
+
+  // ✅ Tambah label bundle, cek semua kemungkinan field
+  const isBundle = (product.promoType === 'bundle' || product.jenis_diskon === 'bundle');
+  const bundleQty = product.bundleQty || product.diskon_bundle_min_qty || product.bundle_min_qty || 0;
+  const bundleTotalPrice = product.bundleTotalPrice || product.diskon_bundle_value || product.bundle_total_price || 0;
+  if (isBundle && bundleQty && bundleTotalPrice) {
+    promoLabel += `<span class="badge-diskon diskon-bundle" title="Beli ${bundleQty} hanya Rp${Number(bundleTotalPrice).toLocaleString('id-ID')}">Beli ${bundleQty} hanya Rp${Number(bundleTotalPrice).toLocaleString('id-ID')}</span>`;
+  }
+
   // Ambil gambar produk dari database (image_url atau imageUrl)
   const imageUrlRaw = product.image_url || product.imageUrl || '';
   const imageUrl = imageUrlRaw
@@ -469,13 +493,23 @@ products.forEach(product => {
       <p>${product.stock}</p>
     </div>
     <h3>Rp ${Number(product.sellPrice || product.price).toLocaleString('id-ID')}</h3>
+    ${promoLabel ? `<div class="keterangan-diskon">${promoLabel}</div>` : ''}
     <p>SKU: ${product.sku}</p>
     <p>Kategori: ${product.category || '-'}</p>
     <button class="btn-add-cart"
+      data-id="${product.id ?? product.product_id ?? ''}"
       data-name="${product.name}"
-      data-price="${product.sellPrice || product.price}"
+      data-price="${Number(product.sellPrice || product.price)}"
       data-sku="${product.sku}"
-      data-stock="${product.stock}">Tambah Ke Keranjang</button>
+      data-stock="${product.stock}"
+      data-discount-type="${product.promoType || product.jenis_diskon || ''}"
+      data-discount-value="${product.promoPercent || product.promoAmount || 0}"
+      data-buy-qty="${product.buyQty || product.buy_qty || 0}"
+      data-free-qty="${product.freeQty || product.free_qty || 0}"
+      data-bundle-qty="${bundleQty}"
+      data-bundle-value="${bundleTotalPrice}">
+      Tambah Ke Keranjang
+    </button>
   `;
   produkList.appendChild(card);
 });

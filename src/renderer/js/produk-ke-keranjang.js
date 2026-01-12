@@ -89,7 +89,9 @@ function updateKeranjangView() {
     if (item.diskon_bundle_min_qty && item.diskon_bundle_value) {
       totalDiskon = applyBundleDiscount(item);
       if (totalDiskon > 0) {
-        diskonLabel = `Promo Bundle: Rp ${Number(totalDiskon).toLocaleString('id-ID')}`;
+        diskonLabel = `Promo Bundle: Beli ${item.diskon_bundle_min_qty} hanya Rp${Number(item.diskon_bundle_value).toLocaleString('id-ID')}<br>Diskon: Rp ${Number(totalDiskon).toLocaleString('id-ID')}`;
+      } else {
+        diskonLabel = `Promo Bundle: Beli ${item.diskon_bundle_min_qty} hanya Rp${Number(item.diskon_bundle_value).toLocaleString('id-ID')}`;
       }
     }
     // Priority 2: BUY X GET Y
