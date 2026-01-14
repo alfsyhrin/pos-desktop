@@ -31,6 +31,14 @@
     document.querySelectorAll('.sidebar-item[data-page]').forEach(a => {
       const page = (a.dataset.page || '').toLowerCase();
       
+      // 🔴 PERBAIKAN: Jangan hide logout button
+      // Logout punya data-page="login" dan data-action="logout"
+      // Jadi skip filter ini untuk logout
+      if (a.dataset.action === 'logout') {
+        a.style.display = '';
+        return; // Skip ke elemen berikutnya
+      }
+      
       if (role === 'cashier') {
         // Cashier hanya bisa akses yang ada di allowedForCashier
         if (!allowedForCashier.includes(page)) {
@@ -100,3 +108,14 @@
     }
   });
 })();
+
+function applyElementPermissions() {
+  const role = getRole();
+  document.querySelectorAll('[data-permissions]').forEach(el => {
+    const allowed = (el.dataset.permissions || '').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+    if (allowed.length && !allowed.includes(role)) {
+      el.style.display = 'none';
+      console.log('Hide:', el, 'Role:', role, 'Allowed:', allowed);
+    }
+  });
+}
