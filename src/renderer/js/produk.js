@@ -445,6 +445,12 @@ async function initProduk() {
   }
   
   console.log('✅ ========== initProduk() SELESAI ==========');
+  if (typeof window.applyElementPermissions === 'function') {
+  window.applyElementPermissions();
+}
+
+    // 🔴 PENTING: Apply custom permission handler
+  ensureTambahProdukPermissions();
 }
 
 // ===== RENDER PRODUK PAGE =====
@@ -504,6 +510,11 @@ window.renderProdukPage = async function renderProdukPage() {
     isRenderingProdukPage = false;
     console.log('✅ renderProdukPage selesai');
   }
+  if (typeof window.applyElementPermissions === 'function') {
+  window.applyElementPermissions();
+}
+    // 🔴 PENTING: Apply custom permission handler
+  ensureTambahProdukPermissions();
 };
 
 function setupExportButtons() {
@@ -979,12 +990,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ===== PERMISSIONS HANDLER =====
-const role = (localStorage.getItem('role') || '').toLowerCase();
-if (role === 'cashier') {
-  document.querySelectorAll('.edit-produk, .hapus-produk, .tambah-produk').forEach(btn => {
-    btn.style.display = 'none';
-  });
-}
+// const role = (localStorage.getItem('role') || '').toLowerCase();
+// if (role === 'cashier') {
+//   document.querySelectorAll('.edit-produk, .hapus-produk, .tambah-produk').forEach(btn => {
+//     btn.style.display = 'none';
+//   });
+// }
 
 // ===== FETCH STORES =====
 window.fetchStoresForOwner = async function() {
@@ -1145,9 +1156,65 @@ function exportStokOpnamePDF(products) {
 
 // ===== INIT PADA DOM READY =====
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initProduk);
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 DOMContentLoaded event fired');
+    initProduk();
+    // Juga pastikan permission check dilakukan setelah semua selesai
+    setTimeout(() => {
+      console.log('🔐 Checking permissions after DOMContentLoaded...');
+      ensureTambahProdukPermissions();
+    }, 500);
+  });
 } else {
+  console.log('📄 Document already loaded, calling initProduk immediately');
   initProduk();
+  setTimeout(() => {
+    console.log('🔐 Checking permissions...');
+    ensureTambahProdukPermissions();
+  }, 500);
+}
+
+// ...existing code...
+
+// ===== PERMISSIONS HANDLER (DIPERBAIKI) =====
+// Pastikan tombol "Tambah Produk" ter-hide untuk cashier
+function ensureTambahProdukPermissions() {
+  const role = (localStorage.getItem('role') || '').toLowerCase();
+  console.log(`🔐 [ensureTambahProdukPermissions] Role: ${role}`);
+  
+  const tambahBtn = document.querySelector('.tambah-produk-btn');
+  if (!tambahBtn) {
+    console.warn('⚠️ [ensureTambahProdukPermissions] Tombol .tambah-produk-btn tidak ditemukan');
+    return;
+  }
+  
+  // Cek data-permissions
+  const permissions = (tambahBtn.dataset.permissions || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  console.log(`📋 [ensureTambahProdukPermissions] Permissions: ${permissions.join(', ')}`);
+  
+  // Jika role tidak ada di permissions, sembunyikan
+  if (permissions.length > 0 && !permissions.includes(role)) {
+    tambahBtn.style.display = 'none';
+    console.log(`✅ [ensureTambahProdukPermissions] Tombol .tambah-produk-btn DI-HIDE untuk role: ${role}`);
+  } else {
+    tambahBtn.style.display = '';
+    console.log(`✅ [ensureTambahProdukPermissions] Tombol .tambah-produk-btn DITAMPILKAN untuk role: ${role}`);
+  }
+  
+  // Juga hide edit & delete buttons untuk cashier
+  if (role === 'cashier') {
+    document.querySelectorAll('.edit-produk, .hapus-produk').forEach(btn => {
+      btn.style.display = 'none';
+      console.log(`✅ Hide button: ${btn.className}`);
+    });
+  }
+}
+
+// Helper untuk mendapat role (kalau belum ada)
+function getRole() {
+  return (localStorage.getItem('role') || '').toLowerCase();
 }
 
 window.initProduk = initProduk;
+window.ensureTambahProdukPermissions = ensureTambahProdukPermissions;
+window.getRole = getRole;

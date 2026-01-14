@@ -55,6 +55,35 @@ function viewTransactionDetail(transactionId) {
   window.location.href = 'detail-transaksi.html';
 }
 
+// ===== FILTER TRANSAKSI DENGAN TANGGAL & WAKTU =====
+function applyDateTimeFilters(transactions) {
+  const dateFrom = document.getElementById('date-from')?.value;
+  const dateTo = document.getElementById('date-to')?.value;
+  const timeFrom = document.getElementById('time-from')?.value;
+  const timeTo = document.getElementById('time-to')?.value;
+
+  console.log('🔍 Applying filters:', { dateFrom, dateTo, timeFrom, timeTo });
+
+  return transactions.filter(trx => {
+    if (!trx.createdAt) return true;
+
+    // Parse createdAt (format ISO: "2026-01-14T02:45:22.000Z")
+    const createdDate = new Date(trx.createdAt);
+    const createdDateStr = createdDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const createdTimeStr = createdDate.toISOString().split('T')[1].substring(0, 8); // "HH:MM:SS"
+
+    // Check date range
+    if (dateFrom && createdDateStr < dateFrom) return false;
+    if (dateTo && createdDateStr > dateTo) return false;
+
+    // Check time range
+    if (timeFrom && createdTimeStr < timeFrom) return false;
+    if (timeTo && createdTimeStr > timeTo) return false;
+
+    return true;
+  });
+}
+
 // helper: format date string to specific timezone (default WIT)
 function formatDateToTZ(
   dateInput,
@@ -198,7 +227,7 @@ async function deleteTransaction(transactionId) {
   }
 }
 
-// Load and display transactions
+// ===== LOAD TRANSACTIONS DENGAN FILTER =====
 async function loadTransactions(filters = {}) {
   const container = document.querySelector('.transactions-list') || document.querySelector('.card-transaksi-wrapper');
   if (!container) return;
@@ -229,11 +258,12 @@ async function loadTransactions(filters = {}) {
       return;
     }
 
-    // Fetch transaksi dengan query params yang benar
-    const transactions = await fetchTransactions({
+    // Fetch transaksi
+    console.log(`📡 Fetching transactions for store ${storeId}...`);
+    let transactions = await fetchTransactions({
       search: filters.search || '',
       page: filters.page || 1,
-      limit: filters.limit || 20
+      limit: filters.limit || 100 // Naikkan limit agar bisa filter banyak data
     });
 
     if (!transactions || transactions.length === 0) {
@@ -262,6 +292,11 @@ async function loadTransactions(filters = {}) {
       return;
     }
 
+    // 🔴 PENTING: Apply date & time filters
+    transactions = applyDateTimeFilters(transactions);
+
+    console.log(`📊 Transactions after filter: ${transactions.length}`);
+
     renderTransactions(transactions);
     window.updateHeaderStoreName();
   } catch (err) {
@@ -270,11 +305,12 @@ async function loadTransactions(filters = {}) {
   }
 }
 
-// Event listener untuk search
-async function initTransaksi() {
+// ===== EVENT LISTENER UNTUK FILTER BUTTONS =====
+function initTransaksi() {
   window.updateHeaderStoreName();
   loadTransactions(transaksiFilters);
 
+  // Search input
   const searchInput = document.getElementById('search-transaksi');
   if (searchInput) {
     searchInput.addEventListener('input', () => {
@@ -283,6 +319,32 @@ async function initTransaksi() {
       loadTransactions(transaksiFilters);
     });
   }
+
+  // Button "Terapkan" untuk filter tanggal & waktu
+  const btnTerapkan = document.querySelector('.btn-terapkan');
+  if (btnTerapkan) {
+    btnTerapkan.addEventListener('click', () => {
+      console.log('✅ Filter button clicked');
+      transaksiFilters.page = 1;
+      loadTransactions(transaksiFilters);
+    });
+  }
+
+  // Optional: Filter real-time saat mengubah input
+  const dateFrom = document.getElementById('date-from');
+  const dateTo = document.getElementById('date-to');
+  const timeFrom = document.getElementById('time-from');
+  const timeTo = document.getElementById('time-to');
+
+  [dateFrom, dateTo, timeFrom, timeTo].forEach(input => {
+    if (input) {
+      input.addEventListener('change', () => {
+        console.log('⏰ Filter changed');
+        transaksiFilters.page = 1;
+        loadTransactions(transaksiFilters);
+      });
+    }
+  });
 }
 
 if (document.readyState === 'loading') {
@@ -296,7 +358,7 @@ window.initTransaksi = initTransaksi;
 const transaksiFilters = {
   search: '',
   page: 1,
-  limit: 20
+  limit: 100
 };
 
 // TAMBAH: Setup bulk delete

@@ -737,23 +737,22 @@ const os = require("os");
 
 ipcMain.handle("print-barcode-label", async (event, payload) => {
   try {
-    const { image, printerName, copies = 1 } = payload;
+    const { image, printerName, copies = 1, pageHeightMm = 72 } = payload;
 
     if (!image) throw new Error("Image kosong");
 
-    const tmpPath = path.join(
-      app.getPath("temp"),
-      `barcode_${Date.now()}.png`
-    );
-
+    const tmpPath = path.join(app.getPath("temp"), `barcode_${Date.now()}.png`);
     fs.writeFileSync(tmpPath, Buffer.from(image, "base64"));
+
+    const pageWidthMm = 66;
+    const pageHeight = Math.max(1, Number(pageHeightMm)); // mm
 
     const data = [{
       type: "image",
       path: tmpPath,
-      position: "center",
-      width: "100mm",
-      height: "150mm"
+      position: "left",
+      width: `${pageWidthMm}mm`,
+      height: `${pageHeight}mm`
     }];
 
     const options = {
@@ -761,16 +760,19 @@ ipcMain.handle("print-barcode-label", async (event, payload) => {
       silent: false,
       preview: false,
       copies,
-      dpi: 250,
+      dpi: 300,
       margin: "0 0 0 0",
-      pageSize: { width: 100000, height: 150000 }
+      pageSize: { width: Math.round(pageWidthMm * 1000), height: Math.round(pageHeight * 1000) } // 0.1mm units used by lib
     };
 
+    console.log("Print barcode with dynamic pageHeightMm:", pageHeight);
     await PosPrinter.print(data, options);
 
-    return { success: true };
+    // cleanup
+    try { fs.unlinkSync(tmpPath); } catch (e) {}
+    return { success: true, message: `Barcode berhasil dicetak (height=${pageHeight}mm)` };
   } catch (err) {
-    console.error("BARCODE PRINT ERROR FULL:", err);
+    console.error("BARCODE PRINT ERROR:", err);
     return { success: false, error: err.message };
   }
 });

@@ -411,17 +411,39 @@ function generateSharpBarcodeCanvas(value, type = "CODE128") {
   return finalCanvas;
 }
 
-function generateBarcodeLabelImage(barcodeValue, productName = "", type = "CODE128") {
+function generateBarcodeLabelImage(barcodeValue, productName = "", type = "CODE128", opts = {}) {
   if (!barcodeValue) {
     throw new Error("Barcode kosong saat generate image");
   }
 
-  const dpi = 300;
-  const mmToPx = (mm) => Math.round((mm / 25.4) * dpi);
+  const {
+    dpi = 300,
+    topTrimMm = 6,    // default trim 6mm dari atas (tune sesuai printer)
+    verticalGapMm = 4,
+    horizontalGapMm = 0,
+    displayFontSize = 12  // angka barcode sedikit dibesarkan
+  } = opts;
+
+  const labelWidthMm = 33;
+  const labelHeightMm = 15;
+
+  const labelWidthPx = mmToPx(labelWidthMm, dpi);
+  const labelHeightPx = mmToPx(labelHeightMm, dpi);
+  const verticalGapPx = mmToPx(verticalGapMm, dpi);
+  const horizontalGapPx = mmToPx(horizontalGapMm, dpi);
+
+  const colsPerRow = 2;
+  const rowsPerPage = 4;
+  const totalLabels = colsPerRow * rowsPerPage;
+
+  const pageWidthMm = labelWidthMm * colsPerRow + horizontalGapMm * (colsPerRow - 1);
+  const pageHeightMm = labelHeightMm * rowsPerPage + verticalGapMm * (rowsPerPage - 1);
+  const pageWidthPx = mmToPx(pageWidthMm, dpi);
+  const pageHeightPx = mmToPx(pageHeightMm, dpi);
 
   const canvas = document.createElement("canvas");
-  canvas.width  = mmToPx(100);
-  canvas.height = mmToPx(150);
+  canvas.width = pageWidthPx;
+  canvas.height = pageHeightPx;
 
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = false;
@@ -430,43 +452,159 @@ function generateBarcodeLabelImage(barcodeValue, productName = "", type = "CODE1
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const cols = 2;
-  const rows = 4;
-  const cellW = canvas.width / cols;
-  const cellH = canvas.height / rows;
-
   const safeName = (productName || "")
     .toString()
     .trim()
-    .substring(0, 24)
+    .substring(0, 16)
     .toUpperCase();
 
-  for (let i = 0; i < 8; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-
-    const barcodeCanvas = generateSharpBarcodeCanvas(barcodeValue, type);
-
-    const x = col * cellW + (cellW - barcodeCanvas.width) / 2;
-    const y = row * cellH + 15;
-
-    ctx.drawImage(barcodeCanvas, x, y);
-
-    if (safeName) {
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 28px 'Arial Black', Arial, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-
-      ctx.fillText(
-        safeName,
-        col * cellW + cellW / 2,
-        y + barcodeCanvas.height + 18
-      );
+  let finalBarcodeValue = barcodeValue;
+  if (type === "EAN13") {
+    const clean = barcodeValue.replace(/\D/g, "");
+    if (clean.length === 12) {
+      try {
+        const checksum = calculateEAN13Checksum(clean);
+        finalBarcodeValue = clean + checksum;
+      } catch (e) {
+        console.error("EAN-13 checksum error:", e);
+        finalBarcodeValue = clean.substring(0, 13);
+      }
+    } else if (clean.length === 13) {
+      finalBarcodeValue = clean;
+    } else {
+      throw new Error("EAN13 harus 12 atau 13 digit angka");
     }
   }
 
-  return canvas.toDataURL("image/png", 1.0);
+  return new Promise((resolve, reject) => {
+    try {
+      const svgPromises = [];
+
+      for (let i = 0; i < totalLabels; i++) {
+        const col = i % colsPerRow;
+        const row = Math.floor(i / colsPerRow);
+
+        const labelX = col * (labelWidthPx + horizontalGapPx);
+        const labelY = row * (labelHeightPx + verticalGapPx);
+
+        const labelCanvas = document.createElement("canvas");
+        labelCanvas.width = labelWidthPx;
+        labelCanvas.height = labelHeightPx;
+
+        const labelCtx = labelCanvas.getContext("2d");
+        labelCtx.imageSmoothingEnabled = false;
+        labelCtx.textRendering = "geometricPrecision";
+
+        labelCtx.fillStyle = "#FFFFFF";
+        labelCtx.fillRect(0, 0, labelCanvas.width, labelCanvas.height);
+
+        const svgPromise = new Promise((resolveLabel) => {
+          try {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+            JsBarcode(svg, finalBarcodeValue, {
+              format: type,
+              width: 2,
+              height: labelHeightPx - mmToPx(4, dpi),
+              displayValue: true,
+              fontSize: displayFontSize,   // apply larger number size
+              fontOptions: "bold",
+              margin: mmToPx(1, dpi),
+              textMargin: 2,
+              background: "#FFFFFF",
+              lineColor: "#000000"
+            });
+
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+            const svgUrl = URL.createObjectURL(svgBlob);
+            const svgImg = new Image();
+
+            svgImg.onload = function() {
+              labelCtx.drawImage(svgImg, 0, 0, labelCanvas.width, labelCanvas.height);
+
+              if (safeName) {
+                labelCtx.fillStyle = "#000000";
+                labelCtx.font = "bold 8px Arial";
+                labelCtx.textAlign = "center";
+                labelCtx.textBaseline = "bottom";
+                labelCtx.fillText(safeName, labelCanvas.width / 2, labelCanvas.height - 1);
+              }
+
+              URL.revokeObjectURL(svgUrl);
+              ctx.drawImage(labelCanvas, labelX, labelY);
+              resolveLabel();
+            };
+
+            svgImg.onerror = function() {
+              labelCtx.fillStyle = "#000000";
+              labelCtx.font = "bold 9px Arial";
+              labelCtx.textAlign = "center";
+              labelCtx.fillText(finalBarcodeValue, labelCanvas.width / 2, labelCanvas.height / 2);
+              ctx.drawImage(labelCanvas, labelX, labelY);
+              resolveLabel();
+            };
+
+            svgImg.src = svgUrl;
+          } catch (err) {
+            labelCtx.fillStyle = "#000000";
+            labelCtx.font = "bold 9px Arial";
+            labelCtx.textAlign = "center";
+            labelCtx.fillText(finalBarcodeValue, labelCanvas.width / 2, labelCanvas.height / 2);
+            ctx.drawImage(labelCanvas, labelX, labelY);
+            resolveLabel();
+          }
+        });
+
+        svgPromises.push(svgPromise);
+      }
+
+      Promise.all(svgPromises)
+        .then(() => {
+          console.log('✅ All labels rendered successfully');
+          setTimeout(() => {
+            // Jika canvas landscape, rotate 90° CW agar sesuai orientasi kertas (portrait)
+            let outCanvas = canvas;
+            if (canvas.width > canvas.height) {
+              const finalCanvas = document.createElement('canvas');
+              finalCanvas.width = canvas.height;
+              finalCanvas.height = canvas.width;
+              const fctx = finalCanvas.getContext('2d');
+              fctx.imageSmoothingEnabled = false;
+              fctx.translate(finalCanvas.width, 0);
+              fctx.rotate(Math.PI / 2);
+              fctx.drawImage(canvas, 0, 0);
+              outCanvas = finalCanvas;
+            }
+
+            // Trim top area (crop) untuk kompensasi offset kertas/printer
+            const trimPx = Math.max(0, mmToPx(topTrimMm, dpi));
+            if (trimPx > 0 && trimPx < outCanvas.height - 1) {
+              const cropped = document.createElement('canvas');
+              cropped.width = outCanvas.width;
+              cropped.height = Math.max(1, outCanvas.height - trimPx);
+              const cctx = cropped.getContext('2d');
+              cctx.imageSmoothingEnabled = false;
+              cctx.drawImage(outCanvas, 0, trimPx, outCanvas.width, outCanvas.height - trimPx, 0, 0, cropped.width, cropped.height);
+              resolve(cropped.toDataURL("image/png", 1.0));
+            } else {
+              resolve(outCanvas.toDataURL("image/png", 1.0));
+            }
+          }, 100);
+        })
+        .catch((err) => {
+          console.error('❌ Error in Promise.all:', err);
+          resolve(canvas.toDataURL("image/png", 1.0));
+        });
+
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+function mmToPx(mm, dpi = 300) {
+  return Math.round((mm / 25.4) * dpi);
 }
 
 // ==========================================
@@ -745,46 +883,168 @@ async function cetakBarcode() {
     return;
   }
 
-  if (!barcodePrinterAPI?.printBarcode) {
-    showToast("Barcode Printer API tidak tersedia", "error");
-    return;
-  }
+  showToast("Sedang memproses barcode...", "info");
 
   let imageBase64;
   try {
-    // Pastikan EAN-13 memiliki checksum yang benar
     let finalBarcodeValue = barcodeValue;
+    
+    // Normalize EAN-13
     if (type === "EAN13") {
       const clean = barcodeValue.replace(/\D/g, "");
       if (clean.length === 12) {
-        const checksum = calculateEAN13Checksum(clean);
-        finalBarcodeValue = clean + checksum;
+        try {
+          const checksum = calculateEAN13Checksum(clean);
+          finalBarcodeValue = clean + checksum;
+        } catch (e) {
+          console.error("EAN-13 checksum error:", e);
+          finalBarcodeValue = clean.substring(0, 13);
+        }
+      } else if (clean.length === 13) {
+        finalBarcodeValue = clean;
+      } else {
+        throw new Error("EAN13 harus 12 atau 13 digit angka");
       }
     }
+
+    console.log('🎨 Generating barcode image...');
+    console.log('  Value:', finalBarcodeValue);
+    console.log('  Type:', type);
+    console.log('  Name:', productName);
     
-    imageBase64 = generateBarcodeLabelImage(
+    // 🔴 PENTING: AWAIT untuk generate barcode dengan benar
+    const imageDataUrl = await generateBarcodeLabelImage(
       finalBarcodeValue,
       productName,
       type
-    ).replace(/^data:image\/png;base64,/, "");
+    );
+    
+    imageBase64 = imageDataUrl.replace(/^data:image\/png;base64,/, "");
+    console.log('✅ Image generated, size:', imageBase64.length);
+
   } catch (e) {
-    console.error("GAGAL GENERATE IMAGE:", e);
-    showToast("Gagal membuat image barcode", "error");
+    console.error("❌ GAGAL GENERATE IMAGE:", e);
+    showToast("Gagal membuat image barcode: " + e.message, "error");
     return;
   }
 
-  console.log("IMAGE BASE64 LENGTH:", imageBase64.length);
+  try {
+    console.log('🖨️ Opening print window...');
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    if (!printWindow) {
+      showToast("Popup print diblokir oleh browser", "error");
+      return;
+    }
 
-  const res = await barcodePrinterAPI.printBarcode({
-    image: imageBase64,
-    printerName: "Xprinter XP-D4601B",
-    copies: 1
-  });
+    const html = `
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Print Barcode Label 33x15mm</title>
+        <style>
+          * { margin: 0; padding: 0; }
+          /* Page size: 2x33mm width, 4x15mm + 3x4mm gaps height => 66mm x 72mm */
+          @page {
+            size: 66mm 72mm;
+            margin: 0;
+            orphans: 0;
+            widows: 0;
+          }
+          html, body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            width: 100%;
+            height: 100%;
+          }
+          .page-break {
+            width: 66mm;
+            height: 72mm;
+            display: block;
+            page-break-after: always;
+            page-break-inside: avoid;
+          }
+          img {
+            width: 66mm;   /* force exact physical dimensions */
+            height: 72mm;
+            display: block;
+            margin: 0;
+            padding: 0;
+            object-fit: contain;
+            background: white;
+          }
+          @media print {
+            * {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            html, body {
+              width: 66mm;
+              height: 72mm;
+              margin: 0;
+              padding: 0;
+            }
+            .page-break {
+              margin: 0;
+              padding: 0;
+              width: 66mm;
+              height: 72mm;
+              page-break-after: always;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page-break">
+          <img src="data:image/png;base64,${imageBase64}" alt="Barcode Label">
+        </div>
+      </body>
+      </html>
+    `;
 
-  if (!res?.success) {
-    showToast("Gagal cetak barcode", "error");
-  } else {
-    showToast("Barcode berhasil dicetak", "success");
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    console.log('📄 HTML written to print window');
+
+    // TUNGGU sampai dokumen siap, BARU print
+    let loaded = false;
+    printWindow.addEventListener('load', function() {
+      if (!loaded) {
+        loaded = true;
+        console.log('✅ Print window fully loaded, starting print...');
+        setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
+        }, 300);
+      }
+    });
+
+    // Timeout fallback jika load event tidak trigger
+    setTimeout(() => {
+      if (!loaded && !printWindow.closed) {
+        loaded = true;
+        console.log('⚠️ Load timeout, starting print anyway...');
+        printWindow.focus();
+        printWindow.print();
+      }
+    }, 2000);
+
+    // Handle after print - close window
+    setTimeout(() => {
+      if (!printWindow.closed) {
+        printWindow.onafterprint = function() {
+          printWindow.close();
+        };
+      }
+    }, 300);
+
+  } catch (err) {
+    console.error("❌ Gagal membuka window print:", err);
+    showToast("Gagal membuka window print: " + err.message, "error");
   }
 }
 
@@ -843,11 +1103,9 @@ window.addEventListener("message", async (event) => {
 
   let imageBase64;
   try {
-    imageBase64 = generateBarcodeLabelImage(
-      barcodeValue,
-      productName,
-      type
-    ).replace(/^data:image\/png;base64,/, "");
+    // generateBarcodeLabelImage returns Promise -> await it
+    const imageDataUrl = await generateBarcodeLabelImage(barcodeValue, productName, type);
+    imageBase64 = imageDataUrl.replace(/^data:image\/png;base64,/, "");
   } catch (e) {
     alert("Gagal generate barcode");
     return;
