@@ -163,7 +163,19 @@ function addToCartFrontend({
 
   let idx = cart.findIndex(item => normalizeId(item.id) === normId);
   if (idx !== -1) {
-    cart[idx].quantity += 1;
+    // Jika produk sudah ada di cart
+    if (cart[idx].discount_type === 'buyxgety') {
+      // Untuk promo buyxgety, tingkatkan buy_quantity (jumlah yang dibayar)
+      cart[idx].buy_quantity = (Number(cart[idx].buy_quantity || 0) + 1);
+      // Re-apply buyxgety logic agar bonus & total quantity ter-update
+      applyBuyXGetY(cart[idx]);
+    } else {
+      // Produk biasa / bundle / discount lainnya -> tingkatkan quantity
+      cart[idx].quantity = (Number(cart[idx].quantity || 0) + 1);
+      // Keep buy_quantity in sync for downstream logic
+      cart[idx].buy_quantity = Number(cart[idx].buy_quantity || cart[idx].quantity);
+      // Jika ada bundle/discount recalculation diperlukan, it will run in updateKeranjangView
+    }
   } else {
     const item = {
       id: normId,
@@ -181,6 +193,7 @@ function addToCartFrontend({
       diskon_bundle_min_qty,    // ✅ SIMPAN dengan nama yang benar
       diskon_bundle_value       // ✅ SIMPAN dengan nama yang benar
     };
+    // Jika baru dan promo buyxgety, pastikan applyBuyXGetY diterapkan (mungkin ada bonus awal)
     applyBuyXGetY(item);
     cart.push(item);
   }

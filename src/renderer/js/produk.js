@@ -122,6 +122,8 @@ async function renderProdukList(products, listProdukEl, storeId) {
     return;
   }
   
+  allProducts = products; // Simpan untuk filter lokal jika diperlukan
+  
   console.log(`🎨 [renderProdukList] Mulai render ${products.length} produk...`);
   
   // DEBUG: Tampilkan semua produk
@@ -146,6 +148,7 @@ async function renderProdukList(products, listProdukEl, storeId) {
   const kategoriSet = new Set(products.map(p => p.category).filter(Boolean));
   console.log(`📊 Kategori ditemukan: ${Array.from(kategoriSet).join(', ')}`);
   populateCategoryDropdown(Array.from(kategoriSet));
+  inisialisasiPencarianProduk(); // Pastikan event listener kategori & reset terpasang
   
   // 3. BUILD HTML SEKALIGUS
   let allCardsHTML = '';
@@ -358,6 +361,7 @@ function showStoreSelector(stores) {
 
 // ===== KATEGORI & SEARCH =====
 let selectedCategory = '';
+let allProducts = []; // Untuk filter lokal jika diperlukan
 
 const KATEGORI_LIST = [
   "Kesehatan & Kecantikan",
@@ -368,24 +372,38 @@ const KATEGORI_LIST = [
   "Makanan & Minuman"
 ];
 
+// Perbaikan: Dropdown kategori dengan tombol reset & highlight kategori terpilih
 function populateCategoryDropdown(categories = []) {
   const menu = document.querySelector('.dropdown-menu');
   if (!menu) return;
   menu.innerHTML = '';
 
+  // Tombol Semua Kategori
   const btnAll = document.createElement('button');
   btnAll.type = 'button';
   btnAll.dataset.category = '';
-  btnAll.textContent = 'Semua Kategori';
+  btnAll.textContent = selectedCategory === '' ? '✓ Semua Kategori' : 'Semua Kategori';
+  btnAll.style.fontWeight = selectedCategory === '' ? 'bold' : '';
   menu.appendChild(btnAll);
 
-  KATEGORI_LIST.forEach(cat => {
+  // Kategori dari data
+  const uniqueCategories = [...new Set([...categories, ...KATEGORI_LIST])].filter(Boolean);
+  uniqueCategories.forEach(cat => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.category = cat;
-    btn.textContent = cat;
+    btn.textContent = selectedCategory === cat ? `✓ ${cat}` : cat;
+    btn.style.fontWeight = selectedCategory === cat ? 'bold' : '';
     menu.appendChild(btn);
   });
+
+  // Tombol Reset Filter
+  const btnReset = document.createElement('button');
+  btnReset.type = 'button';
+  btnReset.id = 'btn-reset-kategori';
+  btnReset.textContent = '🔄 Reset Filter';
+  btnReset.style.marginTop = '8px';
+  menu.appendChild(btnReset);
 }
 
 // ===== INIT PRODUK =====
@@ -841,7 +859,7 @@ function inisialisasiPencarianProduk() {
     searchInput.addEventListener('input', function () {
       const q = this.value.trim();
       clearTimeout(searchTimeout);
-      if (q.length === 0) {
+      if (q.length === 0 && !selectedCategory) {
         if (window.renderProdukPage) window.renderProdukPage();
         return;
       }
@@ -852,9 +870,10 @@ function inisialisasiPencarianProduk() {
     searchInput.dataset.listener = "true";
   }
 
-  const categoryButtons = document.querySelectorAll('.dropdown-menu button[data-category]');
-  if (categoryButtons) {
-    categoryButtons.forEach(btn => {
+  // Perbaikan: Event kategori & reset
+  const menu = document.querySelector('.dropdown-menu');
+  if (menu) {
+    menu.querySelectorAll('button[data-category]').forEach(btn => {
       if (btn.dataset.bound) return;
       btn.addEventListener('click', () => {
         selectedCategory = btn.dataset.category || '';
@@ -862,9 +881,26 @@ function inisialisasiPencarianProduk() {
         if (toggle) toggle.checked = false;
         const q = (document.querySelector('.bar-pencarian-produk input[type="text"]') || {}).value || '';
         cariProduk(q.trim(), selectedCategory);
+        // Refresh dropdown highlight
+        populateCategoryDropdown([...KATEGORI_LIST]);
       });
       btn.dataset.bound = '1';
     });
+
+    // Tombol reset
+    const btnReset = menu.querySelector('#btn-reset-kategori');
+    if (btnReset && !btnReset.dataset.bound) {
+      btnReset.addEventListener('click', () => {
+        selectedCategory = '';
+        const toggle = document.getElementById('dropdown-toggle');
+        if (toggle) toggle.checked = false;
+        const searchInput = document.querySelector('.bar-pencarian-produk input[type="text"]');
+        if (searchInput) searchInput.value = '';
+        if (window.renderProdukPage) window.renderProdukPage();
+        populateCategoryDropdown([...KATEGORI_LIST]);
+      });
+      btnReset.dataset.bound = '1';
+    }
   }
 }
 
@@ -1173,8 +1209,6 @@ if (document.readyState === 'loading') {
     ensureTambahProdukPermissions();
   }, 500);
 }
-
-// ...existing code...
 
 // ===== PERMISSIONS HANDLER (DIPERBAIKI) =====
 // Pastikan tombol "Tambah Produk" ter-hide untuk cashier

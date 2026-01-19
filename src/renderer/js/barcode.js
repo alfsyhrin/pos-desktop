@@ -39,44 +39,80 @@ function calculateEAN13Checksum(first12Digits) {
 // ==========================================
 
 document.addEventListener('keydown', function(e) {
-  const activeElement = document.activeElement;
-  const isFormInput = activeElement.tagName === 'INPUT' || 
-                      activeElement.tagName === 'TEXTAREA' || 
-                      activeElement.tagName === 'SELECT';
-  
-  if (isFormInput && activeElement.id !== 'scanner-input') {
-    return;
-  }
-
+  // kumpulkan karakter scanner
   if (e.key === 'Enter') {
     if (scannerBuffer.length > 3) {
-      handleScannedBarcode(scannerBuffer);
+      const code = scannerBuffer;
+      scannerBuffer = '';
+      clearTimeout(scannerTimeout);
+
+      // PRIORITAS: gunakan dispatcher pusat jika tersedia (registerBarcodeHandler / _dispatchBarcode)
+      if (typeof window._dispatchBarcode === 'function') {
+        try { window._dispatchBarcode(code); }
+        catch(err) { console.error('dispatchBarcode error', err); }
+        return;
+      }
+
+      // fallback: jika halaman kasir aktif, panggil handler kasir
+      if (document.getElementById('produk-list-kasir') && typeof window.handleScannedBarcodeKasir === 'function') {
+        try { window.handleScannedBarcodeKasir(code); } catch(err) { console.error(err); }
+        return;
+      }
+
+      // terakhir fallback ke global handleScannedBarcode (produk/page handler)
+      if (typeof window.handleScannedBarcode === 'function') {
+        try { window.handleScannedBarcode(code); } catch(err) { console.error(err); }
+      }
+    } else {
+      scannerBuffer = '';
+      clearTimeout(scannerTimeout);
     }
-    scannerBuffer = '';
-    clearTimeout(scannerTimeout);
   } else if (e.key.length === 1) {
     scannerBuffer += e.key;
     clearTimeout(scannerTimeout);
-    scannerTimeout = setTimeout(() => {
-      scannerBuffer = '';
-    }, 100);
+    scannerTimeout = setTimeout(() => { scannerBuffer = ''; }, 100);
   }
 });
 
 function handleScannedBarcode(barcode) {
-  showToast('Barcode terdeteksi: ' + barcode, 'success');
-  // Panggil handler utama (override per halaman)
-  if (typeof window.handleScannedBarcode === 'function') {
-    window.handleScannedBarcode(barcode);
+  console.log('🔍 [barcode.js] handleScannedBarcode dipanggil dengan barcode:', barcode);
+  console.log('📍 [barcode.js] window.location.pathname:', window.location.pathname);
+  console.log('📍 [barcode.js] window.location.hash:', window.location.hash);
+  
+  // Cek apakah ada di halaman kasir
+  const isKasirPage = document.getElementById('produk-list-kasir') !== null;
+  console.log('🎯 [barcode.js] isKasirPage:', isKasirPage);
+  
+  // Jika di halaman kasir dan handler ada, gunakan handler kasir
+  if (isKasirPage && typeof window.handleScannedBarcodeKasir === 'function') {
+    console.log('✅ [barcode.js] ROUTE → handleScannedBarcodeKasir');
+    window.handleScannedBarcodeKasir(barcode);
     return;
   }
-  // Fallback ke handler lama
-  if (window.onBarcodeScanned) {
-    window.onBarcodeScanned(barcode);
+  
+  // Jika di halaman kasir tapi handler belum ada, tunggu sebentar
+  if (isKasirPage && typeof window.handleScannedBarcodeKasir !== 'function') {
+    console.warn('⚠️ [barcode.js] Handler kasir belum siap, tunggu 500ms...');
+    setTimeout(() => {
+      if (typeof window.handleScannedBarcodeKasir === 'function') {
+        console.log('✅ [barcode.js] Handler siap sekarang, ROUTE → handleScannedBarcodeKasir');
+        window.handleScannedBarcodeKasir(barcode);
+      } else {
+        console.error('❌ [barcode.js] Handler tetap tidak ditemukan!');
+        console.log('📋 [barcode.js] window.handleScannedBarcodeKasir:', window.handleScannedBarcodeKasir);
+        console.log('📋 [barcode.js] window.addToCartFrontend:', window.addToCartFrontend);
+      }
+    }, 500);
+    return;
   }
+  
+  // Fallback: tidak di halaman kasir, input ke field
+  console.log('⚠️ [barcode.js] Fallback → input field');
   setInputValue('barcode-value', barcode);
   setInputValue('product-barcode', barcode);
-  generateBarcodeFromValue(barcode);
+  if (typeof generateBarcodeFromValue === 'function') {
+    generateBarcodeFromValue(barcode);
+  }
 }
 
 function focusScannerInput() {
@@ -611,110 +647,280 @@ function mmToPx(mm, dpi = 300) {
 // CAMERA SCANNER
 // ==========================================
 
-function toggleCamera() {
-  if (cameraActive) {
-    stopCamera();
-  } else {
-    startCamera();
-  }
-}
+// ========== PERBAIKAN SCAN KAMERA ==========
 
-async function startCamera() {
-  let cameraReader = document.getElementById('camera-reader');
-  let retry = 0;
-  while (!cameraReader && retry < 20) {
-    await new Promise(r => setTimeout(r, 100));
-    cameraReader = document.getElementById('camera-reader');
-    retry++;
+// Pastikan overlay dan container siap
+function ensureCameraDOM() {
+  let overlay = document.getElementById('camera-modal-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'camera-modal-overlay';
+    overlay.className = 'camera-modal-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    `;
+    document.body.appendChild(overlay);
   }
 
   let container = document.getElementById('camera-container');
   if (!container) {
     container = document.createElement('div');
     container.id = 'camera-container';
-    container.style.display = 'none';
-    document.body.appendChild(container);
-  }
-  if (!cameraReader) {
-    cameraReader = document.createElement('div');
-    cameraReader.id = 'camera-reader';
-    container.appendChild(cameraReader);
+    container.className = 'camera-container';
+    container.style.cssText = `
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+    `;
+    overlay.appendChild(container);
   }
 
-  const btn = document.getElementById('btn-camera') || document.getElementById('btn-scan-camera') || null;
+  let reader = document.getElementById('camera-reader');
+  if (!reader) {
+    reader = document.createElement('div');
+    reader.id = 'camera-reader';
+    reader.style.cssText = `
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      background: #000;
+      overflow: hidden;
+    `;
+    container.appendChild(reader);
+  }
+
+  // Pastikan controls ada
+  let controls = container.querySelector('.camera-controls');
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.className = 'camera-controls';
+    controls.style.cssText = `
+      width: 100%;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    `;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.id = 'btn-close-camera';
+    closeBtn.className = 'btn btn-outline';
+    closeBtn.type = 'button';
+    closeBtn.style.cssText = `
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #1a1a1a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    `;
+    closeBtn.innerHTML = '<span class="material-symbols-outlined">close</span> Tutup Kamera';
+    
+    controls.appendChild(closeBtn);
+    container.appendChild(controls);
+  }
+
+  return { overlay, container, reader };
+}
+
+// Perbaikan startCamera dengan error handling lebih baik
+async function startCamera() {
+  console.log('🎥 [startCamera] Memulai proses scan kamera...');
+  
+  // Ensure DOM elements exist
+  const { overlay, container, reader } = ensureCameraDOM();
+  
+  const btn = document.getElementById('btn-scan-camera') || document.getElementById('btn-camera');
 
   if (typeof Html5Qrcode === 'undefined') {
-    showToast('Library scanner belum dimuat (Html5Qrcode).', 'error');
+    showToast('Library scanner (Html5Qrcode) belum dimuat!', 'error');
     return;
   }
 
   try {
-    container.style.display = 'block';
-    container.classList.add('active');
-    cameraReader.innerHTML = '';
-
+    // 1. Cleanup instance lama
     if (html5QrCode) {
-      try { await html5QrCode.clear(); } catch (_) {}
+      try {
+        await html5QrCode.stop();
+        await html5QrCode.clear();
+      } catch (_) {}
       html5QrCode = null;
     }
-    html5QrCode = new Html5Qrcode("camera-reader");
 
-    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    // 2. Clear reader
+    reader.innerHTML = '';
+
+    // 3. Tampilkan overlay & container
+    overlay.style.display = 'flex';
+    container.style.display = 'flex';
+    console.log('✅ [startCamera] Modal overlay ditampilkan');
+
+    // 4. Create instance baru
+    html5QrCode = new Html5Qrcode("camera-reader");
+    console.log('✅ [startCamera] Html5Qrcode instance dibuat');
+
+    // 5. Start scanning
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      aspectRatio: 1.0,
+      showTorchButtonIfSupported: true
+    };
+
     await html5QrCode.start(
       { facingMode: "environment" },
       config,
       (decodedText) => {
+        console.log('✅ [startCamera] Barcode terdeteksi:', decodedText);
         handleScannedBarcode(decodedText);
         stopCamera();
       },
-      (errorMessage) => { /* ignore frame decode errors */ }
+      (errorMessage) => {
+        // Ignore frame errors
+      }
     );
 
     cameraActive = true;
-    if (btn) btn.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Stop Kamera';
-    showToast('Kamera aktif - Arahkan ke barcode', 'info');
+    if (btn) {
+      btn.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Stop Kamera';
+      btn.style.background = '#ef4444';
+      btn.style.color = '#fff';
+    }
+    
+    showToast('🎥 Kamera aktif - Arahkan ke barcode untuk scan', 'success');
+    console.log('✅ [startCamera] Scanning dimulai, menunggu barcode...');
+
   } catch (error) {
-    container.classList.remove('active');
-    container.style.display = 'none';
-    showToast('Gagal membuka kamera: ' + (error?.message || error), 'error');
-    console.error('Camera error:', error);
+    console.error('❌ [startCamera] Gagal membuka kamera:', error);
+    
+    // Cleanup & hide overlay
+    if (overlay) overlay.style.display = 'none';
+    if (container) container.style.display = 'none';
+    
+    showToast(
+      `Gagal membuka kamera: ${error?.message || 'Cek permission atau browser compatibility'}`,
+      'error'
+    );
+    
+    // Reset button
+    if (btn) {
+      btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
+      btn.style.background = '';
+      btn.style.color = '';
+    }
+    
+    cameraActive = false;
   }
 }
 
+// Perbaikan stopCamera dengan cleanup proper
 function stopCamera() {
+  console.log('🎥 [stopCamera] Menutup kamera...');
+  
+  const overlay = document.getElementById('camera-modal-overlay');
   const container = document.getElementById('camera-container');
-  const btn = document.getElementById('btn-camera') || document.getElementById('btn-scan-camera') || null;
+  const btn = document.getElementById('btn-scan-camera') || document.getElementById('btn-camera');
 
   if (html5QrCode && cameraActive) {
-    html5QrCode.stop().then(() => {
+    html5QrCode.stop()
+      .then(() => {
+        console.log('✅ [stopCamera] Camera stream stopped');
+        return html5QrCode.clear();
+      })
+      .then(() => {
+        console.log('✅ [stopCamera] Instance cleared');
+        html5QrCode = null;
+      })
+      .catch(err => {
+        console.error('⚠️ [stopCamera] Error saat stop:', err);
+        html5QrCode = null;
+      })
+      .finally(() => {
+        // Hide overlay & container
+        if (overlay) overlay.style.display = 'none';
+        if (container) container.style.display = 'none';
+        
+        // Reset button
+        if (btn) {
+          btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
+          btn.style.background = '';
+          btn.style.color = '';
+        }
+        
+        cameraActive = false;
+        showToast('Kamera ditutup', 'info');
+        console.log('✅ [stopCamera] Selesai');
+      });
+  } else {
+    if (overlay) overlay.style.display = 'none';
+    if (container) container.style.display = 'none';
+    cameraActive = false;
+    if (html5QrCode) {
       try { html5QrCode.clear(); } catch (_) {}
       html5QrCode = null;
-      cameraActive = false;
-      if (container) {
-        container.classList.remove('active');
-        container.style.display = 'none';
-      }
-      if (btn) btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
-    }).catch(err => {
-      console.error('Error stopping camera:', err);
-      if (container) {
-        container.classList.remove('active');
-        container.style.display = 'none';
-      }
-      if (btn) btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
-      cameraActive = false;
-      html5QrCode = null;
-    });
-  } else {
-    if (container) {
-      container.classList.remove('active');
-      container.style.display = 'none';
     }
-    if (btn) btn.innerHTML = '<span class="material-symbols-outlined">photo_camera</span> Scan Kamera';
-    cameraActive = false;
-    if (html5QrCode) { try { html5QrCode.clear(); } catch (_) {} html5QrCode = null; }
   }
 }
+
+// Update event listener untuk button close
+document.addEventListener('click', function (e) {
+  const target = e.target;
+  
+  // Detect close button click (bisa dari span atau button)
+  if (target.id === 'btn-close-camera' || 
+      target.closest('#btn-close-camera')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🎥 [click] Close button dipencet');
+    stopCamera();
+    return;
+  }
+
+  // Close jika klik di outside container
+  const overlay = document.getElementById('camera-modal-overlay');
+  if (overlay && target === overlay) {
+    e.preventDefault();
+    console.log('🎥 [click] Overlay dipencet (outside), tutup kamera');
+    stopCamera();
+    return;
+  }
+});
+
+// ====== CAMERA MODAL HANDLER UNTUK TAMBAH PRODUK ======
+window.toggleCamera = function() {
+  // Untuk halaman tambah-produk.html, gunakan #camera-container (bukan overlay)
+  const container = document.getElementById('camera-container');
+  if (!container) {
+    alert('Element kamera tidak ditemukan!');
+    return;
+  }
+  if (window.cameraActive) {
+    stopCamera();
+  } else {
+    startCamera();
+  }
+};
+
+// Pastikan startCamera dan stopCamera juga global
+window.startCamera = startCamera;
+window.stopCamera = stopCamera;
 
 // ==========================================
 // FORM ACTIONS
