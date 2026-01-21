@@ -29,11 +29,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (usernameEl) usernameEl.textContent = (user && user.username) ? user.username : '-';
     if (emailEl) emailEl.textContent = (user && user.email) ? user.email : '-';
 
-    // Sembunyikan menu 'kasir' jika role admin (PASTIKAN setelah sidebar dirender)
-    if (user && user.role === 'admin') {
-      const kasirMenu = document.querySelector('.sidebar-item[data-page="kasir"]');
-      if (kasirMenu) kasirMenu.style.display = 'none';
-    }
+    // ✅ PERBAIKI: Jangan sembunyikan kasir untuk admin
+    // Admin bisa akses kasir sama seperti cashier
+    // if (user && user.role === 'admin') {
+    //   const kasirMenu = document.querySelector('.sidebar-item[data-page="kasir"]');
+    //   if (kasirMenu) kasirMenu.style.display = 'none';
+    // }
 
     // optionally fetch store name if store-name element exists and user has store_id
     const storeId = user && (user.store_id || localStorage.getItem('store_id'));

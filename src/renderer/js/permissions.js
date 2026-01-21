@@ -25,6 +25,8 @@
     const role = getRole();
     // Cashier bisa akses: dashboard, kasir, produk, transaksi, pengaturan
     const allowedForCashier = ['dashboard','kasir','produk','transaksi','pengaturan','pendingTransaksi'];
+    // ✅ PERBAIKI: Admin bisa akses kasir juga
+    const allowedForAdmin = ['dashboard','kasir','produk','transaksi','karyawan','laporan','pengaturan','aktivitas','pendingTransaksi'];
     // Owner bisa akses: dashboard, produk, transaksi, karyawan, laporan, pengaturan, aktivitas (TIDAK KASIR)
     const allowedForOwner = ['dashboard','produk','transaksi','karyawan','laporan','pengaturan','aktivitas','pendingTransaksi'];
     
@@ -46,6 +48,13 @@
         } else {
           a.style.display = '';
         }
+      } else if (role === 'admin') {
+        // ✅ PERBAIKI: Admin bisa akses semua di allowedForAdmin (termasuk kasir)
+        if (!allowedForAdmin.includes(page)) {
+          a.style.display = 'none';
+        } else {
+          a.style.display = '';
+        }
       } else if (role === 'owner') {
         // Owner hanya bisa akses yang ada di allowedForOwner
         if (!allowedForOwner.includes(page)) {
@@ -54,7 +63,7 @@
           a.style.display = '';
         }
       } else {
-        // Admin bisa akses semua
+        // Default: show all
         a.style.display = '';
       }
     });

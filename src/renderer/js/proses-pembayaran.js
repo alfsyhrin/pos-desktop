@@ -16,7 +16,7 @@ function loadPendingTransaction() {
 // Ambil data store untuk mendapatkan tax_percentage
 async function fetchStoreTaxPercentage(storeId) {
   const token = localStorage.getItem('token');
-  if (!storeId || !token) return 10; // fallback default 10%
+  if (!storeId || !token) return 0; // ✅ PERBAIKI: fallback ke 0, bukan 10
 
   try {
     const res = await fetch(`http://103.126.116.119:8001/api/stores/${storeId}`, {
@@ -25,13 +25,14 @@ async function fetchStoreTaxPercentage(storeId) {
       }
     });
     const data = await res.json();
-    if (data.success && data.data && data.data.tax_percentage) {
-      return Number(data.data.tax_percentage) || 10;
+    // ✅ PERBAIKI: Treat 0 as valid value, not as falsy
+    if (data.success && data.data && data.data.tax_percentage !== undefined) {
+      return Number(data.data.tax_percentage); // Bisa 0, bisa 10, dll
     }
-    return 10;
+    return 0; // ✅ fallback ke 0
   } catch (err) {
     console.error('Error fetching store tax percentage:', err);
-    return 10; // default
+    return 0; // ✅ fallback ke 0
   }
 }
 
@@ -101,7 +102,8 @@ function renderPendingTransaction(pendingData) {
   });
 
   const netSubtotal = grossSubtotal - discountTotal;
-  const taxPercentage = Number(pendingData.tax_percentage || 10);
+  // ✅ PERBAIKI: Gunakan fallback 0, bukan 10
+  const taxPercentage = pendingData.tax_percentage !== undefined ? Number(pendingData.tax_percentage) : 0;
   const tax = netSubtotal * (taxPercentage / 100);
   const grandTotal = netSubtotal + tax;
 
@@ -139,10 +141,11 @@ function unformatRupiah(str) {
 function inisialisasiInputTunai(pendingData) {
   const inputTunai = document.querySelector('.card-tunai-diterima-pembayaran input[type="number"]');
   const kembalianEl = document.querySelectorAll('.card-total-pembayaran h4')[3];
-  const taxPercentage = pendingData.tax_percentage || 10; // atau ambil dari store
-const subtotal = pendingData._grandTotal || 0;
-const tax = subtotal * (taxPercentage / 100);
-const totalFinal = subtotal + tax;
+  // gunakan 0 sebagai fallback dan terima 0 sebagai nilai valid
+  const taxPercentage = pendingData.tax_percentage !== undefined ? Number(pendingData.tax_percentage) : 0;
+  const subtotal = pendingData._grandTotal || 0;
+  const tax = subtotal * (taxPercentage / 100);
+  const totalFinal = subtotal + tax;
 
 
   if (inputTunai && kembalianEl) {
@@ -294,7 +297,8 @@ function inisialisasiBayar(pendingData) {
         _netSubtotal: pendingData._netSubtotal || 0,
         _tax: pendingData._tax || 0,
         _grandTotal: pendingData._grandTotal || 0,
-        tax_percentage: pendingData.tax_percentage || 10,
+        // simpan 0 sebagai valid value jika admin set 0%
+        tax_percentage: pendingData.tax_percentage !== undefined ? Number(pendingData.tax_percentage) : 0,
         received: receivedAmount,
         change: Math.max(0, receivedAmount - (pendingData._grandTotal || 0))
       };
@@ -399,21 +403,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const pendingData = loadPendingTransaction();
 
   if (pendingData) {
-
     // Ambil tax_percentage dari API store
     const taxPercentage = await fetchStoreTaxPercentage(pendingData.storeId);
     pendingData.tax_percentage = taxPercentage; // simpan di pendingData
+    
     // Render pending transaction info
     renderPendingTransaction(pendingData);
-    renderListItemPembayaran(pendingData.cart); // Render list item pembayaran
+    renderListItemPembayaran(pendingData.cart);
 
     // Initialize input and bayar events
-    inisialisasiInputTunaiFormat(pendingData); // Ganti
+    inisialisasiInputTunaiFormat(pendingData);
     inisialisasiBayar(pendingData);
     inisialisasiPecahanUang(pendingData);
   } else {
     alert('Data transaksi pending tidak ditemukan!');
-    // Redirect back to kasir
     window.location.href = '../pages/kasir.html';
   }
 });

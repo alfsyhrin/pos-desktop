@@ -98,7 +98,8 @@ function generateReceiptTemplate(storeData, trx) {
   const subtotal = Number(trx._grossSubtotal || trx.total || 0);
   const totalDiskon = Number(trx._discountTotal || trx.discount_total || totalDiskonItem);
   const tax = Number(trx._tax || trx.tax || 0);
-  const taxPercent = Number(trx.tax_percentage || (subtotal ? (tax / subtotal * 100) : 10));
+  // ✅ PERBAIKI: Gunakan !== undefined bukan ||
+  const taxPercent = trx.tax_percentage !== undefined ? Number(trx.tax_percentage) : (subtotal ? (tax / subtotal * 100) : 0);
   const grandTotal = Number(trx._grandTotal || trx.grand_total || (subtotal - totalDiskon + tax));
 
   receipt += lineKV('Sub Total      :', subtotal);
@@ -277,8 +278,8 @@ async function renderDetailTransaksi() {
       }
     }
 
-    // PPN dari (subtotal - diskon)
-    const taxPercentage = Number(trx.tax_percentage || 10);
+    // ✅ PERBAIKI: Gunakan fallback 0 (bukan 10) dan cek !== undefined
+    const taxPercentage = trx.tax_percentage !== undefined ? Number(trx.tax_percentage) : 0;
     const dasarPajak = grossSubtotal - discountTotal;
     const tax = dasarPajak * (taxPercentage / 100);
     const grandTotal = dasarPajak + tax;
@@ -334,8 +335,11 @@ async function renderDetailTransaksi() {
     return;
   }
 
-  // Gunakan tax_percentage dari response API, fallback ke store
-  const taxPercentage = Number(trx.tax_percentage || storeData?.tax_percentage || 10);
+  // ✅ PERBAIKI: Gunakan tax_percentage dari trx terlebih dahulu, fallback ke storeData atau 0
+  const taxPercentage = Number(
+    trx.tax_percentage !== undefined ? trx.tax_percentage :
+    storeData?.tax_percentage !== undefined ? storeData.tax_percentage : 0
+  );
 
   // Nomor transaksi
   document.querySelectorAll('.jenis-pembayaran-transaksi')[0].querySelector('p').textContent =
